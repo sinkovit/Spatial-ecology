@@ -1,0 +1,13 @@
+DataFile:	./input.txt
+xMinimum:	594569.2
+xNumRows:	393
+xCellSize:	250.0
+yMinimum:	3319308.0
+yNumCols:	892
+yCellSize:	250.0
+zMininim:	125.0
+zNumLvl:	23
+zCellSize:	250.0
+
+
+
