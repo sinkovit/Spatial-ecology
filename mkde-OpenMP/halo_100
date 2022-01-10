@@ -1,0 +1,2194 @@
+Process 0 reading configuration file ParallelMKDEconfig.txt
+Reading location data from file ./input.txt.
+Number of groups: 326
+Number of records: 89539
+After animal: 
+lnCnt: 89539
+       New group: 217-November-09
+       New group: 217-December-09
+       New group: 217-January-10
+       New group: 217-February-10
+       New group: 217-March-10
+       New group: 217-April-10
+       New group: 217-May-10
+       New group: 217-June-10
+       New group: 217-July-10
+       New group: 217-August-10
+       New group: 217-September-10
+       New group: 217-October-10
+       New group: 217-November-10
+       New group: 217-December-10
+       New group: 217-January-11
+       New group: 217-February-11
+       New group: 217-March-11
+       New group: 217-April-11
+       New group: 217-May-11
+       New group: 217-June-11
+       New group: 217-July-11
+       New group: 217-August-11
+       New group: 217-September-11
+       New group: 217-October-11
+       New group: 218-November-09
+       New group: 218-December-09
+       New group: 218-January-10
+       New group: 218-February-10
+       New group: 218-March-10
+       New group: 218-April-10
+       New group: 218-July-10
+       New group: 218-December-10
+       New group: 218-January-11
+       New group: 218-February-11
+       New group: 218-March-11
+       New group: 218-April-11
+       New group: 218-May-11
+       New group: 218-June-11
+       New group: 218-July-11
+       New group: 218-August-11
+       New group: 220-June-10
+       New group: 220-August-10
+       New group: 220-September-10
+       New group: 220-November-10
+       New group: 220-December-10
+       New group: 220-January-11
+       New group: 220-February-11
+       New group: 220-March-11
+       New group: 220-April-11
+       New group: 220-May-11
+       New group: 220-June-11
+       New group: 220-July-11
+       New group: 220-August-11
+       New group: 220-September-11
+       New group: 220-October-11
+       New group: 261-November-09
+       New group: 261-December-09
+       New group: 261-November-10
+       New group: 261-December-10
+       New group: 261-January-11
+       New group: 261-February-11
+       New group: 261-March-11
+       New group: 261-April-11
+       New group: 261-May-11
+       New group: 261-June-11
+       New group: 261-July-11
+       New group: 261-August-11
+       New group: 261-September-11
+       New group: 261-October-11
+       New group: 269-January-10
+       New group: 269-February-10
+       New group: 269-March-10
+       New group: 269-April-10
+       New group: 269-June-10
+       New group: 269-July-10
+       New group: 269-August-10
+       New group: 269-September-10
+       New group: 269-October-10
+       New group: 269-November-10
+       New group: 269-December-10
+       New group: 269-January-11
+       New group: 269-February-11
+       New group: 269-March-11
+       New group: 269-September-11
+       New group: 269-October-11
+       New group: 284-November-09
+       New group: 284-January-10
+       New group: 284-February-10
+       New group: 284-March-10
+       New group: 284-April-10
+       New group: 284-June-10
+       New group: 284-July-10
+       New group: 284-August-10
+       New group: 284-September-10
+       New group: 284-October-10
+       New group: 284-November-10
+       New group: 284-September-11
+       New group: 284-October-11
+       New group: 320-November-09
+       New group: 320-December-09
+       New group: 320-January-10
+       New group: 320-February-10
+       New group: 320-March-10
+       New group: 320-April-10
+       New group: 320-June-10
+       New group: 320-July-10
+       New group: 320-August-10
+       New group: 320-September-10
+       New group: 320-October-10
+       New group: 320-November-10
+       New group: 320-December-10
+       New group: 320-January-11
+       New group: 320-February-11
+       New group: 320-March-11
+       New group: 320-April-11
+       New group: 320-May-11
+       New group: 320-June-11
+       New group: 320-July-11
+       New group: 320-August-11
+       New group: 320-September-11
+       New group: 320-October-11
+       New group: 322-November-09
+       New group: 322-April-10
+       New group: 322-June-10
+       New group: 322-July-10
+       New group: 322-August-10
+       New group: 322-September-10
+       New group: 322-October-10
+       New group: 322-November-10
+       New group: 322-December-10
+       New group: 322-January-11
+       New group: 322-February-11
+       New group: 322-March-11
+       New group: 322-April-11
+       New group: 322-May-11
+       New group: 322-June-11
+       New group: 322-July-11
+       New group: 322-August-11
+       New group: 359-November-09
+       New group: 359-December-09
+       New group: 359-February-10
+       New group: 359-March-10
+       New group: 359-February-11
+       New group: 359-March-11
+       New group: 359-April-11
+       New group: 359-May-11
+       New group: 359-June-11
+       New group: 359-July-11
+       New group: 359-August-11
+       New group: 359-September-11
+       New group: 359-October-11
+       New group: 361-April-10
+       New group: 361-June-10
+       New group: 361-July-10
+       New group: 361-August-10
+       New group: 361-September-10
+       New group: 361-October-10
+       New group: 361-November-10
+       New group: 361-December-10
+       New group: 361-January-11
+       New group: 361-February-11
+       New group: 361-March-11
+       New group: 361-April-11
+       New group: 361-May-11
+       New group: 361-June-11
+       New group: 361-July-11
+       New group: 361-August-11
+       New group: 361-September-11
+       New group: 361-Octo-September-10
+       New group: 430-November-10
+       New group: 430-December-10
+       New group: 430-January-11
+       New group: 430-February-11
+       New group: 430-March-11
+       New group: 430-April-11
+       New group: 430-May-11
+       New group: 430-June-11
+       New group: 430-July-11
+       New group: 430-August-11
+       New group: 430-September-11
+       New group: 430-October-11
+       New group: 446-February-11
+       New group: 446-March-11
+       New group: 446-April-11
+       New group: 446-May-11
+       New group: 446-June-11
+       New group: 446-July-11
+       New group: 446-August-11
+       New group: 446-September-11
+       New group: 446-October-11
+       New group: 468-June-10
+       New group: 468-July-10
+       New group: 468-January-11
+       New group: 468-February-11
+       New group: 468-March-11
+       New group: 468-April-11
+       New group: 468-May-11
+       New group: 468-June-11
+       New group: 468-July-11
+       New group: 468-August-11
+       New group: 468-September-11
+       New group: 468-October-11
+       New group: 469-June-10
+       New group: 469-July-10
+       New group: 469-January-11
+       New group: 469-February-11
+       New group: 469-March-11
+       New group: 469-April-11
+       New group: 469-May-11
+       New group: 469-June-11
+       New group: 469-July-11
+       New group: 469-August-11
+       New group: 469-September-11
+       New group: 469-October-11
+       New group: 495-June-10
+       New group: 495-July-10
+       New group: 495-April-11
+       New group: 495-May-11
+       New group: 495-July-11
+       New group: 495-August-11
+       New group: 495-September-11
+       New group: 495-October-11
+       New group: 529-September-11
+       New group: 529-October-11
+       New group: 545-September-11
+       New group: 545-October-11
+After readInputData
+nVoxels: 8062788
+Group: 0
+Max voxel value:  1.89192e-16
+Sum voxel value:  1.24321e-15
+Sum voxel scaled: 1.94251e-08
+Process 0 writing VTK file 217-October-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-October-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 1
+Max voxel value:  4.36465e-10
+Sum voxel value:  9.70417e-09
+Sum voxel scaled: 0.151628
+Process 0 writing VTK file 217-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 2
+Max voxel value:  6.18309e-10
+Sum voxel value:  2.13452e-08
+Sum voxel scaled: 0.333518
+Process 0 writing VTK file 217-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 3
+Max voxel value:  2.78447e-09
+Sum voxel value:  2.71364e-08
+Sum voxel scaled: 0.424006
+Process 0 writing VTK file 217-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 4
+Max voxel value:  3.71712e-09
+Sum voxel value:  4.09666e-08
+Sum voxel scaled: 0.640103
+Process 0 writing VTK file 217-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 5
+Max voxel value:  1.48633e-09
+Sum voxel value:  3.48518e-08
+Sum voxel scaled: 0.544559
+Process 0 writing VTK file 217-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 6
+Max voxel value:  1.23224e-08
+Sum voxel value:  5.93005e-08
+Sum voxel scaled: 0.926571
+Process 0 writing VTK file 217-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 7
+Max voxel value:  1.80525e-09
+Sum voxel value:  4.31643e-08
+Sum voxel scaled: 0.674442
+Process 0 writing VTK file 217-May-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-May-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 8
+Max voxel value:  1.40954e-08
+Sum voxel value:  6.02822e-08
+Sum voxel scaled: 0.941909
+Process 0 writing VTK file 217-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 9
+Max voxel value:  2.07142e-09
+Sum voxel value:  4.33076e-08
+Sum voxel scaled: 0.676682
+Process 0 writing VTK file 217-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 10
+Max voxel value:  4.83266e-10
+Sum voxel value:  2.68024e-08
+Sum voxel scaled: 0.418788
+Process 0 writing VTK file 217-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 11
+Max voxel value:  9.54571e-10
+Sum voxel value:  2.91172e-08
+Sum voxel scaled: 0.454956
+Process 0 writing VTK file 217-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 12
+Max voxel value:  3.602e-09
+Sum voxel value:  4.95159e-08
+Sum voxel scaled: 0.773686
+Process 0 writing VTK file 217-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 13
+Max voxel value:  4.12965e-09
+Sum voxel value:  3.26772e-08
+Sum voxel scaled: 0.510581
+Process 0 writing VTK file 217-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 14
+Max voxel value:  1.2097e-08
+Sum voxel value:  3.89591e-08
+Sum voxel scaled: 0.608736
+Process 0 writing VTK file 217-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 15
+Max voxel value:  3.31612e-10
+Sum voxel value:  1.67465e-08
+Sum voxel scaled: 0.261664
+Process 0 writing VTK file 217-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 16
+Max voxel value:  8.3064e-09
+Sum voxel value:  5.21873e-08
+Sum voxel scaled: 0.815426
+Process 0 writing VTK file 217-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 17
+Max voxel value:  2.98507e-09
+Sum voxel value:  4.22187e-08
+Sum voxel scaled: 0.659668
+Process 0 writing VTK file 217-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 18
+Max voxel value:  2.93833e-09
+Sum voxel value:  4.17703e-08
+Sum voxel scaled: 0.652661
+Process 0 writing VTK file 217-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 19
+Max voxel value:  1.44711e-09
+Sum voxel value:  4.344e-08
+Sum voxel scaled: 0.67875
+Process 0 writing VTK file 217-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 20
+Max voxel value:  8.70735e-10
+Sum voxel value:  3.97194e-08
+Sum voxel scaled: 0.620616
+Process 0 writing VTK file 217-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 21
+Max voxel value:  3.55828e-09
+Sum voxel value:  4.27e-08
+Sum voxel scaled: 0.667187
+Process 0 writing VTK file 217-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 22
+Max voxel value:  4.53502e-10
+Sum voxel value:  2.64076e-08
+Sum voxel scaled: 0.412619
+Process 0 writing VTK file 217-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 23
+Max voxel value:  4.71244e-10
+Sum voxel value:  2.62929e-08
+Sum voxel scaled: 0.410826
+Process 0 writing VTK file 217-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 24
+Max voxel value:  3.08091e-09
+Sum voxel value:  1.95631e-08
+Sum voxel scaled: 0.305673
+Process 0 writing VTK file 217-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 217-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 25
+Max voxel value:  1.40884e-09
+Sum voxel value:  8.82606e-09
+Sum voxel scaled: 0.137907
+Process 0 writing VTK file 218-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 26
+Max voxel value:  4.08691e-09
+Sum voxel value:  1.49082e-08
+Sum voxel scaled: 0.23294
+Process 0 writing VTK file 218-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 27
+Max voxel value:  7.62546e-10
+Sum voxel value:  1.39466e-08
+Sum voxel scaled: 0.217915
+Process 0 writing VTK file 218-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 28
+Max voxel value:  1.01265e-09
+Sum voxel value:  2.44155e-08
+Sum voxel scaled: 0.381492
+Process 0 writing VTK file 218-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 29
+Max voxel value:  2.65881e-09
+Sum voxel value:  4.98185e-08
+Sum voxel scaled: 0.778414
+Process 0 writing VTK file 218-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 30
+Max voxel value:  1.13753e-09
+Sum voxel value:  4.52467e-08
+Sum voxel scaled: 0.706979
+Process 0 writing VTK file 218-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 31
+Max voxel value:  2.58415e-09
+Sum voxel value:  3.43825e-08
+Sum voxel scaled: 0.537226
+Process 0 writing VTK file 218-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 32
+Max voxel value:  6.10481e-10
+Sum voxel value:  9.63306e-09
+Sum voxel scaled: 0.150517
+Process 0 writing VTK file 218-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 33
+Max voxel value:  2.82665e-09
+Sum voxel value:  1.94267e-08
+Sum voxel scaled: 0.303542
+Process 0 writing VTK file 218-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 34
+Max voxel value:  7.27175e-09
+Sum voxel value:  3.88301e-08
+Sum voxel scaled: 0.60672
+Process 0 writing VTK file 218-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 35
+Max voxel value:  2.00659e-09
+Sum voxel value:  4.9058e-08
+Sum voxel scaled: 0.766531
+Process 0 writing VTK file 218-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 36
+Max voxel value:  1.95159e-09
+Sum voxel value:  4.4489e-08
+Sum voxel scaled: 0.695141
+Process 0 writing VTK file 218-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 37
+Max voxel value:  2.73652e-09
+Sum voxel value:  3.98736e-08
+Sum voxel scaled: 0.623025
+Process 0 writing VTK file 218-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 38
+Max voxel value:  5.87033e-10
+Sum voxel value:  2.40707e-08
+Sum voxel scaled: 0.376104
+Process 0 writing VTK file 218-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 39
+Max voxel value:  2.22575e-09
+Sum voxel value:  2.66411e-08
+Sum voxel scaled: 0.416267
+Process 0 writing VTK file 218-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 40
+Max voxel value:  6.38288e-10
+Sum voxel value:  1.91961e-08
+Sum voxel scaled: 0.299939
+Process 0 writing VTK file 218-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 218-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 41
+Max voxel value:  2.45745e-09
+Sum voxel value:  5.52801e-08
+Sum voxel scaled: 0.863751
+Process 0 writing VTK file 220-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 42
+Max voxel value:  7.7141e-10
+Sum voxel value:  4.13836e-08
+Sum voxel scaled: 0.646618
+Process 0 writing VTK file 220-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 43
+Max voxel value:  8.77764e-10
+Sum voxel value:  1.66189e-08
+Sum voxel scaled: 0.25967
+Process 0 writing VTK file 220-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 44
+Max voxel value:  9.73912e-10
+Sum voxel value:  9.08372e-09
+Sum voxel scaled: 0.141933
+Process 0 writing VTK file 220-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 45
+Max voxel value:  5.09509e-09
+Sum voxel value:  3.44214e-08
+Sum voxel scaled: 0.537835
+Process 0 writing VTK file 220-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 46
+Max voxel value:  4.29242e-09
+Sum voxel value:  3.712e-08
+Sum voxel scaled: 0.580001
+Process 0 writing VTK file 220-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 47
+Max voxel value:  1.523e-09
+Sum voxel value:  4.1122e-08
+Sum voxel scaled: 0.642531
+Process 0 writing VTK file 220-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 48
+Max voxel value:  4.77441e-09
+Sum voxel value:  5.3963e-08
+Sum voxel scaled: 0.843172
+Process 0 writing VTK file 220-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 49
+Max voxel value:  2.39667e-09
+Sum voxel value:  4.82457e-08
+Sum voxel scaled: 0.75384
+Process 0 writing VTK file 220-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 50
+Max voxel value:  1.30398e-09
+Sum voxel value:  4.44713e-08
+Sum voxel scaled: 0.694864
+Process 0 writing VTK file 220-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 51
+Max voxel value:  1.47738e-08
+Sum voxel value:  5.32976e-08
+Sum voxel scaled: 0.832775
+Process 0 writing VTK file 220-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 52
+Max voxel value:  2.96586e-09
+Sum voxel value:  4.69524e-08
+Sum voxel scaled: 0.733632
+Process 0 writing VTK file 220-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 53
+Max voxel value:  8.1644e-10
+Sum voxel value:  2.86586e-08
+Sum voxel scaled: 0.447791
+Process 0 writing VTK file 220-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 54
+Max voxel value:  3.3137e-09
+Sum voxel value:  2.63417e-08
+Sum voxel scaled: 0.41159
+Process 0 writing VTK file 220-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 55
+Max voxel value:  4.04325e-10
+Sum voxel value:  1.95727e-08
+Sum voxel scaled: 0.305823
+Process 0 writing VTK file 220-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 220-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 56
+Max voxel value:  7.19826e-09
+Sum voxel value:  2.77034e-08
+Sum voxel scaled: 0.432866
+Process 0 writing VTK file 261-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 57
+Max voxel value:  1.59009e-09
+Sum voxel value:  2.2635e-08
+Sum voxel scaled: 0.353671
+Process 0 writing VTK file 261-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 58
+Max voxel value:  5.70094e-09
+Sum voxel value:  3.45644e-08
+Sum voxel scaled: 0.540069
+Process 0 writing VTK file 261-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 59
+Max voxel value:  7.92953e-10
+Sum voxel value:  1.70923e-08
+Sum voxel scaled: 0.267067
+Process 0 writing VTK file 261-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 60
+Max voxel value:  2.15369e-09
+Sum voxel value:  2.94312e-08
+Sum voxel scaled: 0.459863
+Process 0 writing VTK file 261-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 61
+Max voxel value:  3.07139e-09
+Sum voxel value:  3.39478e-08
+Sum voxel scaled: 0.530435
+Process 0 writing VTK file 261-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 62
+Max voxel value:  2.80295e-09
+Sum voxel value:  4.96384e-08
+Sum voxel scaled: 0.7756
+Process 0 writing VTK file 261-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 63
+Max voxel value:  2.44008e-09
+Sum voxel value:  5.23576e-08
+Sum voxel scaled: 0.818088
+Process 0 writing VTK file 261-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 64
+Max voxel value:  1.86799e-09
+Sum voxel value:  4.68431e-08
+Sum voxel scaled: 0.731924
+Process 0 writing VTK file 261-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 65
+Max voxel value:  2.82689e-09
+Sum voxel value:  4.27903e-08
+Sum voxel scaled: 0.668599
+Process 0 writing VTK file 261-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 66
+Max voxel value:  2.76598e-09
+Sum voxel value:  5.04734e-08
+Sum voxel scaled: 0.788647
+Process 0 writing VTK file 261-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 67
+Max voxel value:  7.15007e-10
+Sum voxel value:  3.32274e-08
+Sum voxel scaled: 0.519179
+Process 0 writing VTK file 261-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 68
+Max voxel value:  7.30883e-10
+Sum voxel value:  2.55954e-08
+Sum voxel scaled: 0.399927
+Process 0 writing VTK file 261-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 69
+Max voxel value:  5.36007e-10
+Sum voxel value:  1.88093e-08
+Sum voxel scaled: 0.293896
+Process 0 writing VTK file 261-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 261-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 70
+Max voxel value:  8.54304e-10
+Sum voxel value:  2.28443e-08
+Sum voxel scaled: 0.356942
+Process 0 writing VTK file 269-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 71
+Max voxel value:  1.12127e-08
+Sum voxel value:  4.11231e-08
+Sum voxel scaled: 0.642549
+Process 0 writing VTK file 269-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 72
+Max voxel value:  5.20463e-09
+Sum voxel value:  2.3561e-08
+Sum voxel scaled: 0.368141
+Process 0 writing VTK file 269-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 73
+Max voxel value:  3.66937e-09
+Sum voxel value:  3.34895e-08
+Sum voxel scaled: 0.523273
+Process 0 writing VTK file 269-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 74
+Max voxel value:  5.04249e-09
+Sum voxel value:  4.55623e-08
+Sum voxel scaled: 0.711911
+Process 0 writing VTK file 269-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 75
+Max voxel value:  1.53994e-09
+Sum voxel value:  4.10182e-08
+Sum voxel scaled: 0.640909
+Process 0 writing VTK file 269-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 76
+Max voxel value:  7.3269e-10
+Sum voxel value:  1.92545e-08
+Sum voxel scaled: 0.300851
+Process 0 writing VTK file 269-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 77
+Max voxel value:  2.64425e-09
+Sum voxel value:  3.92423e-08
+Sum voxel scaled: 0.613161
+Process 0 writing VTK file 269-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 78
+Max voxel value:  5.34688e-09
+Sum voxel value:  3.89376e-08
+Sum voxel scaled: 0.6084
+Process 0 writing VTK file 269-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 79
+Max voxel value:  3.42413e-09
+Sum voxel value:  2.44565e-08
+Sum voxel scaled: 0.382133
+Process 0 writing VTK file 269-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 80
+Max voxel value:  2.50422e-09
+Sum voxel value:  2.40763e-08
+Sum voxel scaled: 0.376193
+Process 0 writing VTK file 269-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 81
+Max voxel value:  2.68264e-09
+Sum voxel value:  2.98359e-08
+Sum voxel scaled: 0.466186
+Process 0 writing VTK file 269-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 82
+Max voxel value:  3.73178e-09
+Sum voxel value:  3.88742e-08
+Sum voxel scaled: 0.607409
+Process 0 writing VTK file 269-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 83
+Max voxel value:  4.13511e-09
+Sum voxel value:  3.45053e-08
+Sum voxel scaled: 0.539145
+Process 0 writing VTK file 269-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 84
+Max voxel value:  4.69388e-09
+Sum voxel value:  3.10598e-08
+Sum voxel scaled: 0.485309
+Process 0 writing VTK file 269-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 85
+Max voxel value:  1.72455e-09
+Sum voxel value:  1.31807e-08
+Sum voxel scaled: 0.205948
+Process 0 writing VTK file 269-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 269-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 86
+Max voxel value:  3.68021e-08
+Sum voxel value:  1.57468e-07
+Sum voxel scaled: 2.46043
+Process 0 writing VTK file 284-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 87
+Max voxel value:  2.98422e-09
+Sum voxel value:  2.88572e-08
+Sum voxel scaled: 0.450893
+Process 0 writing VTK file 284-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 88
+Max voxel value:  1.19424e-09
+Sum voxel value:  2.26965e-08
+Sum voxel scaled: 0.354632
+Process 0 writing VTK file 284-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 89
+Max voxel value:  6.63963e-10
+Sum voxel value:  2.95364e-08
+Sum voxel scaled: 0.461507
+Process 0 writing VTK file 284-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 90
+Max voxel value:  4.27949e-09
+Sum voxel value:  3.83248e-08
+Sum voxel scaled: 0.598824
+Process 0 writing VTK file 284-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 91
+Max voxel value:  3.23226e-09
+Sum voxel value:  4.66079e-08
+Sum voxel scaled: 0.728248
+Process 0 writing VTK file 284-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 92
+Max voxel value:  1.31297e-09
+Sum voxel value:  3.14725e-08
+Sum voxel scaled: 0.491758
+Process 0 writing VTK file 284-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 93
+Max voxel value:  1.60651e-09
+Sum voxel value:  2.76639e-08
+Sum voxel scaled: 0.432248
+Process 0 writing VTK file 284-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 94
+Max voxel value:  5.68779e-09
+Sum voxel value:  2.92497e-08
+Sum voxel scaled: 0.457027
+Process 0 writing VTK file 284-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 95
+Max voxel value:  4.19363e-09
+Sum voxel value:  1.81301e-08
+Sum voxel scaled: 0.283282
+Process 0 writing VTK file 284-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 96
+Max voxel value:  9.54277e-09
+Sum voxel value:  3.87735e-08
+Sum voxel scaled: 0.605836
+Process 0 writing VTK file 284-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 97
+Max voxel value:  8.2731e-09
+Sum voxel value:  1.59654e-08
+Sum voxel scaled: 0.249459
+Process 0 writing VTK file 284-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 98
+Max voxel value:  8.15523e-10
+Sum voxel value:  8.36329e-09
+Sum voxel scaled: 0.130676
+Process 0 writing VTK file 284-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 284-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 99
+Max voxel value:  1.45113e-09
+Sum voxel value:  1.42268e-08
+Sum voxel scaled: 0.222293
+Process 0 writing VTK file 320-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 100
+Max voxel value:  5.67447e-10
+Sum voxel value:  1.99248e-08
+Sum voxel scaled: 0.311325
+Process 0 writing VTK file 320-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 101
+Max voxel value:  1.59495e-09
+Sum voxel value:  1.75477e-08
+Sum voxel scaled: 0.274182
+Process 0 writing VTK file 320-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 102
+Max voxel value:  1.31081e-09
+Sum voxel value:  3.53263e-08
+Sum voxel scaled: 0.551974
+Process 0 writing VTK file 320-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 103
+Max voxel value:  4.3817e-09
+Sum voxel value:  4.37633e-08
+Sum voxel scaled: 0.683801
+Process 0 writing VTK file 320-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 104
+Max voxel value:  1.29205e-09
+Sum voxel value:  3.99691e-08
+Sum voxel scaled: 0.624517
+Process 0 writing VTK file 320-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 105
+Max voxel value:  1.92805e-09
+Sum voxel value:  3.67469e-08
+Sum voxel scaled: 0.57417
+Process 0 writing VTK file 320-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 106
+Max voxel value:  2.23278e-09
+Sum voxel value:  4.23622e-08
+Sum voxel scaled: 0.66191
+Process 0 writing VTK file 320-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 107
+Max voxel value:  1.88243e-09
+Sum voxel value:  3.84341e-08
+Sum voxel scaled: 0.600533
+Process 0 writing VTK file 320-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 108
+Max voxel value:  3.30574e-09
+Sum voxel value:  3.30256e-08
+Sum voxel scaled: 0.516025
+Process 0 writing VTK file 320-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 109
+Max voxel value:  6.07452e-09
+Sum voxel value:  3.96433e-08
+Sum voxel scaled: 0.619427
+Process 0 writing VTK file 320-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 110
+Max voxel value:  1.14099e-08
+Sum voxel value:  7.207e-08
+Sum voxel scaled: 1.12609
+Process 0 writing VTK file 320-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 111
+Max voxel value:  4.30271e-09
+Sum voxel value:  2.94803e-08
+Sum voxel scaled: 0.460629
+Process 0 writing VTK file 320-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 112
+Max voxel value:  6.15741e-09
+Sum voxel value:  3.40663e-08
+Sum voxel scaled: 0.532286
+Process 0 writing VTK file 320-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 113
+Max voxel value:  2.05747e-09
+Sum voxel value:  3.56538e-08
+Sum voxel scaled: 0.557091
+Process 0 writing VTK file 320-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 114
+Max voxel value:  2.47544e-09
+Sum voxel value:  5.02469e-08
+Sum voxel scaled: 0.785107
+Process 0 writing VTK file 320-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 115
+Max voxel value:  2.16233e-09
+Sum voxel value:  4.66006e-08
+Sum voxel scaled: 0.728135
+Process 0 writing VTK file 320-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 116
+Max voxel value:  2.44784e-09
+Sum voxel value:  3.85763e-08
+Sum voxel scaled: 0.602755
+Process 0 writing VTK file 320-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 117
+Max voxel value:  4.44282e-09
+Sum voxel value:  5.81426e-08
+Sum voxel scaled: 0.908479
+Process 0 writing VTK file 320-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 118
+Max voxel value:  2.82425e-09
+Sum voxel value:  4.30896e-08
+Sum voxel scaled: 0.673274
+Process 0 writing VTK file 320-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 119
+Max voxel value:  7.38729e-09
+Sum voxel value:  4.01673e-08
+Sum voxel scaled: 0.627614
+Process 0 writing VTK file 320-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 120
+Max voxel value:  8.25666e-10
+Sum voxel value:  2.96875e-08
+Sum voxel scaled: 0.463867
+Process 0 writing VTK file 320-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 121
+Max voxel value:  3.34448e-09
+Sum voxel value:  3.55693e-08
+Sum voxel scaled: 0.555771
+Process 0 writing VTK file 320-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 320-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 122
+Max voxel value:  1.34365e-08
+Sum voxel value:  7.90258e-08
+Sum voxel scaled: 1.23478
+Process 0 writing VTK file 322-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 123
+Max voxel value:  1.06711e-09
+Sum voxel value:  4.34881e-08
+Sum voxel scaled: 0.679502
+Process 0 writing VTK file 322-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 124
+Max voxel value:  5.02818e-09
+Sum voxel value:  5.45196e-08
+Sum voxel scaled: 0.851869
+Process 0 writing VTK file 322-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 125
+Max voxel value:  4.20591e-09
+Sum voxel value:  4.42651e-08
+Sum voxel scaled: 0.691643
+Process 0 writing VTK file 322-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 126
+Max voxel value:  1.51984e-09
+Sum voxel value:  3.0946e-08
+Sum voxel scaled: 0.483532
+Process 0 writing VTK file 322-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 127
+Max voxel value:  1.50952e-08
+Sum voxel value:  4.3586e-08
+Sum voxel scaled: 0.681031
+Process 0 writing VTK file 322-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 128
+Max voxel value:  7.5964e-09
+Sum voxel value:  3.51942e-08
+Sum voxel scaled: 0.549909
+Process 0 writing VTK file 322-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 129
+Max voxel value:  1.19789e-08
+Sum voxel value:  6.61759e-08
+Sum voxel scaled: 1.034
+Process 0 writing VTK file 322-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 130
+Max voxel value:  2.24241e-09
+Sum voxel value:  2.19753e-08
+Sum voxel scaled: 0.343365
+Process 0 writing VTK file 322-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 131
+Max voxel value:  5.11199e-09
+Sum voxel value:  3.36462e-08
+Sum voxel scaled: 0.525722
+Process 0 writing VTK file 322-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 132
+Max voxel value:  1.29031e-09
+Sum voxel value:  3.73029e-08
+Sum voxel scaled: 0.582857
+Process 0 writing VTK file 322-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 133
+Max voxel value:  9.07529e-09
+Sum voxel value:  6.75886e-08
+Sum voxel scaled: 1.05607
+Process 0 writing VTK file 322-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 134
+Max voxel value:  1.63084e-09
+Sum voxel value:  4.97661e-08
+Sum voxel scaled: 0.777596
+Process 0 writing VTK file 322-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 135
+Max voxel value:  3.44264e-09
+Sum voxel value:  4.76838e-08
+Sum voxel scaled: 0.745059
+Process 0 writing VTK file 322-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 136
+Max voxel value:  1.92506e-09
+Sum voxel value:  3.87313e-08
+Sum voxel scaled: 0.605177
+Process 0 writing VTK file 322-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 137
+Max voxel value:  2.87558e-09
+Sum voxel value:  4.25907e-08
+Sum voxel scaled: 0.665479
+Process 0 writing VTK file 322-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 138
+Max voxel value:  4.71875e-09
+Sum voxel value:  3.04584e-08
+Sum voxel scaled: 0.475913
+Process 0 writing VTK file 322-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 322-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 139
+Max voxel value:  1.70131e-09
+Sum voxel value:  2.50167e-08
+Sum voxel scaled: 0.390885
+Process 0 writing VTK file 359-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 140
+Max voxel value:  1.35346e-123
+Sum voxel value:  -3.47587e-23
+Sum voxel scaled: -5.43104e-16
+Process 0 writing VTK file 359-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 141
+Max voxel value:  2.21096e-09
+Sum voxel value:  4.37097e-08
+Sum voxel scaled: 0.682963
+Process 0 writing VTK file 359-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 142
+Max voxel value:  9.04799e-10
+Sum voxel value:  3.89405e-08
+Sum voxel scaled: 0.608445
+Process 0 writing VTK file 359-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 143
+Max voxel value:  1.67449e-09
+Sum voxel value:  3.15898e-08
+Sum voxel scaled: 0.493591
+Process 0 writing VTK file 359-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 144
+Max voxel value:  3.81153e-09
+Sum voxel value:  6.07896e-08
+Sum voxel scaled: 0.949837
+Process 0 writing VTK file 359-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 145
+Max voxel value:  9.04158e-10
+Sum voxel value:  4.2582e-08
+Sum voxel scaled: 0.665344
+Process 0 writing VTK file 359-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 146
+Max voxel value:  8.07929e-10
+Sum voxel value:  2.70539e-08
+Sum voxel scaled: 0.422717
+Process 0 writing VTK file 359-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 147
+Max voxel value:  2.95246e-09
+Sum voxel value:  4.6747e-08
+Sum voxel scaled: 0.730421
+Process 0 writing VTK file 359-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 148
+Max voxel value:  1.36967e-09
+Sum voxel value:  2.98287e-08
+Sum voxel scaled: 0.466073
+Process 0 writing VTK file 359-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 149
+Max voxel value:  2.16873e-09
+Sum voxel value:  3.1632e-08
+Sum voxel scaled: 0.494251
+Process 0 writing VTK file 359-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 150
+Max voxel value:  1.66369e-09
+Sum voxel value:  2.68283e-08
+Sum voxel scaled: 0.419192
+Process 0 writing VTK file 359-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 151
+Max voxel value:  9.55375e-10
+Sum voxel value:  1.97781e-08
+Sum voxel scaled: 0.309033
+Process 0 writing VTK file 359-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 359-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 152
+Max voxel value:  2.18138e-09
+Sum voxel value:  3.44295e-08
+Sum voxel scaled: 0.537961
+Process 0 writing VTK file 361-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 153
+Max voxel value:  2.4829e-09
+Sum voxel value:  4.88184e-08
+Sum voxel scaled: 0.762788
+Process 0 writing VTK file 361-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 154
+Max voxel value:  4.06568e-09
+Sum voxel value:  3.36368e-08
+Sum voxel scaled: 0.525575
+Process 0 writing VTK file 361-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 155
+Max voxel value:  3.96469e-09
+Sum voxel value:  2.7413e-08
+Sum voxel scaled: 0.428328
+Process 0 writing VTK file 361-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 156
+Max voxel value:  1.65822e-09
+Sum voxel value:  2.78022e-08
+Sum voxel scaled: 0.434409
+Process 0 writing VTK file 361-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 157
+Max voxel value:  4.18966e-09
+Sum voxel value:  2.80156e-08
+Sum voxel scaled: 0.437744
+Process 0 writing VTK file 361-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 158
+Max voxel value:  1.25906e-08
+Sum voxel value:  5.53522e-08
+Sum voxel scaled: 0.864879
+Process 0 writing VTK file 361-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 159
+Max voxel value:  3.08973e-09
+Sum voxel value:  4.54386e-08
+Sum voxel scaled: 0.709978
+Process 0 writing VTK file 361-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 160
+Max voxel value:  4.1036e-09
+Sum voxel value:  4.75875e-08
+Sum voxel scaled: 0.743555
+Process 0 writing VTK file 361-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 161
+Max voxel value:  1.57056e-09
+Sum voxel value:  4.26303e-08
+Sum voxel scaled: 0.666099
+Process 0 writing VTK file 361-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 162
+Max voxel value:  7.19674e-10
+Sum voxel value:  4.99049e-08
+Sum voxel scaled: 0.779765
+Process 0 writing VTK file 361-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 163
+Max voxel value:  1.59049e-09
+Sum voxel value:  3.32048e-08
+Sum voxel scaled: 0.518825
+Process 0 writing VTK file 361-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 164
+Max voxel value:  4.57327e-09
+Sum voxel value:  5.63049e-08
+Sum voxel scaled: 0.879764
+Process 0 writing VTK file 361-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 165
+Max voxel value:  4.00198e-09
+Sum voxel value:  6.03641e-08
+Sum voxel scaled: 0.943189
+Process 0 writing VTK file 361-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 166
+Max voxel value:  4.51231e-09
+Sum voxel value:  4.27242e-08
+Sum voxel scaled: 0.667566
+Process 0 writing VTK file 361-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 167
+Max voxel value:  2.76189e-09
+Sum voxel value:  3.08047e-08
+Sum voxel scaled: 0.481324
+Process 0 writing VTK file 361-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 168
+Max voxel value:  1.81793e-09
+Sum voxel value:  2.74745e-08
+Sum voxel scaled: 0.429289
+Process 0 writing VTK file 361-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 169
+Max voxel value:  4.09717e-10
+Sum voxel value:  2.02565e-08
+Sum voxel scaled: 0.316507
+Process 0 writing VTK file 361-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 361-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 170
+Max voxel value:  6.46415e-10
+Sum voxel value:  6.25321e-09
+Sum voxel scaled: 0.0977065
+Process 0 writing VTK file 362-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 171
+Max voxel value:  1.251e-09
+Sum voxel value:  2.11398e-08
+Sum voxel scaled: 0.33031
+Process 0 writing VTK file 362-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 172
+Max voxel value:  1.3592e-09
+Sum voxel value:  2.36283e-08
+Sum voxel scaled: 0.369193
+Process 0 writing VTK file 362-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 173
+Max voxel value:  8.28006e-10
+Sum voxel value:  2.59793e-08
+Sum voxel scaled: 0.405927
+Process 0 writing VTK file 362-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 174
+Max voxel value:  2.52808e-09
+Sum voxel value:  4.36667e-08
+Sum voxel scaled: 0.682292
+Process 0 writing VTK file 362-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 175
+Max voxel value:  4.54551e-09
+Sum voxel value:  5.61563e-08
+Sum voxel scaled: 0.877443
+Process 0 writing VTK file 362-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 176
+Max voxel value:  3.73906e-09
+Sum voxel value:  5.33829e-08
+Sum voxel scaled: 0.834108
+Process 0 writing VTK file 362-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 177
+Max voxel value:  2.19205e-09
+Sum voxel value:  2.75668e-08
+Sum voxel scaled: 0.430731
+Process 0 writing VTK file 362-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 178
+Max voxel value:  4.78587e-09
+Sum voxel value:  3.24581e-08
+Sum voxel scaled: 0.507158
+Process 0 writing VTK file 362-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 179
+Max voxel value:  2.90118e-09
+Sum voxel value:  3.6046e-08
+Sum voxel scaled: 0.563219
+Process 0 writing VTK file 362-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 180
+Max voxel value:  6.02605e-10
+Sum voxel value:  1.64293e-08
+Sum voxel scaled: 0.256707
+Process 0 writing VTK file 362-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 181
+Max voxel value:  9.59245e-10
+Sum voxel value:  4.92392e-08
+Sum voxel scaled: 0.769362
+Process 0 writing VTK file 362-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 182
+Max voxel value:  7.94076e-10
+Sum voxel value:  3.38999e-08
+Sum voxel scaled: 0.529686
+Process 0 writing VTK file 362-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 183
+Max voxel value:  3.44083e-09
+Sum voxel value:  2.80356e-08
+Sum voxel scaled: 0.438057
+Process 0 writing VTK file 362-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 184
+Max voxel value:  7.69695e-10
+Sum voxel value:  2.4674e-08
+Sum voxel scaled: 0.385531
+Process 0 writing VTK file 362-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 185
+Max voxel value:  6.33991e-09
+Sum voxel value:  3.24164e-08
+Sum voxel scaled: 0.506507
+Process 0 writing VTK file 362-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 186
+Max voxel value:  1.53866e-09
+Sum voxel value:  3.0319e-08
+Sum voxel scaled: 0.473734
+Process 0 writing VTK file 362-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 187
+Max voxel value:  9.36692e-10
+Sum voxel value:  1.90313e-08
+Sum voxel scaled: 0.297364
+Process 0 writing VTK file 362-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 362-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 188
+Max voxel value:  5.96385e-10
+Sum voxel value:  1.20825e-08
+Sum voxel scaled: 0.18879
+Process 0 writing VTK file 373-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 189
+Max voxel value:  1.26002e-09
+Sum voxel value:  1.17475e-08
+Sum voxel scaled: 0.183555
+Process 0 writing VTK file 373-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 190
+Max voxel value:  7.41658e-10
+Sum voxel value:  1.57909e-08
+Sum voxel scaled: 0.246732
+Process 0 writing VTK file 373-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 191
+Max voxel value:  6.37677e-09
+Sum voxel value:  4.33368e-08
+Sum voxel scaled: 0.677138
+Process 0 writing VTK file 373-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 192
+Max voxel value:  2.57238e-09
+Sum voxel value:  3.67586e-08
+Sum voxel scaled: 0.574354
+Process 0 writing VTK file 373-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 193
+Max voxel value:  2.97381e-09
+Sum voxel value:  3.8606e-08
+Sum voxel scaled: 0.603219
+Process 0 writing VTK file 373-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 194
+Max voxel value:  1.04371e-08
+Sum voxel value:  6.73818e-08
+Sum voxel scaled: 1.05284
+Process 0 writing VTK file 373-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 195
+Max voxel value:  5.07526e-09
+Sum voxel value:  4.07217e-08
+Sum voxel scaled: 0.636276
+Process 0 writing VTK file 373-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 196
+Max voxel value:  1.48373e-09
+Sum voxel value:  2.25415e-08
+Sum voxel scaled: 0.352211
+Process 0 writing VTK file 373-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 197
+Max voxel value:  1.98859e-09
+Sum voxel value:  3.86708e-08
+Sum voxel scaled: 0.604232
+Process 0 writing VTK file 373-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 198
+Max voxel value:  1.17477e-09
+Sum voxel value:  2.22145e-08
+Sum voxel scaled: 0.347101
+Process 0 writing VTK file 373-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 199
+Max voxel value:  8.04031e-20
+Sum voxel value:  -5.2983e-08
+Sum voxel scaled: -0.827859
+Process 0 writing VTK file 373-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 200
+Max voxel value:  5.79592e-09
+Sum voxel value:  4.28557e-08
+Sum voxel scaled: 0.669621
+Process 0 writing VTK file 373-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 201
+Max voxel value:  6.16764e-09
+Sum voxel value:  2.14664e-08
+Sum voxel scaled: 0.335412
+Process 0 writing VTK file 373-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 202
+Max voxel value:  1.78183e-09
+Sum voxel value:  1.04466e-08
+Sum voxel scaled: 0.163228
+Process 0 writing VTK file 373-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 203
+Max voxel value:  4.23447e-09
+Sum voxel value:  1.09044e-08
+Sum voxel scaled: 0.170381
+Process 0 writing VTK file 373-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 373-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 204
+Max voxel value:  1.22885e-09
+Sum voxel value:  7.03785e-09
+Sum voxel scaled: 0.109966
+Process 0 writing VTK file 395-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 205
+Max voxel value:  2.22864e-08
+Sum voxel value:  3.85578e-08
+Sum voxel scaled: 0.602466
+Process 0 writing VTK file 395-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 206
+Max voxel value:  5.49591e-10
+Sum voxel value:  5.27512e-09
+Sum voxel scaled: 0.0824237
+Process 0 writing VTK file 395-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 207
+Max voxel value:  5.00137e-09
+Sum voxel value:  3.17785e-08
+Sum voxel scaled: 0.496539
+Process 0 writing VTK file 395-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 208
+Max voxel value:  5.50362e-09
+Sum voxel value:  2.15005e-08
+Sum voxel scaled: 0.335945
+Process 0 writing VTK file 395-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 209
+Max voxel value:  6.44762e-10
+Sum voxel value:  1.89639e-08
+Sum voxel scaled: 0.29631
+Process 0 writing VTK file 395-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 210
+Max voxel value:  6.25721e-09
+Sum voxel value:  1.79325e-08
+Sum voxel scaled: 0.280196
+Process 0 writing VTK file 395-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 211
+Max voxel value:  2.75956e-10
+Sum voxel value:  4.30189e-09
+Sum voxel scaled: 0.067217
+Process 0 writing VTK file 395-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 212
+Max voxel value:  1.98883e-09
+Sum voxel value:  1.62766e-08
+Sum voxel scaled: 0.254322
+Process 0 writing VTK file 395-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 213
+Max voxel value:  2.16693e-09
+Sum voxel value:  2.82695e-08
+Sum voxel scaled: 0.441712
+Process 0 writing VTK file 395-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 214
+Max voxel value:  1.28602e-09
+Sum voxel value:  4.4139e-08
+Sum voxel scaled: 0.689672
+Process 0 writing VTK file 395-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 215
+Max voxel value:  1.55218e-09
+Sum voxel value:  4.27867e-08
+Sum voxel scaled: 0.668542
+Process 0 writing VTK file 395-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 216
+Max voxel value:  1.13983e-08
+Sum voxel value:  4.75235e-08
+Sum voxel scaled: 0.742554
+Process 0 writing VTK file 395-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 217
+Max voxel value:  2.04228e-09
+Sum voxel value:  3.31826e-08
+Sum voxel scaled: 0.518477
+Process 0 writing VTK file 395-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 218
+Max voxel value:  2.36252e-09
+Sum voxel value:  3.56614e-08
+Sum voxel scaled: 0.55721
+Process 0 writing VTK file 395-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 219
+Max voxel value:  2.07435e-09
+Sum voxel value:  2.16931e-08
+Sum voxel scaled: 0.338955
+Process 0 writing VTK file 395-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 220
+Max voxel value:  5.98731e-10
+Sum voxel value:  9.68279e-09
+Sum voxel scaled: 0.151294
+Process 0 writing VTK file 395-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 221
+Max voxel value:  6.86914e-10
+Sum voxel value:  1.02921e-08
+Sum voxel scaled: 0.160814
+Process 0 writing VTK file 395-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 395-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 222
+Max voxel value:  6.36359e-10
+Sum voxel value:  1.31816e-08
+Sum voxel scaled: 0.205962
+Process 0 writing VTK file 403-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 223
+Max voxel value:  4.05213e-10
+Sum voxel value:  5.29435e-09
+Sum voxel scaled: 0.0827242
+Process 0 writing VTK file 403-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 224
+Max voxel value:  9.0269e-10
+Sum voxel value:  1.95112e-08
+Sum voxel scaled: 0.304862
+Process 0 writing VTK file 403-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 225
+Max voxel value:  6.60507e-10
+Sum voxel value:  2.65521e-08
+Sum voxel scaled: 0.414876
+Process 0 writing VTK file 403-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 226
+Max voxel value:  1.11353e-09
+Sum voxel value:  2.80339e-08
+Sum voxel scaled: 0.43803
+Process 0 writing VTK file 403-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 227
+Max voxel value:  1.19812e-08
+Sum voxel value:  6.72769e-08
+Sum voxel scaled: 1.0512
+Process 0 writing VTK file 403-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 228
+Max voxel value:  1.39285e-08
+Sum voxel value:  7.30906e-08
+Sum voxel scaled: 1.14204
+Process 0 writing VTK file 403-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 229
+Max voxel value:  1.72803e-09
+Sum voxel value:  2.34775e-08
+Sum voxel scaled: 0.366836
+Process 0 writing VTK file 403-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 230
+Max voxel value:  8.8952e-10
+Sum voxel value:  1.84791e-08
+Sum voxel scaled: 0.288735
+Process 0 writing VTK file 403-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 231
+Max voxel value:  3.9207e-10
+Sum voxel value:  2.2539e-08
+Sum voxel scaled: 0.352171
+Process 0 writing VTK file 403-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 232
+Max voxel value:  2.34257e-10
+Sum voxel value:  1.444e-08
+Sum voxel scaled: 0.225626
+Process 0 writing VTK file 403-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 233
+Max voxel value:  7.2838e-09
+Sum voxel value:  4.13536e-08
+Sum voxel scaled: 0.64615
+Process 0 writing VTK file 403-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 234
+Max voxel value:  1.03765e-08
+Sum voxel value:  2.8989e-08
+Sum voxel scaled: 0.452954
+Process 0 writing VTK file 403-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 235
+Max voxel value:  8.13116e-10
+Sum voxel value:  2.80288e-08
+Sum voxel scaled: 0.437949
+Process 0 writing VTK file 403-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 236
+Max voxel value:  1.3989e-09
+Sum voxel value:  3.34152e-08
+Sum voxel scaled: 0.522113
+Process 0 writing VTK file 403-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 237
+Max voxel value:  4.59828e-09
+Sum voxel value:  5.96857e-08
+Sum voxel scaled: 0.932589
+Process 0 writing VTK file 403-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 238
+Max voxel value:  2.4004e-09
+Sum voxel value:  4.80496e-08
+Sum voxel scaled: 0.750776
+Process 0 writing VTK file 403-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 239
+Max voxel value:  9.10455e-10
+Sum voxel value:  2.93554e-08
+Sum voxel scaled: 0.458678
+Process 0 writing VTK file 403-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 240
+Max voxel value:  2.73012e-09
+Sum voxel value:  5.31678e-08
+Sum voxel scaled: 0.830747
+Process 0 writing VTK file 403-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 241
+Max voxel value:  3.47315e-09
+Sum voxel value:  4.32078e-08
+Sum voxel scaled: 0.675121
+Process 0 writing VTK file 403-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 403-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 242
+Max voxel value:  1.05618e-09
+Sum voxel value:  6.39443e-09
+Sum voxel scaled: 0.099913
+Process 0 writing VTK file 406-November-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-November-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 243
+Max voxel value:  1.16196e-09
+Sum voxel value:  8.94228e-09
+Sum voxel scaled: 0.139723
+Process 0 writing VTK file 406-December-09-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-December-09-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 244
+Max voxel value:  7.61955e-10
+Sum voxel value:  1.09342e-08
+Sum voxel scaled: 0.170847
+Process 0 writing VTK file 406-January-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-January-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 245
+Max voxel value:  4.24645e-10
+Sum voxel value:  1.60929e-08
+Sum voxel scaled: 0.251452
+Process 0 writing VTK file 406-February-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-February-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 246
+Max voxel value:  6.6903e-10
+Sum voxel value:  2.21992e-08
+Sum voxel scaled: 0.346863
+Process 0 writing VTK file 406-March-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-March-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 247
+Max voxel value:  6.55777e-09
+Sum voxel value:  5.1732e-08
+Sum voxel scaled: 0.808313
+Process 0 writing VTK file 406-April-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-April-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 248
+Max voxel value:  4.9996e-09
+Sum voxel value:  4.15919e-08
+Sum voxel scaled: 0.649873
+Process 0 writing VTK file 406-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 249
+Max voxel value:  1.36155e-09
+Sum voxel value:  2.10139e-08
+Sum voxel scaled: 0.328343
+Process 0 writing VTK file 406-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 250
+Max voxel value:  2.27867e-09
+Sum voxel value:  2.33694e-08
+Sum voxel scaled: 0.365147
+Process 0 writing VTK file 406-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 251
+Max voxel value:  3.99765e-10
+Sum voxel value:  1.5641e-08
+Sum voxel scaled: 0.24439
+Process 0 writing VTK file 406-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 252
+Max voxel value:  5.0214e-09
+Sum voxel value:  2.83947e-08
+Sum voxel scaled: 0.443668
+Process 0 writing VTK file 406-October-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-October-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 253
+Max voxel value:  5.62425e-09
+Sum voxel value:  2.43136e-08
+Sum voxel scaled: 0.379901
+Process 0 writing VTK file 406-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 254
+Max voxel value:  5.6907e-10
+Sum voxel value:  1.01661e-08
+Sum voxel scaled: 0.158845
+Process 0 writing VTK file 406-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 255
+Max voxel value:  4.99362e-10
+Sum voxel value:  1.49455e-08
+Sum voxel scaled: 0.233524
+Process 0 writing VTK file 406-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 256
+Max voxel value:  2.93784e-09
+Sum voxel value:  3.22842e-08
+Sum voxel scaled: 0.504441
+Process 0 writing VTK file 406-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 257
+Max voxel value:  8.01319e-10
+Sum voxel value:  3.56049e-08
+Sum voxel scaled: 0.556326
+Process 0 writing VTK file 406-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 258
+Max voxel value:  2.4532e-09
+Sum voxel value:  4.5979e-08
+Sum voxel scaled: 0.718421
+Process 0 writing VTK file 406-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 259
+Max voxel value:  3.24882e-09
+Sum voxel value:  4.74313e-08
+Sum voxel scaled: 0.741114
+Process 0 writing VTK file 406-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 260
+Max voxel value:  8.37918e-09
+Sum voxel value:  4.32523e-08
+Sum voxel scaled: 0.675817
+Process 0 writing VTK file 406-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 261
+Max voxel value:  4.2102e-09
+Sum voxel value:  4.67072e-08
+Sum voxel scaled: 0.7298
+Process 0 writing VTK file 406-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 262
+Max voxel value:  4.55844e-09
+Sum voxel value:  2.81983e-08
+Sum voxel scaled: 0.440598
+Process 0 writing VTK file 406-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 263
+Max voxel value:  8.91062e-10
+Sum voxel value:  1.73012e-08
+Sum voxel scaled: 0.270331
+Process 0 writing VTK file 406-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 264
+Max voxel value:  2.604e-10
+Sum voxel value:  8.75733e-09
+Sum voxel scaled: 0.136833
+Process 0 writing VTK file 406-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 406-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 265
+Max voxel value:  2.12076e-08
+Sum voxel value:  7.77358e-08
+Sum voxel scaled: 1.21462
+Process 0 writing VTK file 430-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 266
+Max voxel value:  1.71628e-09
+Sum voxel value:  2.16302e-08
+Sum voxel scaled: 0.337971
+Process 0 writing VTK file 430-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 267
+Max voxel value:  1.22115e-09
+Sum voxel value:  1.58969e-08
+Sum voxel scaled: 0.24839
+Process 0 writing VTK file 430-August-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-August-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 268
+Max voxel value:  8.31767e-10
+Sum voxel value:  2.42271e-08
+Sum voxel scaled: 0.378548
+Process 0 writing VTK file 430-September-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-September-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 269
+Max voxel value:  1.54895e-09
+Sum voxel value:  8.5069e-09
+Sum voxel scaled: 0.13292
+Process 0 writing VTK file 430-November-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-November-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 270
+Max voxel value:  7.74838e-10
+Sum voxel value:  1.97244e-08
+Sum voxel scaled: 0.308193
+Process 0 writing VTK file 430-December-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-December-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 271
+Max voxel value:  4.72458e-10
+Sum voxel value:  2.75832e-08
+Sum voxel scaled: 0.430988
+Process 0 writing VTK file 430-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 272
+Max voxel value:  1.00877e-08
+Sum voxel value:  4.87324e-08
+Sum voxel scaled: 0.761444
+Process 0 writing VTK file 430-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 273
+Max voxel value:  2.94053e-09
+Sum voxel value:  3.87103e-08
+Sum voxel scaled: 0.604849
+Process 0 writing VTK file 430-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 274
+Max voxel value:  2.23263e-09
+Sum voxel value:  4.6564e-08
+Sum voxel scaled: 0.727562
+Process 0 writing VTK file 430-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 275
+Max voxel value:  8.60693e-09
+Sum voxel value:  5.37689e-08
+Sum voxel scaled: 0.840139
+Process 0 writing VTK file 430-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 276
+Max voxel value:  1.59572e-09
+Sum voxel value:  2.89547e-08
+Sum voxel scaled: 0.452417
+Process 0 writing VTK file 430-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 277
+Max voxel value:  7.48918e-09
+Sum voxel value:  4.84491e-08
+Sum voxel scaled: 0.757017
+Process 0 writing VTK file 430-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 278
+Max voxel value:  2.00253e-09
+Sum voxel value:  2.35462e-08
+Sum voxel scaled: 0.367909
+Process 0 writing VTK file 430-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 279
+Max voxel value:  1.18146e-09
+Sum voxel value:  2.15881e-08
+Sum voxel scaled: 0.337315
+Process 0 writing VTK file 430-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 280
+Max voxel value:  2.02246e-09
+Sum voxel value:  1.51333e-08
+Sum voxel scaled: 0.236459
+Process 0 writing VTK file 430-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 430-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 281
+Max voxel value:  7.42317e-09
+Sum voxel value:  4.33072e-08
+Sum voxel scaled: 0.676675
+Process 0 writing VTK file 446-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 282
+Max voxel value:  2.73325e-09
+Sum voxel value:  4.35855e-08
+Sum voxel scaled: 0.681023
+Process 0 writing VTK file 446-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 283
+Max voxel value:  5.66409e-09
+Sum voxel value:  5.85251e-08
+Sum voxel scaled: 0.914454
+Process 0 writing VTK file 446-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 284
+Max voxel value:  7.21701e-09
+Sum voxel value:  3.77309e-08
+Sum voxel scaled: 0.589545
+Process 0 writing VTK file 446-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 285
+Max voxel value:  2.30747e-09
+Sum voxel value:  3.35095e-08
+Sum voxel scaled: 0.523585
+Process 0 writing VTK file 446-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 286
+Max voxel value:  2.73909e-09
+Sum voxel value:  3.41718e-08
+Sum voxel scaled: 0.533934
+Process 0 writing VTK file 446-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 287
+Max voxel value:  1.98856e-09
+Sum voxel value:  3.52714e-08
+Sum voxel scaled: 0.551116
+Process 0 writing VTK file 446-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 288
+Max voxel value:  9.06382e-10
+Sum voxel value:  2.03005e-08
+Sum voxel scaled: 0.317195
+Process 0 writing VTK file 446-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 289
+Max voxel value:  1.6272e-09
+Sum voxel value:  1.32476e-08
+Sum voxel scaled: 0.206994
+Process 0 writing VTK file 446-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 446-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 290
+Max voxel value:  2.21713e-08
+Sum voxel value:  4.81616e-08
+Sum voxel scaled: 0.752525
+Process 0 writing VTK file 468-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 291
+Max voxel value:  3.81928e-09
+Sum voxel value:  1.09946e-08
+Sum voxel scaled: 0.17179
+Process 0 writing VTK file 468-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 292
+Max voxel value:  3.8501e-09
+Sum voxel value:  3.2414e-08
+Sum voxel scaled: 0.506468
+Process 0 writing VTK file 468-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 293
+Max voxel value:  2.85566e-09
+Sum voxel value:  3.6596e-08
+Sum voxel scaled: 0.571812
+Process 0 writing VTK file 468-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 294
+Max voxel value:  3.32081e-09
+Sum voxel value:  4.49319e-08
+Sum voxel scaled: 0.702061
+Process 0 writing VTK file 468-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 295
+Max voxel value:  3.39099e-09
+Sum voxel value:  4.59488e-08
+Sum voxel scaled: 0.71795
+Process 0 writing VTK file 468-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 296
+Max voxel value:  2.94365e-10
+Sum voxel value:  1.15445e-08
+Sum voxel scaled: 0.180383
+Process 0 writing VTK file 468-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 297
+Max voxel value:  3.12933e-08
+Sum voxel value:  1.31331e-07
+Sum voxel scaled: 2.05205
+Process 0 writing VTK file 468-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 298
+Max voxel value:  4.85032e-08
+Sum voxel value:  2.6453e-07
+Sum voxel scaled: 4.13328
+Process 0 writing VTK file 468-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 299
+Max voxel value:  1.12737e-07
+Sum voxel value:  1.96375e-07
+Sum voxel scaled: 3.06836
+Process 0 writing VTK file 468-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 300
+Max voxel value:  1.03812e-09
+Sum voxel value:  1.1202e-08
+Sum voxel scaled: 0.175032
+Process 0 writing VTK file 468-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 301
+Max voxel value:  5.61156e-10
+Sum voxel value:  8.65751e-09
+Sum voxel scaled: 0.135274
+Process 0 writing VTK file 468-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 468-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 302
+Max voxel value:  1.58061e-08
+Sum voxel value:  3.61349e-08
+Sum voxel scaled: 0.564607
+Process 0 writing VTK file 469-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 303
+Max voxel value:  3.26577e-10
+Sum voxel value:  1.66243e-09
+Sum voxel scaled: 0.0259755
+Process 0 writing VTK file 469-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 304
+Max voxel value:  1.20329e-10
+Sum voxel value:  4.95441e-09
+Sum voxel scaled: 0.0774127
+Process 0 writing VTK file 469-January-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-January-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 305
+Max voxel value:  2.88716e-09
+Sum voxel value:  2.4181e-08
+Sum voxel scaled: 0.377828
+Process 0 writing VTK file 469-February-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-February-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 306
+Max voxel value:  3.32081e-09
+Sum voxel value:  4.49319e-08
+Sum voxel scaled: 0.702061
+Process 0 writing VTK file 469-March-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-March-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 307
+Max voxel value:  5.1446e-09
+Sum voxel value:  4.17836e-08
+Sum voxel scaled: 0.652869
+Process 0 writing VTK file 469-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 308
+Max voxel value:  9.08624e-10
+Sum voxel value:  2.7004e-08
+Sum voxel scaled: 0.421937
+Process 0 writing VTK file 469-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 309
+Max voxel value:  2.0363e-09
+Sum voxel value:  2.01211e-08
+Sum voxel scaled: 0.314393
+Process 0 writing VTK file 469-June-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-June-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 310
+Max voxel value:  1.28163e-09
+Sum voxel value:  1.89724e-08
+Sum voxel scaled: 0.296444
+Process 0 writing VTK file 469-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 311
+Max voxel value:  2.37805e-10
+Sum voxel value:  1.36318e-08
+Sum voxel scaled: 0.212996
+Process 0 writing VTK file 469-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 312
+Max voxel value:  1.65348e-09
+Sum voxel value:  1.56572e-08
+Sum voxel scaled: 0.244643
+Process 0 writing VTK file 469-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 313
+Max voxel value:  4.28398e-10
+Sum voxel value:  1.10206e-08
+Sum voxel scaled: 0.172196
+Process 0 writing VTK file 469-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 469-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 314
+Max voxel value:  4.07852e-08
+Sum voxel value:  1.1786e-07
+Sum voxel scaled: 1.84156
+Process 0 writing VTK file 495-June-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-June-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 315
+Max voxel value:  6.04576e-10
+Sum voxel value:  1.31189e-09
+Sum voxel scaled: 0.0204983
+Process 0 writing VTK file 495-July-10-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-July-10-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 316
+Max voxel value:  5.66409e-09
+Sum voxel value:  5.85251e-08
+Sum voxel scaled: 0.914454
+Process 0 writing VTK file 495-April-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-April-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 317
+Max voxel value:  7.21701e-09
+Sum voxel value:  3.77309e-08
+Sum voxel scaled: 0.589545
+Process 0 writing VTK file 495-May-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-May-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 318
+Max voxel value:  4.34333e-10
+Sum voxel value:  7.64521e-09
+Sum voxel scaled: 0.119456
+Process 0 writing VTK file 495-July-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-July-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 319
+Max voxel value:  1.33908e-13
+Sum voxel value:  8.58523e-13
+Sum voxel scaled: 1.34144e-05
+Process 0 writing VTK file 495-August-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-August-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 320
+Max voxel value:  2.95353e-16
+Sum voxel value:  1.76009e-15
+Sum voxel scaled: 2.75014e-08
+Process 0 writing VTK file 495-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 321
+Max voxel value:  4.5052e-18
+Sum voxel value:  2.7857e-17
+Sum voxel scaled: 4.35266e-10
+Process 0 writing VTK file 495-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 495-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 322
+Max voxel value:  1.76503e-09
+Sum voxel value:  7.88077e-09
+Sum voxel scaled: 0.123137
+Process 0 writing VTK file 529-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 529-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 323
+Max voxel value:  1.19821e-09
+Sum voxel value:  9.18677e-09
+Sum voxel scaled: 0.143543
+Process 0 writing VTK file 529-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 529-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 324
+Max voxel value:  3.18561e-10
+Sum voxel value:  7.1204e-09
+Sum voxel scaled: 0.111256
+Process 0 writing VTK file 545-September-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 545-September-11-GRASSrasterFile.asc (TO BE COMPLETED)
+Group: 325
+Max voxel value:  3.53368e-09
+Sum voxel value:  2.35268e-08
+Sum voxel scaled: 0.367606
+Process 0 writing VTK file 545-October-11-VTKgridFile.asc (TO BE COMPLETED)
+Process 0 writing GRASS file 545-October-11-GRASSrasterFile.asc (TO BE COMPLETED)
+
+real	15m52.962s
+user	241m6.854s
+sys	11m53.891s

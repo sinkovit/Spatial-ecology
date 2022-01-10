@@ -1,0 +1,2 @@
+# Run OpenMP version of code on node with 16 cores
+export OMP_NUM_THREADS=16 ; time ./ParallelMKDE
