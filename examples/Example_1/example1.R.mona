@@ -1,0 +1,25 @@
+library(mkde)
+library(raster)
+
+# Read GPS movement data from file
+panda <- read.table("/Users/mona/SDSC/SEG/Spatial-ecology/Example_1/pandabob.txt", header=TRUE)
+
+xmin <- min(panda$x)
+ymin <- min(panda$y)
+xmax <- max(panda$x)
+ymax <- max(panda$y)
+xrange <- xmax-xmin
+yrange <- ymax-ymin
+cell.sz <- 10
+nx = xrange/cell.sz
+ny = yrange/cell.sz
+
+mv.dat <- initializeMovementData(panda$time, panda$x, panda$y, sig2obs=25.0, t.max=185.0)
+mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
+dens.res <- initializeDensity(mkde.obj, mv.dat)
+
+mkde.obj <- dens.res$mkde.obj
+mv.dat <- dens.res$move.dat
+
+# Plot results
+plotMKDE(mkde.obj)
