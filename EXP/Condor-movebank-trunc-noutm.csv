@@ -1,0 +1,2 @@
+event-id,visible,timestamp,location-long,location-lat,ground-speed,heading,height-raw,sensor-type,individual-taxon-canonical-name,tag-local-identifier,individual-local-identifier,study-name
+4902734598,true,2006-12-30 08:00:00.000,-115.5701666643315,31.033499965670032,0.0,90.0,"2423","gps",,"269","269","Condor pair 269 & 284 GPS no feeding site"
