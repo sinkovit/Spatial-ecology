@@ -1,13 +1,51 @@
 library ( shiny )
+library ( mkde )
+library ( raster )
+library ( R.utils )
+sessionInfo()
 
-# Simple example
-#ui <- fluidPage ( "Hello World" )
-#server <- function ( input, output ) {}
+displaymkde <- function ( sig2obs, tmax, path_file ) {
+  # Read GPS movement data from file
+  print ( "entered displaymkde" )
+  print ( path_file )
+  
+  #if ( ! ( is.character ( path_file ) && length ( path_file ) == 1 ) ) {
+  #  print ( "file is null!" )
+  #  return ()
+  #}
+  
+  panda <- read.table("/Users/mona/SDSC/SEG/Spatial-ecology/examples/Example_1/pandabob.txt", header=TRUE)
+  #panda <- read.table ( path_file, header=TRUE )
+  
+  xmin <- min(panda$x)
+  ymin <- min(panda$y)
+  xmax <- max(panda$x)
+  ymax <- max(panda$y)
+  xrange <- xmax-xmin
+  yrange <- ymax-ymin
+  cell.sz <- 10
+  nx = xrange/cell.sz
+  ny = yrange/cell.sz
+  mv.dat <- initializeMovementData(panda$time, panda$x, panda$y, sig2obs=sig2obs, t.max=tmax)
+  mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
+  dens.res <- initializeDensity(mkde.obj, mv.dat)
+  
+  mkde.obj <- dens.res$mkde.obj
+  mv.dat <- dens.res$move.dat
+  return ( mkde.obj )
+}
 
+if ( interactive() ) {
+  print ( "interactive!" )
+} else {
+  print ( "not interactive!" )
+}
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
 
+  # tags$head(tags$script(src = "message-handler.js")),
+  
   # App title ----
   titlePanel("Welcome to the Spatial Ecology Gateway!"),
 
@@ -18,15 +56,16 @@ ui <- fluidPage(
     sidebarPanel(
 
 	  # Input: Select a file ----
-	  fileInput("file1", "Please upload your GPS data file:",
+	  fileInput ( "file1", "Please upload your GPS data file:",
                 multiple = FALSE,
-                accept = c("text/csv",
+                accept = c ( "text/csv",
                          "text/comma-separated-values,text/plain",
                          ".csv")),
 
+	  # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
 	  radioButtons("radio", label = h3("Mode"),
     			   choices = list("2D" = 2, "3D" = 3), 
-    			   selected = 3),
+    			   selected = 2),
 
 	  # Copy the line below to make a number input box into the UI.
 	  numericInput("sig2obs", label = h3("sig2obs"), value = 25.0),
@@ -36,28 +75,66 @@ ui <- fluidPage(
 
 	  actionButton("run", label = "Run"),
 
+	  textOutput ( "selected_var" ),
+	  
+	  verbatimTextOutput ( "file_value" ),
+	  
       # Input: Slider for the number of bins ----
-      sliderInput(inputId = "bins",
-                  label = "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30),
+      #sliderInput(inputId = "bins",
+                  #label = "Number of bins:",
+                  #min = 1,
+                  #max = 50,
+                  #value = 30),
 
     ),
 
     # Main panel for displaying outputs ----
     mainPanel(
 
+      #plotOutput ( outputId = "mkdePlot" ),
+      plotOutput ( "mkdePlot" ),
+      
       # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
+      #plotOutput(outputId = "distPlot"),
 
     )
   )
 )
 
 # Define server logic required to draw a histogram ----
-server <- function(input, output) {
+server <- function(input, output, session) {
 
+  #observeEvent(input$run, {
+  #  session$sendCustomMessage(type = 'testmessage',
+  #                            message = 'Thank you for clicking')
+  #})
+  
+  #output$selected_var <- renderText ( {"Running..."} )
+  
+  # Warning: Error in : Can't access reactive value 'file1' outside of reactive consumer.
+  #in_file <- input$file1;
+  #print ( in_file );
+  
+  #if ( ! ( is.character ( input$file_var.datapath ) && length ( input$file_var.datapath ) == 1 ) ) {
+    output$selected_var <- renderPrint ( { input$sig2obs } )
+    output$file_value <- renderPrint ( { str ( input$file1 ) } )
+    #output$file_value <- renderTable({
+    #  file <- input$file1
+    #  ext <- tools::file_ext(file$datapath)
+      
+    #  req(file)
+    #  validate(need(ext == "txt", "Please upload a .txt file"))
+      
+    #  read.csv(file$datapath, header = input$header)
+    #})
+
+    observeEvent ( input$run, { output$mkdePlot <- renderPlot ( { plotMKDE ( displaymkde ( input$sig2obs, input$tmax, input$file_var.datapath ) ) } ) } )
+    #mkde <- eventReactive ( input$run, { runif ( input$sig2obs ) } )
+    #output$mkdePlot <- renderPlot ( { plotMKDE ( displaymkde ( input$sig2obs, input$tmax, input$file_var.datapath ) ) } )
+    #output$mkdePlot <- renderPlot ( { mkde } )
+  #}
+
+  
   # Histogram of the Old Faithful Geyser Data ----
   # with requested number of bins
   # This expression that generates a histogram is wrapped in a call
@@ -66,17 +143,17 @@ server <- function(input, output) {
   # 1. It is "reactive" and therefore should be automatically
   #    re-executed when inputs (input$bins) change
   # 2. Its output type is a plot
-  output$distPlot <- renderPlot({
+  #output$distPlot <- renderPlot({
 
-    x    <- faithful$waiting
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    #x    <- faithful$waiting
+    #bins <- seq(min(x), max(x), length.out = input$bins + 1)
 
-    hist(x, breaks = bins, col = "#75AADB", border = "white",
-         xlab = "Waiting time to next eruption (in mins)",
-         main = "Histogram of waiting times")
+    #hist(x, breaks = bins, col = "#75AADB", border = "white",
+         #xlab = "Waiting time to next eruption (in mins)",
+         #main = "Histogram of waiting times")
 
-    })
-
+    #})
+  
 }
 
 shinyApp ( ui = ui, server = server )
