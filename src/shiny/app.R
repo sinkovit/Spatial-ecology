@@ -4,19 +4,17 @@ library ( raster )
 library ( R.utils )
 sessionInfo()
 
-displaymkde <- function ( sig2obs, tmax, path_file ) {
+displaymkde <- function ( sig2obs, tmax, path.file ) {
   # Read GPS movement data from file
   print ( "entered displaymkde" )
-  print ( path_file )
-  
-  #if ( ! ( is.character ( path_file ) && length ( path_file ) == 1 ) ) {
+
+  #if ( ! ( is.character ( path.file ) && length ( path.file ) == 1 ) ) {
   #  print ( "file is null!" )
   #  return ()
   #}
   
-  panda <- read.table("/Users/mona/SDSC/SEG/Spatial-ecology/examples/Example_1/pandabob.txt", header=TRUE)
-  #panda <- read.table ( path_file, header=TRUE )
-  
+  panda <- read.table ( path.file, header=TRUE)
+
   xmin <- min(panda$x)
   ymin <- min(panda$y)
   xmax <- max(panda$x)
@@ -56,7 +54,7 @@ ui <- fluidPage(
     sidebarPanel(
 
 	  # Input: Select a file ----
-	  fileInput ( "file1", "Please upload your GPS data file:",
+	  fileInput ( "file.input", "Please upload your GPS data file:",
                 multiple = FALSE,
                 accept = c ( "text/csv",
                          "text/comma-separated-values,text/plain",
@@ -111,15 +109,11 @@ server <- function(input, output, session) {
   
   #output$selected_var <- renderText ( {"Running..."} )
   
-  # Warning: Error in : Can't access reactive value 'file1' outside of reactive consumer.
-  #in_file <- input$file1;
-  #print ( in_file );
-  
   #if ( ! ( is.character ( input$file_var.datapath ) && length ( input$file_var.datapath ) == 1 ) ) {
     output$selected_var <- renderPrint ( { input$sig2obs } )
-    output$file_value <- renderPrint ( { str ( input$file1 ) } )
+    output$file_value <- renderPrint ( { str ( input$file.input$datapath ) } )
     #output$file_value <- renderTable({
-    #  file <- input$file1
+    #  file <- input$file.input
     #  ext <- tools::file_ext(file$datapath)
       
     #  req(file)
@@ -128,10 +122,10 @@ server <- function(input, output, session) {
     #  read.csv(file$datapath, header = input$header)
     #})
 
-    observeEvent ( input$run, { output$mkdePlot <- renderPlot ( { plotMKDE ( displaymkde ( input$sig2obs, input$tmax, input$file_var.datapath ) ) } ) } )
+    observeEvent ( input$run, { output$mkdePlot <- renderPlot ( { plotMKDE (
+      displaymkde ( input$sig2obs, input$tmax, input$file.input$datapath ) ) } ) } )
+    
     #mkde <- eventReactive ( input$run, { runif ( input$sig2obs ) } )
-    #output$mkdePlot <- renderPlot ( { plotMKDE ( displaymkde ( input$sig2obs, input$tmax, input$file_var.datapath ) ) } )
-    #output$mkdePlot <- renderPlot ( { mkde } )
   #}
 
   
