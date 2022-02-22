@@ -2,17 +2,14 @@ library ( shiny )
 library ( mkde )
 library ( raster )
 library ( R.utils )
+library ( shinyjs )
+
 sessionInfo()
 
-displaymkde <- function ( sig2obs, tmax, path.file ) {
+getMKDEData <- function ( sig2obs, tmax, path.file ) {
   # Read GPS movement data from file
-  print ( "entered displaymkde" )
+  #print ( "entered getMKDEData" )
 
-  #if ( ! ( is.character ( path.file ) && length ( path.file ) == 1 ) ) {
-  #  print ( "file is null!" )
-  #  return ()
-  #}
-  
   panda <- read.table ( path.file, header=TRUE)
 
   xmin <- min(panda$x)
@@ -33,25 +30,28 @@ displaymkde <- function ( sig2obs, tmax, path.file ) {
   return ( mkde.obj )
 }
 
-if ( interactive() ) {
-  print ( "interactive!" )
-} else {
-  print ( "not interactive!" )
-}
+#if ( interactive() ) {
+#  print ( "interactive!" )
+#} else {
+#  print ( "not interactive!" )
+#}
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
+  useShinyjs(), # include shinyjs
 
   # tags$head(tags$script(src = "message-handler.js")),
   
   # App title ----
-  titlePanel("Welcome to the Spatial Ecology Gateway!"),
+  titlePanel ( "Welcome to the Spatial Ecology Gateway!" ),
 
   # Sidebar layout with input and output definitions ----
-  sidebarLayout(
+  sidebarLayout (
 
     # Sidebar panel for inputs ----
-    sidebarPanel(
+    sidebarPanel (
+      
+    id = "myapp",
 
 	  # Input: Select a file ----
 	  fileInput ( "file.input", "Please upload your GPS data file:",
@@ -61,17 +61,18 @@ ui <- fluidPage(
                          ".csv")),
 
 	  # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-	  radioButtons("radio", label = h3("Mode"),
-    			   choices = list("2D" = 2, "3D" = 3), 
-    			   selected = 2),
+	  radioButtons ( "radio", label = h4 ( "Mode" ),
+    			   choices = list ( "2D" = 2, "3D" = 3 ), 
+    			   selected = 2 ),
 
 	  # Copy the line below to make a number input box into the UI.
-	  numericInput("sig2obs", label = h3("sig2obs"), value = 25.0),
+	  numericInput ( "sig2obs", label = h4 ( "sig2obs" ), value = 25.0 ),
 
 	  # Copy the line below to make a number input box into the UI.
-	  numericInput("tmax", label = h3("t.max"), value = 185.0),
+	  numericInput ( "tmax", label = h3("t.max"), value = 185.0 ),
 
-	  actionButton("run", label = "Run"),
+	  actionButton ( "runx", label = "Run" ),
+	  actionButton ( "reset", "Reset form" ),
 
 	  textOutput ( "selected_var" ),
 	  
@@ -89,7 +90,6 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
 
-      #plotOutput ( outputId = "mkdePlot" ),
       plotOutput ( "mkdePlot" ),
       
       # Output: Histogram ----
@@ -100,34 +100,41 @@ ui <- fluidPage(
 )
 
 # Define server logic required to draw a histogram ----
-server <- function(input, output, session) {
+server <- function ( input, output, session ) {
 
-  #observeEvent(input$run, {
+  # If no file selected, disable Run button...
+  observe ( {
+    if ( is.null ( input$file.input ) || input$file.input == "" ) {
+      shinyjs::disable ( "runx" )
+      shinyjs::disable ( "reset" )
+    } else {
+      shinyjs::enable ( "runx" )
+      shinyjs::enable ( "reset" )
+    }
+  } )
+  #observeEvent(input$runx, {
   #  session$sendCustomMessage(type = 'testmessage',
   #                            message = 'Thank you for clicking')
   #})
   
   #output$selected_var <- renderText ( {"Running..."} )
   
-  #if ( ! ( is.character ( input$file_var.datapath ) && length ( input$file_var.datapath ) == 1 ) ) {
-    output$selected_var <- renderPrint ( { input$sig2obs } )
-    output$file_value <- renderPrint ( { str ( input$file.input$datapath ) } )
-    #output$file_value <- renderTable({
-    #  file <- input$file.input
-    #  ext <- tools::file_ext(file$datapath)
-      
-    #  req(file)
-    #  validate(need(ext == "txt", "Please upload a .txt file"))
-      
-    #  read.csv(file$datapath, header = input$header)
-    #})
-
-    observeEvent ( input$run, { output$mkdePlot <- renderPlot ( { plotMKDE (
-      displaymkde ( input$sig2obs, input$tmax, input$file.input$datapath ) ) } ) } )
+  output$selected_var <- renderPrint ( { input$file.input } )
+  output$file_value <- renderPrint ( { str ( input$file.input$datapath ) } )
     
-    #mkde <- eventReactive ( input$run, { runif ( input$sig2obs ) } )
-  #}
+    #observeEvent ( input$runx, { output$mkdePlot <- renderPlot ( { plotMKDE (
+    #  getMKDEData ( input$sig2obs, input$tmax, input$file.input$datapath ) ) } ) } )
 
+  mkde.plot <- eventReactive ( input$runx, { plotMKDE (
+    getMKDEData ( input$sig2obs, input$tmax, input$file.input$datapath ) )  } )
+  output$mkdePlot <- renderPlot ( { mkde.plot() } )
+
+  # Reset sig2obs and t.mat; unfortunately can't "reset" input file
+  # (see https://stackoverflow.com/questions/44203728/how-to-reset-a-value-of-fileinput-in-shiny
+  # for a trick)
+  observeEvent ( input$reset, {
+    shinyjs::reset ( "myapp" )
+  } )
   
   # Histogram of the Old Faithful Geyser Data ----
   # with requested number of bins
