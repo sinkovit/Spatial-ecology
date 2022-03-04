@@ -16,8 +16,8 @@ t.max <- 185.0
 dimensionality <- 2 # Not currently used in script
 study <- 408181528  # This is the California Condor study in Movebank
 local_data <- TRUE
-username <- "RSinkovits"
-password <- "aBBa&0805&mb"
+username <- "yourusername"
+password <- "yourpassword"
 
 # Generate file name where Movebank data is or will be stored
 outfile <- paste(getwd(), "/Study-", toString(study), ".RData", sep="")
