@@ -119,8 +119,8 @@ server <- function ( input, output, session ) {
   
   #output$selected_var <- renderText ( {"Running..."} )
   
-  output$selected_var <- renderPrint ( { input$file.input } )
-  output$file_value <- renderPrint ( { str ( input$file.input$datapath ) } )
+  #output$selected_var <- renderPrint ( { input$file.input } )
+  #output$file_value <- renderPrint ( { str ( input$file.input$datapath ) } )
     
     #observeEvent ( input$runx, { output$mkdePlot <- renderPlot ( { plotMKDE (
     #  getMKDEData ( input$sig2obs, input$tmax, input$file.input$datapath ) ) } ) } )
