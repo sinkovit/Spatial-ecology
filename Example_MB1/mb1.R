@@ -44,7 +44,7 @@ data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
 # Pare down data for test purposes
 x <- data_df$location_long.1[1:100]
 y <- data_df$location_lat.1[1:100]
-t <- data_df$time[1:150]
+t <- data_df$time[1:100]
 
 # Get data characteristics and prepare problem
 xmin <- min(x)
