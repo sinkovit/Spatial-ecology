@@ -1,9 +1,9 @@
 #!/bin/sh
-/usr/bin/invoke_app "$@" -t mrsa \
+/usr/bin/invoke_app "$@" -t mkde \
                          -u R-4.0.5 \
                          -u wrwroxy-0.2 \
                          -u shiny-server-1.5.17.973 \
                          -w headless \
                          -r none \
-                         -c "wrwroxy --no-auth --listenHost 0.0.0.0 --listenPort 8000 --forwardHost 127.0.0.1 --forwardPort 8001 --connectTime 60" \
+                         -c "wrwroxy --listenHost 0.0.0.0 --listenPort 8000 --forwardHost 127.0.0.1 --forwardPort 8001 --connectTime 60" \
                          -C "shiny-serverHUB.sh @tool/bin"
