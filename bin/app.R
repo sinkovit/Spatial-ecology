@@ -36,7 +36,7 @@ getMKDEData <- function ( sig2obs, tmax, path.file ) {
 #  print ( "not interactive!" )
 #}
 
-# Define UI for app that draws a histogram ----
+# Define UI for app
 ui <- fluidPage(
   useShinyjs(), # include shinyjs
 
@@ -99,7 +99,7 @@ ui <- fluidPage(
   )
 )
 
-# Define server logic required to draw a histogram ----
+# Define server logic required
 server <- function ( input, output, session ) {
 
   # If no file selected, disable Run button...
@@ -134,7 +134,16 @@ server <- function ( input, output, session ) {
   # for a trick)
   observeEvent ( input$reset, {
     shinyjs::reset ( "myapp" )
+    #input$file.input = ""
+    #hide ( "mkdePlot" )
+    #output$mkdePlot <- NULL
+    shinyjs::disable ( "runx" )
+    shinyjs::disable ( "reset" )
   } )
+  
+  #observeEvent ( input$runx, {
+  #  show ( "mkdePlot" )
+  # } )
   
   # Histogram of the Old Faithful Geyser Data ----
   # with requested number of bins
