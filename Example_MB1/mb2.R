@@ -14,10 +14,13 @@ library(move)
 sig2obs <- 25.0
 t.max <- 185.0
 dimensionality <- 2 # Not currently used in script
-study <- 408181528  # This is the California Condor study in Movebank
+study <- 1010101010  # Junk
+study <- 408181528   # California Condor study in Movebank
+study <- 1989169785  # Baja Golden Eagle study in Movebank
+study <- 1109284853  # Andean condor study in Movebank
 local_data <- TRUE
-username <- "yourusername"
-password <- "yourpassword"
+username <- "RSinkovits"
+password <- "aBBa&0805&mb"
 
 # Generate file name where Movebank data is or will be stored
 outfile <- paste(getwd(), "/Study-", toString(study), ".RData", sep="")
