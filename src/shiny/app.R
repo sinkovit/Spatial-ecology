@@ -9,7 +9,6 @@ sessionInfo()
 
 getMKDEData <- function ( sig2obs, tmax, path.file ) {
   # Read GPS movement data from file
-  #print ( "entered getMKDEData" )
 
   panda <- read.table ( path.file, header=TRUE)
 
@@ -39,11 +38,6 @@ mb2 <- function ( sig2obs, tmax, data ) {
   data <- spTransform(data, center=TRUE)
   data_df <- as.data.frame(data)
   data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  
-  # Note to Mona - the value that	you read from the Shiny	app will replace
-  # Note to Mona - the hardcoded values (25.0 and 185.0) assigned	to the	
-  # Note to Mona - variables sig2obs and t.max
-  # Note to Mona - this is exactly what you had done in previous examples
   
   for (local_id in unique(data_df$local_identifier)) {
     x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
@@ -87,19 +81,10 @@ mb2 <- function ( sig2obs, tmax, data ) {
   }
 }
 
-#if ( interactive() ) {
-#  print ( "interactive!" )
-#} else {
-#  print ( "not interactive!" )
-#}
-
 # Define UI for app
 ui <- fluidPage(
   useShinyjs(), # include shinyjs
 
-  # tags$head(tags$script(src = "message-handler.js")),
-  
-  # App title ----
   titlePanel ( "Welcome to the Spatial Ecology Gateway!" ),
 
   # Sidebar layout with input and output definitions ----
@@ -111,14 +96,12 @@ ui <- fluidPage(
     id = "myapp",
 
     textInput ( "movebank.username", "Movebank Username", value = "",
-                width = NULL, placeholder = NULL),
+                width = NULL, placeholder = NULL ),
     passwordInput ( "movebank.password", "Movebank Password", value = "",
                 width = NULL, placeholder = NULL),
     textInput ( "movebank.studyid", "Movebank Study ID", value = "",
-                width = NULL, placeholder = NULL),
-    # 1989169785 = Baja Golden eagle
-    # 408181528 = California Condor
-    
+                width = NULL, placeholder = NULL ),
+
     hr ( style = "border-top: 1px solid #000000;" ),
     
 	  # Input: Select a file ----
@@ -145,14 +128,6 @@ ui <- fluidPage(
 	  textOutput ( "debug" ),
 	  
 	  verbatimTextOutput ( "file_value" ),
-	  
-      # Input: Slider for the number of bins ----
-      #sliderInput(inputId = "bins",
-                  #label = "Number of bins:",
-                  #min = 1,
-                  #max = 50,
-                  #value = 30),
-
     ),
 
     # Main panel for displaying outputs ----
@@ -160,9 +135,6 @@ ui <- fluidPage(
 
       plotOutput ( "mkdePlot" ),
       
-      # Output: Histogram ----
-      #plotOutput(outputId = "distPlot"),
-
     )
   )
 )
@@ -186,37 +158,19 @@ server <- function ( input, output, session ) {
       shinyjs::enable ( "reset" )
     }
   } )
-  #observeEvent(input$runx, {
-  #  session$sendCustomMessage(type = 'testmessage',
-  #                            message = 'Thank you for clicking')
-  #})
-  
-  output$debug <- renderText ( { "Running..." } )
-  
-  #output$selected_var <- renderPrint ( { input$file.upload } )
-  #output$file_value <- renderPrint ( { str ( input$file.upload$datapath ) } )
-    
-    #observeEvent ( input$runx, { output$mkdePlot <- renderPlot ( { plotMKDE (
-    #  getMKDEData ( input$sig2obs, input$tmax, input$file.upload$datapath ) ) } ) } )
-
-  #mkde.plot <- eventReactive ( input$runx, { plotMKDE (
-  #  getMKDEData ( input$sig2obs, input$tmax, input$file.upload$datapath ) ) } )
-  #output$mkdePlot <- renderPlot ( { mkde.plot() } )
 
   mkde.plot <- eventReactive ( input$runx, {
     if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
          ! is.null ( input$movebank.password ) &&
          ! is.null ( input$movebank.studyid ) ) {
-      output$debug <- renderText ( "Movebank!" )
       login <- movebankLogin ( username=input$movebank.username,
                                password=input$movebank.password )
-      data <- getMovebankData ( study=input$movebank.studyid, login=login )
-      #save ( data, file=movebank.outfile )
-      mb2 ( data )
+      data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
+      save ( data, file=movebank.outfile )
+      mb2 ( input$sig2obs, input$tmas, data )
       plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
     }
     else if ( ! is.null ( input$file.upload ) ) {
-      output$debug <- renderText ( { "upload file" } )
       plotMKDE ( getMKDEData ( input$sig2obs, input$tmax,
                                input$file.upload$datapath ) ) } } )
   output$mkdePlot <- renderPlot ( { mkde.plot() } )
@@ -226,35 +180,9 @@ server <- function ( input, output, session ) {
   # for a trick)
   observeEvent ( input$reset, {
     shinyjs::reset ( "myapp" )
-    #input$file.upload = ""
-    #hide ( "mkdePlot" )
-    #output$mkdePlot <- NULL
     shinyjs::disable ( "runx" )
     shinyjs::disable ( "reset" )
   } )
-  
-  #observeEvent ( input$runx, {
-  #  show ( "mkdePlot" )
-  # } )
-  
-  # Histogram of the Old Faithful Geyser Data ----
-  # with requested number of bins
-  # This expression that generates a histogram is wrapped in a call
-  # to renderPlot to indicate that:
-  #
-  # 1. It is "reactive" and therefore should be automatically
-  #    re-executed when inputs (input$bins) change
-  # 2. Its output type is a plot
-  #output$distPlot <- renderPlot({
-
-    #x    <- faithful$waiting
-    #bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-    #hist(x, breaks = bins, col = "#75AADB", border = "white",
-         #xlab = "Waiting time to next eruption (in mins)",
-         #main = "Histogram of waiting times")
-
-    #})
   
 }
 
