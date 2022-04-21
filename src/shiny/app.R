@@ -69,8 +69,6 @@ mb2 <- function ( sig2obs, tmax, data ) {
     print(paste("xrange =", xrange, "yrange =", yrange))
     print(paste("cell size =", cell.sz))
     
-    Sys.sleep(5)
-    
     # Create home range using mkde
     mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
     mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
@@ -132,9 +130,7 @@ ui <- fluidPage(
 
     # Main panel for displaying outputs ----
     mainPanel(
-
       plotOutput ( "mkdePlot" ),
-      
     )
   )
 )
@@ -167,12 +163,12 @@ server <- function ( input, output, session ) {
                                password=input$movebank.password )
       data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
       save ( data, file=movebank.outfile )
-      mb2 ( input$sig2obs, input$tmas, data )
       plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
     }
     else if ( ! is.null ( input$file.upload ) ) {
       plotMKDE ( getMKDEData ( input$sig2obs, input$tmax,
-                               input$file.upload$datapath ) ) } } )
+                               input$file.upload$datapath ) ) }
+  } )
   output$mkdePlot <- renderPlot ( { mkde.plot() } )
   
   # Reset sig2obs and t.mat; unfortunately can't "reset" input file
