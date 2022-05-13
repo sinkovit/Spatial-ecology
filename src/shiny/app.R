@@ -136,11 +136,11 @@ ui <- fluidPage(
     sidebarPanel (
       id = "myapp",
 
-      textInput ( "movebank.username", "Movebank Username", value = "mona",
+      textInput ( "movebank.username", "Movebank Username", value = "",
                   width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "1l1keMB21!",
+      passwordInput ( "movebank.password", "Movebank Password", value = "!",
                   width = NULL, placeholder = NULL),
-      textInput ( "movebank.studyid", "Movebank Study ID", value = "408181528",
+      textInput ( "movebank.studyid", "Movebank Study ID", value = "",
                   width = NULL, placeholder = NULL ),
 
       hr ( style = "border-top: 1px solid #000000;" ),
