@@ -31,6 +31,9 @@ data_loader <- function(username, password, study, login) {
       if(str_detect(error_message[1], "There are no valid credentials")) {
         return(list(NULL,"Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
       }
+      if(str_detect(error_message[1], "No data are available for download")) {
+        return(list(NULL,"Error: no data available for download."))
+      }
       return(list(NULL, error_message))
     }
   )
@@ -138,7 +141,7 @@ ui <- fluidPage(
 
       textInput ( "movebank.username", "Movebank Username", value = "",
                   width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "!",
+      passwordInput ( "movebank.password", "Movebank Password", value = "",
                   width = NULL, placeholder = NULL),
       textInput ( "movebank.studyid", "Movebank Study ID", value = "",
                   width = NULL, placeholder = NULL ),
