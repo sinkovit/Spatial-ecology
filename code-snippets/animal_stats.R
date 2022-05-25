@@ -15,6 +15,8 @@
 
 animal_attributes <- function(data_df) {
 
+  printf <- function(...) cat(sprintf(...))
+
   animals <- append(as.list(sort(unique(data_df$local_identifier))), "all")
   max_pixels <- c(50, 100, 200, 500)
 
