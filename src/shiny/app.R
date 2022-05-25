@@ -1,4 +1,36 @@
-library(shiny)
+# This software is Copyright © 2022 The Regents of the University of California.
+# All Rights Reserved. Permission to copy, modify, and distribute this software
+# and its documentation for educational, research and non-profit purposes,
+# without fee, and without a written agreement is hereby granted, provided that
+# this entire copyright appear in all copies. Permission to make commercial use
+# of this software may be obtained by contacting:
+# 
+# Office of Innovation and Commercialization
+# 9500 Gilman Drive, Mail Code 0910
+# University of California
+# La Jolla, CA 92093-0910
+# (858) 534-5815
+# invent@ucsd.edu
+#
+# This software program and documentation are copyrighted by The Regents of the
+# University of California. The software program and documentation are supplied
+# “as is”, without any accompanying services from The Regents. The Regents does
+# not warrant that the operation of the program will be uninterrupted or
+# error-free. The end-user understands that the program was developed for
+# research purposes and is advised not to rely exclusively on the program for
+# any reason.
+# 
+# IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+# DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+# LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+# EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE. THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED
+# HEREUNDER IS ON AN “AS IS” BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO
+# OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+# MODIFICATIONS.library(shiny)
+
 library(mkde)
 library(raster)
 library(R.utils)
@@ -26,7 +58,7 @@ data_loader <- function(username, password, study, login) {
       if(str_detect(error_message[1],
                     "unable to find an inherited method for function ‘getMovebankData’")) {
         return(list(NULL, paste("Error:", study,
-                              "appears to be an invalid Movebank study ID.")))
+                                "appears to be an invalid Movebank study ID.")))
       }
       if(str_detect(error_message[1], "There are no valid credentials")) {
         return(list(NULL,"Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
@@ -42,9 +74,9 @@ data_loader <- function(username, password, study, login) {
 
 getMKDEData <- function ( sig2obs, tmax, path.file ) {
   # Read GPS movement data from file
-
+  
   panda <- read.table ( path.file, header=TRUE)
-
+  
   xmin <- min(panda$x)
   ymin <- min(panda$y)
   xmax <- max(panda$x)
@@ -64,7 +96,7 @@ getMKDEData <- function ( sig2obs, tmax, path.file ) {
 }
 
 
-mb2 <- function ( sig2obs, tmax, data ) {
+mb2 <- function(sig2obs, tmax, data) {
   # Data preparation
   # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
   # (2) Convert MoveStack to data frame
@@ -72,9 +104,12 @@ mb2 <- function ( sig2obs, tmax, data ) {
   data <- spTransform(data, center=TRUE)
   data_df <- as.data.frame(data)
   data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  #print ( paste ( "data_df = ", data_df ) )
-  
-  for (local_id in unique(data_df$local_identifier)) {
+  local_identifiers <- unique(data_df$local_identifier)
+  #print(paste("local_identifiers = ", local_identifiers))
+  #print(paste("length = ", length(local_identifiers)))
+  plots <- list()
+
+  for (local_id in local_identifiers) {
     x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
     y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
     t <- data_df[which(data_df$local_identifier == local_id), "time"]
@@ -88,11 +123,11 @@ mb2 <- function ( sig2obs, tmax, data ) {
     yrange <- ymax-ymin
     
     if (xrange >= yrange) {
-      nx <- 500
+      nx <- 50
       ny <- as.integer(nx * (yrange/xrange))
       cell.sz <- xrange/nx
     } else {
-      ny <- 500
+      ny <- 50
       nx <- as.integer(ny * (xrange/yrange))
       cell.sz <- yrange/ny
     }  
@@ -110,10 +145,10 @@ mb2 <- function ( sig2obs, tmax, data ) {
     dens.res <- initializeDensity(mkde.obj, mv.dat)
     mkde.obj <- dens.res$mkde.obj
     mv.dat <- dens.res$move.dat
-    return ( mkde.obj )
+    plots <- append(plots, list(mkde.obj))
   }
+  return(plots)
 }
-
 
 # Define UI for app
 ui <- fluidPage(
@@ -139,11 +174,11 @@ ui <- fluidPage(
     sidebarPanel (
       id = "myapp",
 
-      textInput ( "movebank.username", "Movebank Username", value = "",
+      textInput ( "movebank.username", "Movebank Username", value = "mona",
                   width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "",
+      passwordInput ( "movebank.password", "Movebank Password", value = "g0MB2022",
                   width = NULL, placeholder = NULL),
-      textInput ( "movebank.studyid", "Movebank Study ID", value = "",
+      textInput ( "movebank.studyid", "Movebank Study ID", value = "408181528",
                   width = NULL, placeholder = NULL ),
 
       hr ( style = "border-top: 1px solid #000000;" ),
@@ -179,10 +214,6 @@ ui <- fluidPage(
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "mkdePlot" ), type = 5),
       #plotOutput ( "mkdePlot" ),
-      
-      #wellPanel(
-      #  verbatimTextOutput("status"),
-      #),
     ),
   )
 )
@@ -220,9 +251,9 @@ server <- function ( input, output, session ) {
       #output$status <- renderPrint({"Retrieving data from MoveBank..."})
       print("Accessing Movebank...")
       #withProgress(message = "Retrieving data from MoveBank...", {
-        results <- data_loader(username = input$movebank.username,
-                               password = input$movebank.password,
-                              study = input$movebank.studyid, login = login )
+      results <- data_loader(username = input$movebank.username,
+                             password = input$movebank.password,
+                             study = input$movebank.studyid, login = login )
       #})
       print("Done")
       shiny::validate(need(results[[2]] == "", results[[2]]))
@@ -234,7 +265,9 @@ server <- function ( input, output, session ) {
       shinyjs::disable ( "runx" )
       print("Creating plot...")
       #withProgress(message = "Creating plot...", {
-        plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
+        #plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
+      plots <- mb2(input$sig2obs, input$tmax, data)
+      plotMKDE(plots[[1]])
       #})
       print("Plotting done")
       shinyjs::enable ( "runx" )
