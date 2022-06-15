@@ -29,8 +29,9 @@
 # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED
 # HEREUNDER IS ON AN “AS IS” BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-# MODIFICATIONS.library(shiny)
+# MODIFICATIONS.
 
+library(shiny)
 library(mkde)
 library(raster)
 library(R.utils)
@@ -39,6 +40,7 @@ library(shinycssloaders)
 library(move)
 library(ggplot2)
 library(stringr)
+library(gridExtra)
 
 sessionInfo()
 
@@ -46,12 +48,16 @@ sessionInfo()
 data_loader <- function(username, password, study, login) {
   tryCatch(
     {
+      print("Authenticating into Movebank...")
       login <- movebankLogin(username = username, password = password )
+      print("Retrieving data from Movebank...")
       d <- getMovebankData(study=strtoi(study), login=login)
       return(list(d, ""))
     },
     error = function(error_message) {
       if(str_detect(error_message[1], "you are not allowed to download")) {
+        # Movebank data license url =
+        # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
         return(list(NULL,
                     "Please go to Movebank and accept the data license terms, then return here and try again."))
       }
@@ -70,7 +76,6 @@ data_loader <- function(username, password, study, login) {
     }
   )
 }
-
 
 getMKDEData <- function ( sig2obs, tmax, path.file ) {
   # Read GPS movement data from file
@@ -95,21 +100,22 @@ getMKDEData <- function ( sig2obs, tmax, path.file ) {
   return ( mkde.obj )
 }
 
-
 mb2 <- function(sig2obs, tmax, data) {
   # Data preparation
   # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
   # (2) Convert MoveStack to data frame
   # (3) Convert timestamps to epoch minutes
+  printf("Processing data...")
   data <- spTransform(data, center=TRUE)
   data_df <- as.data.frame(data)
   data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
   local_identifiers <- unique(data_df$local_identifier)
   #print(paste("local_identifiers = ", local_identifiers))
-  #print(paste("length = ", length(local_identifiers)))
-  plots <- list()
+  print(paste("number of identifiers = ", length(local_identifiers)))
+  mkde.objs <- list()
 
   for (local_id in local_identifiers) {
+    print(paste("Computing home range for", local_id, "..."))
     x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
     y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
     t <- data_df[which(data_df$local_identifier == local_id), "time"]
@@ -132,22 +138,112 @@ mb2 <- function(sig2obs, tmax, data) {
       cell.sz <- yrange/ny
     }  
     
-    print(paste("local_identifier =", local_id))
-    print("Home range dimensions (pixels/voxels)")
-    print(paste("nx =", nx, "ny =", ny))
-    print("Home range dimensions (meters)")
-    print(paste("xrange =", xrange, "yrange =", yrange))
-    print(paste("cell size =", cell.sz))
+    #print(paste("local_identifier =", local_id))
+    print("    Home range dimensions (pixels/voxels)")
+    print(paste("    nx =", nx, "ny =", ny))
+    print("    Home range dimensions (meters)")
+    print(paste("    xrange =", xrange, "yrange =", yrange))
+    print(paste("    cell size =", cell.sz))
     
     # Create home range using mkde
     mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
     mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
-    dens.res <- initializeDensity(mkde.obj, mv.dat)
+    dens.res <- initializeDensity(mkde.obj, mv.dat) # this call generates a ton of output: x of y
     mkde.obj <- dens.res$mkde.obj
     mv.dat <- dens.res$move.dat
-    plots <- append(plots, list(mkde.obj))
+    mkde.objs <- append(mkde.objs, list(mkde.obj))
   }
-  return(plots)
+  return(mkde.objs)
+}
+
+# From http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+# Unfortunately doesn't work: multiplot(plotMKDE(plots[[1]]), plotMKDE(plots[[2]]))
+# maybe because plotMKDE() doesn't return any value?
+# 
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+multiplotMKDE <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  print("entered multiplotMKDE()")
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  print(paste("numPlots =", numPlots))
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plotMKDE(plots[[1]]))
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    print("multiplotMKDE: here 1")
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      print(paste("i =", i))
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      print(paste("matchidx =", matchidx))
+      
+      print(plotMKDE(plots[[i]]), vp = viewport(layout.pos.row = matchidx$row,
+                                                layout.pos.col = matchidx$col))
+    }
+  }
 }
 
 # Define UI for app
@@ -165,7 +261,7 @@ ui <- fluidPage(
   
   useShinyjs(), # include shinyjs
 
-  titlePanel ( "Welcome to the Spatial Ecology Gateway!" ),
+  titlePanel ( "Welcome to the Space Use Ecology Gateway!" ),
 
   # Sidebar layout with input and output definitions ----
   sidebarLayout (
@@ -174,11 +270,11 @@ ui <- fluidPage(
     sidebarPanel (
       id = "myapp",
 
-      textInput ( "movebank.username", "Movebank Username", value = "mona",
+      textInput ( "movebank.username", "Movebank Username", value = "",
                   width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "g0MB2022",
+      passwordInput ( "movebank.password", "Movebank Password", value = "",
                   width = NULL, placeholder = NULL),
-      textInput ( "movebank.studyid", "Movebank Study ID", value = "408181528",
+      textInput ( "movebank.studyid", "Movebank Study ID", value = "",
                   width = NULL, placeholder = NULL ),
 
       hr ( style = "border-top: 1px solid #000000;" ),
@@ -249,25 +345,52 @@ server <- function ( input, output, session ) {
       
       #data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
       #output$status <- renderPrint({"Retrieving data from MoveBank..."})
-      print("Accessing Movebank...")
+      #print("Accessing Movebank...")
       #withProgress(message = "Retrieving data from MoveBank...", {
       results <- data_loader(username = input$movebank.username,
                              password = input$movebank.password,
                              study = input$movebank.studyid, login = login )
       #})
-      print("Done")
+      #print("Done")
       shiny::validate(need(results[[2]] == "", results[[2]]))
       data <- results[[1]]
-      errors <- results[[2]]
+      #errors <- results[[2]]
 
       #output$status <- renderPrint({"Saving data locally..."})
       #save ( data, file=movebank.outfile )
       shinyjs::disable ( "runx" )
-      print("Creating plot...")
+      #print("Creating plot...")
       #withProgress(message = "Creating plot...", {
         #plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
-      plots <- mb2(input$sig2obs, input$tmax, data)
-      plotMKDE(plots[[1]])
+      mkde_objs <- mb2(input$sig2obs, input$tmax, data)
+      #plotMKDE(mkde_objs[[1]])
+      
+      # This example uses the ChickWeight dataset, which comes with ggplot2
+      # First plot
+      p1 <- ggplot(ChickWeight, aes(x=Time, y=weight, colour=Diet, group=Chick)) +
+        geom_line() +
+        ggtitle("Growth curve for individual chicks")
+      
+      # Second plot
+      p2 <- ggplot(ChickWeight, aes(x=Time, y=weight, colour=Diet)) +
+        geom_point(alpha=.3) +
+        geom_smooth(alpha=.2, size=1) +
+        ggtitle("Fitted growth curve per diet")
+      
+      # Third plot
+      p3 <- ggplot(subset(ChickWeight, Time==21), aes(x=weight, colour=Diet)) +
+        geom_density() +
+        ggtitle("Final weight, by diet")
+      
+      # Fourth plot
+      p4 <- ggplot(subset(ChickWeight, Time==21), aes(x=weight, fill=Diet)) +
+        geom_histogram(colour="black", binwidth=50) +
+        facet_grid(Diet ~ .) +
+        ggtitle("Final weight, by diet") +
+        theme(legend.position="none")        # No legend (redundant in this graph)    
+      
+      multiplot(p1, p2, p3, p4, cols=2)
+      #multiplotMKDE(mkde_objs[[1]], mkde_objs[[2]])
       #})
       print("Plotting done")
       shinyjs::enable ( "runx" )
