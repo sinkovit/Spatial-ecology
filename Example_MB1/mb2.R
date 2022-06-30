@@ -14,10 +14,10 @@ library(move)
 sig2obs <- 25.0
 t.max <- 185.0
 dimensionality <- 2 # Not currently used in script
-study <- 1010101010  # Junk
+#study <- 1010101010  # Junk
 study <- 408181528   # California Condor study in Movebank
-study <- 1989169785  # Baja Golden Eagle study in Movebank
-study <- 1109284853  # Andean condor study in Movebank
+#study <- 1989169785  # Baja Golden Eagle study in Movebank
+#study <- 1109284853  # Andean condor study in Movebank
 local_data <- TRUE
 username <- "RSinkovits"
 password <- "aBBa&0805&mb"
@@ -49,6 +49,9 @@ data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
 # Note to Mona - variables sig2obs and t.max
 # Note to Mona - this is exactly what you had done in previous examples
 
+plots <- list()
+iter <- 0
+
 for (local_id in unique(data_df$local_identifier)) {
     x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
     y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
@@ -63,11 +66,11 @@ for (local_id in unique(data_df$local_identifier)) {
     yrange <- ymax-ymin
 
     if (xrange >= yrange) {
-       nx <- 500
+       nx <- 50
        ny <- as.integer(nx * (yrange/xrange))
        cell.sz <- xrange/nx
     } else {
-       ny <- 500
+       ny <- 50
        nx <- as.integer(ny * (xrange/yrange))
        cell.sz <- yrange/ny
     }  
@@ -83,11 +86,24 @@ for (local_id in unique(data_df$local_identifier)) {
 
     # Create home range using mkde
     mv.dat <- initializeMovementData(t, x, y, sig2obs=25.0, t.max=185.0)
+
     mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
+    #mkde.obj <- initializeMKDE2D(xrange, cell.sz, nx, yrange, cell.sz, ny)
+
     dens.res <- initializeDensity(mkde.obj, mv.dat)
     mkde.obj <- dens.res$mkde.obj
     mv.dat <- dens.res$move.dat
 
+    iter <- iter + 1
+
+    if (iter == 1) {
+       mkde.obj.1 <- mkde.obj
+    }
+    if (iter == 2) {
+       mkde.obj.2 <- mkde.obj
+    }
+
+    plots <- append(plots, list(mkde.obj)) #RSS
     # Plot results
-    plotMKDE(mkde.obj)
+    #RSS plotMKDE(mkde.obj)
 }
