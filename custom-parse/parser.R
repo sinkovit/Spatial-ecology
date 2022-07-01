@@ -75,10 +75,17 @@ parseGpsText <- function(file) {
 	 # Implement error handling
       }
 	  
-      # If we have lat-long data without x-y data, do conversion
-      # to aeqd (Azimuthal Equidistance) projection
-      if("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
-      	 !"x" %in% colnames(gpsdata)  && !"y"   %in% colnames(gpsdata)) {
+      # If we have lat-long data without x-y data, do conversion to
+      # aeqd (Azimuthal Equidistance) projection. This step is a
+      # little convoluted since we need to convert to a "move" object
+      # to use the spTransform() function, convert back to data frame
+      # and then extract converted columns. Note the the conversion
+      # function puts the new x data into column coords.x2 and new y
+      # data into coords.x1. In the future, should explore how this
+      # can be done more simply
+      
+      if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
+      	 (!"x" %in% colnames(gpsdata)  && !"y"   %in% colnames(gpsdata))) {
 	 if (class(gpsdata$time) == "character") {
 	     gpsmb <- move(x=gpsdata$long, y=gpsdata$lat,
 	                   time=as.POSIXct(gpsdata$time, format="%Y-%m-%d %H:%M:%S", tz="UTC"),
@@ -95,13 +102,17 @@ parseGpsText <- function(file) {
 	 gpsdata$x <- tempdf$coords.x2
 	 gpsdata$y <- tempdf$coords.x1
 	 rm(gpsmb)
-	 rm(df)
+	 rm(tempdf)
       }
 
       # Convert timestamp to epoch time (minutes since 1/1/1970)
+
       if (class(gpsdata$time) == "character") {
       	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
       }
+
+      # Return a data frame containing x, y and t (minutes), plus
+      # optionally id and z. This format can then easily be used
 
       return(gpsdata)
 }
