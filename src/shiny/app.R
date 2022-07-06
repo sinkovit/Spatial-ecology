@@ -75,9 +75,9 @@ animalAttributes <- function(data_df) {
   custom_round <- function(x) {return (signif(x, min(2,floor(log10(x)))))}
   
   animals <- append(as.list(sort(unique(data_df$local_identifier))), "all")
-  print(paste("animals =", animals))
-  max_pixels <- c(50, 100, 200, 500)
-  print(paste("max_pixels =", max_pixels))
+  #print(paste("animals =", animals))
+  max_pixels <- c(30, 60, 100, 300)
+  #print(paste("max_pixels =", max_pixels))
   
   printf("\n")
   printf("The following table gives the extent of animal movement for the\n")
@@ -107,12 +107,12 @@ animalAttributes <- function(data_df) {
   #                     grid = character(), px(m) = numeric(), grid = character() )
   # Oddly above doesn't work but below works...
   result <- data.frame(id = numeric())
-  result[ , 'long min'] <- numeric()
-  result[ , 'long max'] <- numeric()
-  result[ , 'lat min'] <- numeric()
-  result[ , 'lat max'] <- numeric()
-  result[ , 'E-W (m)'] <- numeric()
-  result[ , 'N-S (m)'] <- numeric()
+  result[ , 'longitude (min)'] <- numeric()
+  result[ , 'longitude (max)'] <- numeric()
+  result[ , 'latitude (min)'] <- numeric()
+  result[ , 'latitude (max)'] <- numeric()
+  result[ , 'East-West (m)'] <- numeric()
+  result[ , 'North-South (m)'] <- numeric()
   row.index <- 1
   
   for (local_id in animals) {
@@ -135,15 +135,15 @@ animalAttributes <- function(data_df) {
     y_range <- y_minmax[2] - y_minmax[1]
     printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1], long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
     row <- c(local_id, round(long_minmax[1],3), round(long_minmax[2],3),
-             round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,3),
-             round(y_range,3))
+             round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
+             round(y_range,2))
     #result[row.index, ] <- row
-    print(paste("row head =", row))
+    #print(paste("row head =", row))
     
     row.tail = c()
     
     for (max_pix in max_pixels) {
-      print(paste("max_pix =", max_pix))
+      #print(paste("max_pix =", max_pix))
       if (x_range >= y_range) {
         nx <- max_pix
         ny <- as.integer(nx * (y_range/x_range))
@@ -163,11 +163,14 @@ animalAttributes <- function(data_df) {
       printf("%6.1f %7s ", cell.sz, dims)
       
       if(row.index == 1) {
-        columns.new <- c('cell size', 'dimensions')
-        print(paste("columns.new = ", columns.new))
-        result[ , 'cell size'] <- numeric()
-        result[ , 'dimensions'] <- character()
-        print("here 1")
+        cell.size <- paste('cell size (',max_pix, "m)", sep = "")
+        dim <- paste('dimensions (', max_pix, 'm)', sep = "")
+        #print(paste("cell.size =", cell.size))
+        #print(paste("dim = ", dim))
+        columns.new <- c(cell.size, dim)
+        #print(paste("columns.new = ", columns.new))
+        result[ , cell.size] <- numeric()
+        result[ , dim] <- character()
         str(result)
       }
       
@@ -177,9 +180,9 @@ animalAttributes <- function(data_df) {
       #row <- append(row, row.tail)
       #print(paste("added row = ", row))
     }
-    print(paste("all row.tail = ", row.tail))
+    #print(paste("all row.tail = ", row.tail))
     row <- append(row,row.tail)
-    print(paste("new row =", row))
+    #print(paste("new row =", row))
     result[row.index, ] <- row
     row.index <- row.index + 1
     
@@ -314,7 +317,6 @@ server <- function ( input, output, session ) {
   #})
 
   mkde.plot <- eventReactive ( input$runx, {
-    print("run event 2")
     if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
          ! is.null ( input$movebank.password ) &&
          ! is.null ( input$movebank.studyid ) ) {
@@ -339,9 +341,9 @@ server <- function ( input, output, session ) {
       
       print("Creating table...")
       stat <- animalAttributes(data)
-      print(paste("stat =", stat))
+      #print(paste("stat =", stat))
       
-      caption <- "m = units in meters"
+      caption <- "m = meters"
       
       #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
       #output$table.info <- renderUI(lapply(exampletext, tags$p))
