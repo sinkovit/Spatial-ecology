@@ -133,17 +133,14 @@ animalAttributes <- function(data_df) {
     }
     x_range <- x_minmax[2] - x_minmax[1]
     y_range <- y_minmax[2] - y_minmax[1]
-    printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1], long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
+    printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1],
+           long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
     row <- c(local_id, round(long_minmax[1],3), round(long_minmax[2],3),
              round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
              round(y_range,2))
-    #result[row.index, ] <- row
-    #print(paste("row head =", row))
-    
+
     row.tail = c()
-    
     for (max_pix in max_pixels) {
-      #print(paste("max_pix =", max_pix))
       if (x_range >= y_range) {
         nx <- max_pix
         ny <- as.integer(nx * (y_range/x_range))
@@ -161,28 +158,18 @@ animalAttributes <- function(data_df) {
       }
       dims <- sprintf("%dx%d", nx, ny)
       printf("%6.1f %7s ", cell.sz, dims)
-      
+
       if(row.index == 1) {
-        cell.size <- paste('cell size (',max_pix, "m)", sep = "")
-        dim <- paste('dimensions (', max_pix, 'm)', sep = "")
-        #print(paste("cell.size =", cell.size))
-        #print(paste("dim = ", dim))
-        columns.new <- c(cell.size, dim)
-        #print(paste("columns.new = ", columns.new))
-        result[ , cell.size] <- numeric()
-        result[ , dim] <- character()
-        str(result)
+        cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
+        dim.label <- paste('dimensions (', max_pix, 'm)', sep = "")
+        columns.new <- c(cell.size.label, dim.label)
+        result[ , cell.size.label] <- numeric()
+        result[ , dim.label] <- character()
       }
-      
+
       row.tail <- append(row.tail, c(cell.sz, dims))
-      #print(paste("row.tail =", row.tail))
-      #row <- list(row, row.tail)
-      #row <- append(row, row.tail)
-      #print(paste("added row = ", row))
     }
-    #print(paste("all row.tail = ", row.tail))
     row <- append(row,row.tail)
-    #print(paste("new row =", row))
     result[row.index, ] <- row
     row.index <- row.index + 1
     
@@ -190,9 +177,6 @@ animalAttributes <- function(data_df) {
   }
   return(result)
 }
-
-# Calling the function; assumes data_df is already defined
-#animalAttributes(data_df)
 
 
 getMKDEData <- function ( sig2obs, tmax, path.file ) {
