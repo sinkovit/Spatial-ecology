@@ -35,8 +35,8 @@
 movebankDataLoader <- function(username, password, study, login) {
   
   file.local <-
-    paste(getwd(), "/xStudy-", toString(study), ".RData", sep="")
-  print(paste("file.local =", file.local))
+    paste(getwd(), "/Study-", toString(study), ".RData", sep="")
+  #print(paste("file.local =", file.local))
   
   tryCatch(
     {
@@ -50,7 +50,7 @@ movebankDataLoader <- function(username, password, study, login) {
         print("Retrieving data from Movebank...")
         d <- getMovebankData(study=strtoi(study), login=login)
         print("Saving data locally...")
-        #save ( data, file=file.local )
+        save ( data, file=file.local )
         return(list(d, ""))
       }},
     error = function(error_message) {
