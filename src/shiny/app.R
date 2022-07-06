@@ -359,8 +359,8 @@ server <- function ( input, output, session ) {
       
       #print("Creating plot...")
       ##withProgress(message = "Creating plot...", {
-        ##plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
-      #plots <- mb2(input$sig2obs, input$tmax, data)
+        ##plotMKDE ( movebankProcess ( input$sig2obs, input$tmax, data ) )
+      #plots <- movebankProcess(input$sig2obs, input$tmax, data)
       #plotMKDE(plots[[1]])
       ##})
       #print("Plotting done")

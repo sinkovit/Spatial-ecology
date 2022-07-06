@@ -31,7 +31,59 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-mb2 <- function(sig2obs, tmax, data) {
+# https://github.com/sinkovit/Spatial-ecology/blob/Bob/Example_MB1/getdata_trycatch.R
+movebankDataLoader <- function(username, password, study, login) {
+  
+  file.local <-
+    paste(getwd(), "/xStudy-", toString(study), ".RData", sep="")
+  print(paste("file.local =", file.local))
+  
+  tryCatch(
+    {
+      if(file.exists(file.local)) {
+        print("Data exists locally, loading...")
+        load(file.local)
+        return(list(data, ""))
+      } else {
+        print("Authenticating into Movebank...")
+        login <- movebankLogin(username = username, password = password )
+        print("Retrieving data from Movebank...")
+        d <- getMovebankData(study=strtoi(study), login=login)
+        print("Saving data locally...")
+        #save ( data, file=file.local )
+        return(list(d, ""))
+      }},
+    error = function(error_message) {
+      print(paste("error_message =", error_message))
+      if(str_detect(error_message[1], "you are not allowed to download")) {
+        # Movebank data license url =
+        # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
+        return(list(NULL,
+                    "Please go to Movebank and accept the data license terms, then return here and try again."))
+      }
+      if(str_detect(error_message[1],
+                    "unable to find an inherited method for function ‘getMovebankData’")) {
+        return(list(NULL, paste("Error:", study,
+                                "appears to be an invalid Movebank study ID.")))
+      }
+      if(str_detect(error_message[1], "There are no valid credentials")) {
+        return(list(NULL,
+                    "Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
+      }
+      if(str_detect(error_message[1], "No data are available for download")) {
+        return(list(NULL, "Error: no data available for download."))
+      }
+      if(str_detect(error_message[1], "Timeout was reached")) {
+        return(list(NULL,
+                    "Error: movebank.org timed out. Please wait a few minutes and try again..."))
+      }
+      return(list(NULL, error_message))
+    }
+  )
+}
+
+
+movebankProcess <- function(sig2obs, tmax, data) {
   # Data preparation
   # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
   # (2) Convert MoveStack to data frame
@@ -86,83 +138,3 @@ mb2 <- function(sig2obs, tmax, data) {
   return(plots)
 }
 
-
-movebankDataConverter <- function(data) {
-  # Data preparation
-  # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
-  # (2) Convert MoveStack to data frame
-  # (3) Convert timestamps to epoch minutes
-  print("entered movebankDataConverter")
-  data <- spTransform(data, center=TRUE)
-  data_df <- as.data.frame(data)
-  data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  return(data_df)
-}
-
-
-# https://github.com/sinkovit/Spatial-ecology/blob/Bob/Example_MB1/getdata_trycatch.R
-movebankDataLoader <- function(username, password, study, login) {
-  
-  file.local <-
-    paste(getwd(), "/Study-", toString(study), ".RData", sep="")
-  print(paste("file.local =", file.local))
-  
-  tryCatch(
-    {
-      if(file.exists(file.local)) {
-        print("Data exists locally, loading...")
-        load(file.local)
-        #print(paste("local data =", data))
-        str(data)
-        #d2 <- movebankDataConverter(data)
-        return(list(data, ""))
-      } else {
-        print("Authenticating into Movebank...")
-        login <- movebankLogin(username = username, password = password )
-        print("Retrieving data from Movebank...")
-        d <- getMovebankData(study=strtoi(study), login=login)
-        #print(paste("movebank data =", d))
-        str(d)
-        print("Saving data locally...")
-        save ( data, file=file.local )
-        
-        #d2 <- movebankDataConverter(d)
-        return(list(d, ""))
-      }},
-    error = function(error_message) {
-      print(paste("error_message =", error_message))
-      if(str_detect(error_message[1], "you are not allowed to download")) {
-        # Movebank data license url =
-        # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
-        return(list(NULL,
-                    "Please go to Movebank and accept the data license terms, then return here and try again."))
-      }
-      if(str_detect(error_message[1],
-                    "unable to find an inherited method for function ‘getMovebankData’")) {
-        return(list(NULL, paste("Error:", study,
-                                "appears to be an invalid Movebank study ID.")))
-      }
-      if(str_detect(error_message[1], "There are no valid credentials")) {
-        return(list(NULL,
-                    "Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
-      }
-      if(str_detect(error_message[1], "No data are available for download")) {
-        return(list(NULL, "Error: no data available for download."))
-      }
-      if(str_detect(error_message[1], "Timeout was reached")) {
-        return(list(NULL,
-                    "Error: movebank.org timed out. Please wait a few minutes and try again..."))
-      }
-      return(list(NULL, error_message))
-    }
-  )
-  
-  # Data preparation
-  # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
-  # (2) Convert MoveStack to data frame
-  # (3) Convert timestamps to epoch minutes
-  #data <- spTransform(data, center=TRUE)
-  #data_df <- as.data.frame(data)
-  #data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  #return(list(data_df, ""))
-}
