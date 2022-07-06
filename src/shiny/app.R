@@ -41,6 +41,8 @@ library(move)
 library(ggplot2)
 library(stringr)
 
+source("movebank.R")
+
 sessionInfo()
 
 # From Bob's code
@@ -59,12 +61,12 @@ sessionInfo()
 # values
 
 # Note 2 - code is written assuming that data has already been
-# loaded. The animal_attribute() function is first defined and call to
+# loaded. The animalAttributes() function is first defined and call to
 # function is made at bottom of file
 
 # --------------------------------------------------------------------
 
-animal_attributes <- function(data_df) {
+animalAttributes <- function(data_df) {
   
   # Replicate C printf functionality
   printf <- function(...) cat(sprintf(...))
@@ -73,7 +75,9 @@ animal_attributes <- function(data_df) {
   custom_round <- function(x) {return (signif(x, min(2,floor(log10(x)))))}
   
   animals <- append(as.list(sort(unique(data_df$local_identifier))), "all")
+  print(paste("animals =", animals))
   max_pixels <- c(50, 100, 200, 500)
+  print(paste("max_pixels =", max_pixels))
   
   printf("\n")
   printf("The following table gives the extent of animal movement for the\n")
@@ -94,6 +98,23 @@ animal_attributes <- function(data_df) {
   printf("\n------- --------- --------- --------- --------- ---------- ---------- ------ ------- ")
   printf("------ ------- ------ ------- ------ -------\n")
   
+  #result <- data.frame(id = numeric(), 'long min' = numeric(),
+  #                     long_max = numeric(), lat_min = numeric(),
+  #                     lat_max = numeric(), E_W = numeric(),
+  #                     N_S = numeric())
+  #, px(m) = numeric(), grid = character(),
+  #                     px(m) = numeric(), grid = character(), px(m) = numeric(),
+  #                     grid = character(), px(m) = numeric(), grid = character() )
+  # Oddly above doesn't work but below works...
+  result <- data.frame(id = numeric())
+  result[ , 'long min'] <- numeric()
+  result[ , 'long max'] <- numeric()
+  result[ , 'lat min'] <- numeric()
+  result[ , 'lat max'] <- numeric()
+  result[ , 'E-W (m)'] <- numeric()
+  result[ , 'N-S (m)'] <- numeric()
+  row.index <- 1
+  
   for (local_id in animals) {
     if(local_id == "all") {
       long_minmax = range(data_df$location_long)
@@ -113,8 +134,16 @@ animal_attributes <- function(data_df) {
     x_range <- x_minmax[2] - x_minmax[1]
     y_range <- y_minmax[2] - y_minmax[1]
     printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1], long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
+    row <- c(local_id, round(long_minmax[1],3), round(long_minmax[2],3),
+             round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,3),
+             round(y_range,3))
+    #result[row.index, ] <- row
+    print(paste("row head =", row))
+    
+    row.tail = c()
     
     for (max_pix in max_pixels) {
+      print(paste("max_pix =", max_pix))
       if (x_range >= y_range) {
         nx <- max_pix
         ny <- as.integer(nx * (y_range/x_range))
@@ -132,46 +161,35 @@ animal_attributes <- function(data_df) {
       }
       dims <- sprintf("%dx%d", nx, ny)
       printf("%6.1f %7s ", cell.sz, dims)
+      
+      if(row.index == 1) {
+        columns.new <- c('cell size', 'dimensions')
+        print(paste("columns.new = ", columns.new))
+        result[ , 'cell size'] <- numeric()
+        result[ , 'dimensions'] <- character()
+        print("here 1")
+        str(result)
+      }
+      
+      row.tail <- append(row.tail, c(cell.sz, dims))
+      #print(paste("row.tail =", row.tail))
+      #row <- list(row, row.tail)
+      #row <- append(row, row.tail)
+      #print(paste("added row = ", row))
     }
+    print(paste("all row.tail = ", row.tail))
+    row <- append(row,row.tail)
+    print(paste("new row =", row))
+    result[row.index, ] <- row
+    row.index <- row.index + 1
+    
     printf("\n")
   }
+  return(result)
 }
 
 # Calling the function; assumes data_df is already defined
-#animal_attributes(data_df)
-
-# https://github.com/sinkovit/Spatial-ecology/blob/Bob/Example_MB1/getdata_trycatch.R
-data_loader <- function(username, password, study, login) {
-  tryCatch(
-    {
-      print("Authenticating into Movebank...")
-      login <- movebankLogin(username = username, password = password )
-      print("Retrieving data from Movebank...")
-      d <- getMovebankData(study=strtoi(study), login=login)
-      return(list(d, ""))
-    },
-    error = function(error_message) {
-      if(str_detect(error_message[1], "you are not allowed to download")) {
-        # Movebank data license url =
-        # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
-        return(list(NULL,
-                    "Please go to Movebank and accept the data license terms, then return here and try again."))
-      }
-      if(str_detect(error_message[1],
-                    "unable to find an inherited method for function ‘getMovebankData’")) {
-        return(list(NULL, paste("Error:", study,
-                                "appears to be an invalid Movebank study ID.")))
-      }
-      if(str_detect(error_message[1], "There are no valid credentials")) {
-        return(list(NULL,"Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
-      }
-      if(str_detect(error_message[1], "No data are available for download")) {
-        return(list(NULL,"Error: no data available for download."))
-      }
-      return(list(NULL, error_message))
-    }
-  )
-}
+#animalAttributes(data_df)
 
 
 getMKDEData <- function ( sig2obs, tmax, path.file ) {
@@ -195,62 +213,6 @@ getMKDEData <- function ( sig2obs, tmax, path.file ) {
   mkde.obj <- dens.res$mkde.obj
   mv.dat <- dens.res$move.dat
   return ( mkde.obj )
-}
-
-
-mb2 <- function(sig2obs, tmax, data) {
-  # Data preparation
-  # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
-  # (2) Convert MoveStack to data frame
-  # (3) Convert timestamps to epoch minutes
-  printf("Processing data...")
-  data <- spTransform(data, center=TRUE)
-  data_df <- as.data.frame(data)
-  data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  local_identifiers <- unique(data_df$local_identifier)
-  #print(paste("local_identifiers = ", local_identifiers))
-  #print(paste("length = ", length(local_identifiers)))
-  plots <- list()
-
-  for (local_id in local_identifiers) {
-    x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
-    y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
-    t <- data_df[which(data_df$local_identifier == local_id), "time"]
-    
-    # Get data range; set grid size and cell size
-    xmin <- min(x)
-    ymin <- min(y)
-    xmax <- max(x)
-    ymax <- max(y)
-    xrange <- xmax-xmin
-    yrange <- ymax-ymin
-    
-    if (xrange >= yrange) {
-      nx <- 50
-      ny <- as.integer(nx * (yrange/xrange))
-      cell.sz <- xrange/nx
-    } else {
-      ny <- 50
-      nx <- as.integer(ny * (xrange/yrange))
-      cell.sz <- yrange/ny
-    }  
-    
-    print(paste("local_identifier =", local_id))
-    print("Home range dimensions (pixels/voxels)")
-    print(paste("nx =", nx, "ny =", ny))
-    print("Home range dimensions (meters)")
-    print(paste("xrange =", xrange, "yrange =", yrange))
-    print(paste("cell size =", cell.sz))
-    
-    # Create home range using mkde
-    mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
-    mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
-    dens.res <- initializeDensity(mkde.obj, mv.dat)
-    mkde.obj <- dens.res$mkde.obj
-    mv.dat <- dens.res$move.dat
-    plots <- append(plots, list(mkde.obj))
-  }
-  return(plots)
 }
 
 # Define UI for app
@@ -277,11 +239,11 @@ ui <- fluidPage(
     sidebarPanel (
       id = "myapp",
 
-      textInput ( "movebank.username", "Movebank Username", value = "",
+      textInput ( "movebank.username", "Movebank Username", value = "mona",
                   width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "",
+      passwordInput ( "movebank.password", "Movebank Password", value = "g0MB2022",
                   width = NULL, placeholder = NULL),
-      textInput ( "movebank.studyid", "Movebank Study ID", value = "",
+      textInput ( "movebank.studyid", "Movebank Study ID", value = "408181528",
                   width = NULL, placeholder = NULL ),
 
       hr ( style = "border-top: 1px solid #000000;" ),
@@ -317,6 +279,8 @@ ui <- fluidPage(
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "mkdePlot" ), type = 5),
       #plotOutput ( "mkdePlot" ),
+      textOutput("table.info"),
+      #htmlOutput("table.info"),
       DT::dataTableOutput('table')
     ),
   )
@@ -326,7 +290,6 @@ ui <- fluidPage(
 # Define server logic required
 server <- function ( input, output, session ) {
 
-  movebank.outfile <- paste ( "movebank.data" )
   shinyjs::disable("radio")
   
   #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
@@ -345,19 +308,27 @@ server <- function ( input, output, session ) {
       shinyjs::enable ( "reset" )
     }
   } )
+  
+  #movebank.data <- eventReactive ( input$runx, {
+  #  print("run event 1")
+  #})
 
   mkde.plot <- eventReactive ( input$runx, {
+    print("run event 2")
     if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
          ! is.null ( input$movebank.password ) &&
          ! is.null ( input$movebank.studyid ) ) {
-      
+      shinyjs::disable ( "runx" )
+
+
       #data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
       #output$status <- renderPrint({"Retrieving data from MoveBank..."})
       print("Accessing Movebank...")
       #withProgress(message = "Retrieving data from MoveBank...", {
-      results <- data_loader(username = input$movebank.username,
-                             password = input$movebank.password,
-                             study = input$movebank.studyid, login = login )
+      results <-
+        movebankDataLoader(username = input$movebank.username,
+                           password = input$movebank.password,
+                           study = input$movebank.studyid, login = login )
       #})
       print("Done")
       shiny::validate(need(results[[2]] == "", results[[2]]))
@@ -365,15 +336,34 @@ server <- function ( input, output, session ) {
       errors <- results[[2]]
 
       #output$status <- renderPrint({"Saving data locally..."})
-      #save ( data, file=movebank.outfile )
-      shinyjs::disable ( "runx" )
-      print("Creating plot...")
-      #withProgress(message = "Creating plot...", {
-        #plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
-      plots <- mb2(input$sig2obs, input$tmax, data)
-      plotMKDE(plots[[1]])
-      #})
-      print("Plotting done")
+      
+      print("Creating table...")
+      stat <- animalAttributes(data)
+      print(paste("stat =", stat))
+      
+      caption <- "m = units in meters"
+      
+      #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
+      #output$table.info <- renderUI(lapply(exampletext, tags$p))
+      
+      output$table.info <- renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various pixel sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a pixel size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions\n"})
+      
+      #diamonds2 = diamonds[sample(nrow(diamonds), 5), ]
+      #print(paste("class =", class(diamonds2)))
+      #print(paste("str =", str(diamonds2)))
+      #print(paste("diamonds2 =", diamonds2))
+      output$table <- DT::renderDataTable({
+        DT::datatable(stat[], caption=caption)
+      })
+      
+      
+      #print("Creating plot...")
+      ##withProgress(message = "Creating plot...", {
+        ##plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
+      #plots <- mb2(input$sig2obs, input$tmax, data)
+      #plotMKDE(plots[[1]])
+      ##})
+      #print("Plotting done")
       shinyjs::enable ( "runx" )
     }
     else if ( ! is.null ( input$file.upload ) ) {
@@ -382,12 +372,6 @@ server <- function ( input, output, session ) {
   } )
   
   output$mkdePlot <- renderPlot ( { mkde.plot() } )
-  
-  diamonds2 = diamonds[sample(nrow(diamonds), 1000), ]
-  #print(paste("diamonds2 =", diamonds2[]))
-  output$table <- DT::renderDataTable({
-    DT::datatable(diamonds2[])
-  })
   
   # Reset sig2obs and t.mat; unfortunately can't "reset" input file
   # (see https://stackoverflow.com/questions/44203728/how-to-reset-a-value-of-fileinput-in-shiny
