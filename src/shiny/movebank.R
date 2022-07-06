@@ -54,7 +54,7 @@ movebankDataLoader <- function(username, password, study, login) {
         return(list(d, ""))
       }},
     error = function(error_message) {
-      print(paste("error_message =", error_message))
+      #print(paste("error_message =", error_message))
       if(str_detect(error_message[1], "you are not allowed to download")) {
         # Movebank data license url =
         # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
