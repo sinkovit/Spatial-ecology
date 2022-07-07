@@ -54,6 +54,9 @@ parseGpsText <- function(file) {
       names(gpsdata)[names(gpsdata) == 'timestamp'] <- 'time'
       names(gpsdata)[names(gpsdata) == 'Timestamp'] <- 'time'
       names(gpsdata)[names(gpsdata) == 'TIMESTAMP'] <- 'time'
+      names(gpsdata)[names(gpsdata) == 'date'] <- 'time'
+      names(gpsdata)[names(gpsdata) == 'Date'] <- 'time'
+      names(gpsdata)[names(gpsdata) == 'DATE'] <- 'time'
 
       names(gpsdata)[names(gpsdata) == 'Id'] <- 'id'
       names(gpsdata)[names(gpsdata) == 'ID'] <- 'id'

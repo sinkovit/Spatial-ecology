@@ -12,7 +12,8 @@ infiles <- c("Data/T-x-Y-z.txt",
 "Data/timestamp-lat-long-id.csv",
 "Data/missing-lat.csv",
 "Data/missing-t.txt",
-"Data/missing-x.txt")
+"Data/missing-x.txt",
+"Data/date-x-y.txt")
 
 for (file in infiles) {
     print(file)
