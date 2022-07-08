@@ -41,7 +41,9 @@ library(move)
 library(ggplot2)
 library(stringr)
 
+source("gps.R")
 source("movebank.R")
+source("util.R")
 
 sessionInfo()
 
@@ -161,7 +163,8 @@ animalAttributes <- function(data_df) {
 
       if(row.index == 1) {
         cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
-        dim.label <- paste('dimensions (', max_pix, 'm)', sep = "")
+        dim.label <- paste('grid dimensions (', max_pix, 'm)', sep = "")
+        #cell.size.label <- "cell size (m)"
         columns.new <- c(cell.size.label, dim.label)
         result[ , cell.size.label] <- numeric()
         result[ , dim.label] <- character()
@@ -226,35 +229,38 @@ ui <- fluidPage(
     sidebarPanel (
       id = "myapp",
 
-      textInput ( "movebank.username", "Movebank Username", value = "mona",
-                  width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "g0MB2022",
-                  width = NULL, placeholder = NULL),
-      textInput ( "movebank.studyid", "Movebank Study ID", value = "408181528",
-                  width = NULL, placeholder = NULL ),
-
-      hr ( style = "border-top: 1px solid #000000;" ),
-    
-	    # Input: Select a file ----
-	    fileInput ( "file.upload", "Please upload your GPS data file:",
-                  multiple = FALSE,
-                 accept = c ( "text/csv",
-                          "text/comma-separated-values,text/plain",
-                         ".csv")),
-
-	    # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-	    radioButtons ( "radio", label = h4 ( "Mode" ),
-    			    choices = list ( "2D" = 2, "3D" = 3 ), 
-    			    selected = 2 ),
-
-	    # Copy the line below to make a number input box into the UI.
-	    numericInput ( "sig2obs", label = h4 ( "sig2obs" ), value = 25.0 ),
-
-	    # Copy the line below to make a number input box into the UI.
-	    numericInput ( "tmax", label = h3("t.max"), value = 185.0 ),
-
-	    actionButton ( "runx", label = "Run" ),
-	    actionButton ( "reset", "Reset form" ),
+      tabsetPanel(type = "tabs",
+                  tabPanel("1. Load Data",
+                           hr(style = "border-top: 1px solid #000000;"),
+                           fileInput("file.upload",
+                                     "OR upload your GPS data file:",
+                                     multiple = FALSE,
+                                     accept = c ( "text/csv",
+                                                  "text/comma-separated-values,text/plain",
+                                                  ".csv"))),
+                  textInput("movebank.username", "Movebank Username",
+                                     value = "mona", width = NULL,
+                                     placeholder = NULL),
+                           passwordInput("movebank.password", "Movebank Password",
+                                         value = "g0MB2022", width = NULL,
+                                         placeholder = NULL),
+                           textInput("movebank.studyid", "Movebank Study ID",
+                                       value = "408181528", width = NULL,
+                                       placeholder = NULL),
+                  tabPanel("2. Set Parameters",
+                           numericInput("sig2obs", label = h4("sig2obs"),
+                                        value = 25.0),
+                           numericInput("tmax", label = h4("t.max (minutes)"),
+                                        value = 185.0),
+                           numericInput("cellsize", label = h4("cell size (meters)"),
+                                        value = 30 ),
+                           # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
+                           radioButtons("radio", label = h4("mode"),
+                                        choices = list("2D" = 2, "2.5D" = 1, "3D" = 3), 
+                                        selected = 2))),
+      hr(style = "border-top: 2px solid #000000;"),
+      actionButton("runx", label = "Run"),
+      actionButton("reset", "Reset form"),
 
 	    textOutput ( "debug" ),
 	  
@@ -306,7 +312,6 @@ server <- function ( input, output, session ) {
          ! is.null ( input$movebank.studyid ) ) {
       shinyjs::disable ( "runx" )
 
-
       #data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
       #output$status <- renderPrint({"Retrieving data from MoveBank..."})
       print("Accessing Movebank...")
@@ -339,11 +344,14 @@ server <- function ( input, output, session ) {
       #print(paste("str =", str(diamonds2)))
       #print(paste("diamonds2 =", diamonds2))
       output$table <- DT::renderDataTable({
-        DT::datatable(stat[], caption=caption)
+        DT::datatable(stat[], extensions = 'Buttons', caption=caption,
+                      options = list(autoWidth = TRUE, dom = 'Bfrtip',
+                                     buttons = c('csv', 'excel')),
+                      selection = list(mode = 'single', selected = c(1), target = 'row'))
       })
       
       
-      #print("Creating plot...")
+      print("Creating plot...")
       ##withProgress(message = "Creating plot...", {
         ##plotMKDE ( movebankProcess ( input$sig2obs, input$tmax, data ) )
       #plots <- movebankProcess(input$sig2obs, input$tmax, data)
