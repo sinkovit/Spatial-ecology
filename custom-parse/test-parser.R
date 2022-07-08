@@ -14,7 +14,8 @@ infiles <- c("Data/T-x-Y-z.txt",
 "Data/missing-t.txt",
 "Data/missing-x.txt",
 "Data/date-x-y.txt",
-"Data/Condor-movebank-trunc.csv")
+"Data/Condor-movebank.csv",
+"Data/Condor-movebank-noutm.csv")
 
 for (file in infiles) {
     print(file)

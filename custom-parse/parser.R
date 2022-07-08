@@ -1,17 +1,38 @@
 parseGpsText <- function(file) {
 
-      # Parse a plain text (whitespace separate values) or csv file
-      # containing animal GPS tracking data. Also renames columns to
-      # use a standard set of column names - x, y, z, lat, long, time,
-      # id. If time is in timestamp format, convert to minutes from
-      # first reading.
-      #
-      # Returns a data frame with appropriately renamed columns.
+# Parse a plain text (whitespace separate values) or csv file
+# containing animal GPS tracking data and rename columns to use a
+# canonical set of names - x, y, z, lat, long, time, id, utm.zone,
+# utm.easting, utm.northing
+
+# Note that not all data sets will have all columns, but they do need
+# to contain time and some specification of spatial coordinate (x-y,
+# lat-long and/or UTM)
+
+# If time is in POXSIX timestamp format, convert to minutes from start
+# of epoch (1/1/1970)
+#
+# Add an 'id' column if the data set does not have one - this allows
+# the processing routines to loop over animals without having to check
+# if the column exists
+
+# Parse a plain text (whitespace separate values) or csv file
+# containing animal GPS tracking data and rename columns to use a
+# canonical set of names - x, y, z, lat, long, time, id utm.zone,
+# utm.easting, utm.northing Note that not all data sets will have all
+# columns, but they do need to contain time and some specification of
+# spatial coordinate (x-y, lat-long and/or UTM) If time is in
+# timestamp format, convert to minutes from first reading Add an 'id'
+# column if the data set does not have one - this allows the
+# processing routines to loop over animals without having to check if
+# the column exists
+
+# Function returns a data frame with appropriately renamed columns
 
       library(tools)
       library(move)
 
-      # Determine file type and then load data
+      #### Determine file type and then load data
       
       ext <- file_ext(file)
       if (ext == "csv") { 
@@ -23,133 +44,148 @@ parseGpsText <- function(file) {
       	# implement error handling
       }
 
-      # Rename column names to conform to x, y, z, lat, long, t, id
-      
+      #### Rename column names to conform to canonical names
+
+      # Horizontal coordinates (canonical name: x and y)
       names(gpsdata)[names(gpsdata) == 'X'] <- 'x'
       names(gpsdata)[names(gpsdata) == 'Y'] <- 'y'
 
-      names(gpsdata)[names(gpsdata) == 'Z'] <- 'z'
-      names(gpsdata)[names(gpsdata) == 'height-raw'] <- 'z'
-      names(gpsdata)[names(gpsdata) == 'height_raw'] <- 'z'
-      names(gpsdata)[names(gpsdata) == 'height.raw'] <- 'z'
+      # Horizontal UTM coordinates (canonical name: utm.[easting|northing])
+      names(gpsdata)[names(gpsdata) == 'utm-easting'] <- 'utm.easting'
+      names(gpsdata)[names(gpsdata) == 'utm_easting'] <- 'utm.easting'
+      names(gpsdata)[names(gpsdata) == 'utm-northing'] <- 'utm.northing'
+      names(gpsdata)[names(gpsdata) == 'utm_northing'] <- 'utm.northing'
 
-      names(gpsdata)[names(gpsdata) == 'Lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'LAT'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'location_lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'Location_lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'LOCATION_LAT'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'location-lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'Location-lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'LOCATION-LAT'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'location.lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'Location.lat'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'LOCATION.LAT'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'latitute'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'Latitute'] <- 'lat'
-      names(gpsdata)[names(gpsdata) == 'LATITUDE'] <- 'lat'
+      # UTM zone (canonical name: utm.zone)
+      options <- c('Z', 'utm-zone', 'utm_zone', 'utmzone', 'zone')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'utm.zone'
+      }
 
-      names(gpsdata)[names(gpsdata) == 'Long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'LONG'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'location_long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'Location_long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'LOCATION_LONG'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'location-long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'Location-long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'LOCATION-LONG'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'location.long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'Location.long'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'LOCATION.LONG'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'longitude'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'Longitude'] <- 'long'
-      names(gpsdata)[names(gpsdata) == 'LONGITUDE'] <- 'long'
+      # Vertical location (canonical name: z)
+      options <- c('Z', 'height-raw', 'height_raw', 'height.raw')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'z'
+      }
 
-      names(gpsdata)[names(gpsdata) == 't'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'T'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'Time'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'TIME'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'timestamp'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'Timestamp'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'TIMESTAMP'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'date'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'Date'] <- 'time'
-      names(gpsdata)[names(gpsdata) == 'DATE'] <- 'time'
+      # Latitude (canonical name: lat)
+      options <- c('Lat', 'LAT', 'location_lat', 'Location_lat', 'LOCATION_LAT',
+      	      	   'location-lat', 'Location-lat', 'LOCATION-LAT', 'location.lat',
+		   'Location.lat', 'LOCATION.LAT', 'latitute', 'Latitute', 'LATITUDE')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'lat'
+      }
 
-      names(gpsdata)[names(gpsdata) == 'Id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'ID'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'individual_id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'Individual_id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'INDIVIDUAL_ID'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'individual-id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'Individual-id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'INDIVIDUAL-ID'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'individual.id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'Individual.id'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'INDIVIDUAL.ID'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'identifier'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'Identifier'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'IDENTIFIER'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'individual-local-identifier'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'individual_local_identifier'] <- 'id'
-      names(gpsdata)[names(gpsdata) == 'individual.local.identifier'] <- 'id'
+      # Longitude (canonical name: long)
+      options <- c('Long', 'LONG', 'location_long', 'Location_long',
+                  'LOCATION_LONG', 'location-long', 'Location-long', 'LOCATION-LONG',
+	   	  'location.long', 'Location.long', 'LOCATION.LONG', 'longitude',
+	    	  'Longitude', 'LONGITUDE')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'long'
+      }
 
-      names(gpsdata)[names(gpsdata) == 'easting'] <- 'utm-easting'
-      names(gpsdata)[names(gpsdata) == 'easting'] <- 'utm_easting'
-      names(gpsdata)[names(gpsdata) == 'easting'] <- 'utm.easting'
+      # Time (canonical name: time)
+      options <- c('t', 'T', 'Time', 'TIME', 'timestamp', 'Timestamp',
+                   'TIMESTAMP', 'date', 'Date', 'DATE')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'time'
+      }
 
-      names(gpsdata)[names(gpsdata) == 'northing'] <- 'utm-northing'
-      names(gpsdata)[names(gpsdata) == 'northing'] <- 'utm_northing'
-      names(gpsdata)[names(gpsdata) == 'northing'] <- 'utm.northing'
+      # animal identifier (canonical name: id)
+      options <- c('Id', 'ID',
+      	           'identifier', 'Identifier', 'IDENTIFIER',
+		   'individual-local-identifier', 'individual_local_identifier', 'individual.local.identifier',
+		   'local-identifier', 'local_identifier', 'local.identifier')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'id'
+      }
 
-
-      # Make sure that we have the required columns
+      #### Test that data set has the required columns - time plus complete spatial coordinates
       
       if ("time" %in% colnames(gpsdata) &&
-      	  ( ("x"   %in% colnames(gpsdata)   && "y"    %in% colnames(gpsdata)) ||
+      	  ( ("x" %in% colnames(gpsdata) && "y" %in% colnames(gpsdata)) ||
+      	    ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata) && "utm.zone" %in% colnames(gpsdata)) ||
       	    ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
 	 # All is good
       } else {
       	 print("Missing required columns; must have time and lat-long or x-y")
 	 # Implement error handling
       }
-	  
-      # If we have lat-long data without x-y data, do conversion to
-      # aeqd (Azimuthal Equidistance) projection. This step is a
-      # little convoluted since we need to convert to a "move" object
-      # to use the spTransform() function, convert back to data frame
-      # and then extract converted columns. Note the the conversion
-      # function puts the new x data into column coords.x2 and new y
-      # data into coords.x1. In the future, should explore how this
-      # can be done more simply
-      
-      if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
-      	 (!"x" %in% colnames(gpsdata)  && !"y"   %in% colnames(gpsdata))) {
-	 if (class(gpsdata$time) == "character") {
-	     gpsmb <- move(x=gpsdata$long, y=gpsdata$lat,
-	                   time=as.POSIXct(gpsdata$time, format="%Y-%m-%d %H:%M:%S", tz="UTC"),
-	                   proj=CRS("+proj=longlat +ellps=WGS84"))
-             gpsmb <- spTransform(gpsmb, center=TRUE)
-	 } else {
-	     gpsmb <- move(x=gpsdata$long, y=gpsdata$lat,
-	                   time=as.POSIXct(gpsdata$time, origin = "1970-01-01"),
-	                   proj=CRS("+proj=longlat +ellps=WGS84"))
-             gpsmb <- spTransform(gpsmb, center=TRUE)
 
-         }
-	 tempdf <- as.data.frame(gpsmb)
-	 gpsdata$x <- tempdf$coords.x2
-	 gpsdata$y <- tempdf$coords.x1
-	 rm(gpsmb)
-	 rm(tempdf)
-      }
-
-      # Convert timestamp to epoch time (minutes since 1/1/1970)
+      #### Convert time to epoch time (minutes since 1/1/1970)
 
       if (class(gpsdata$time) == "character") {
       	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
       }
 
-      # Return a data frame containing x, y and t (minutes), plus
-      # optionally id and z. This format can then easily be used
+      #### Add an 'id' column if it doesn't already exist
+
+      if (!"id" %in% colnames(gpsdata)) {
+      	 gpsdata['id'] <- 1
+      }
+
+      #### Choose/set horizonal spatial coordinates
+
+      # The data set may contain redundant spatial data in multiple
+      # formats. For example, csv files downloaded from Movebank will
+      # contain lat-long plus optionally UTM coordinates. Here we
+      # impose the following precedence rules
+      #
+      # (1) UTM coordinates
+      # (2) x-y coordinates
+      # (3) lat-long, converted to UTM
+
+      # If we have lat-long data without x-y or UTM data, do
+      # conversion to UTM. This step is a little convoluted since we
+      # need to convert to a "move" object to use the spTransform()
+      # function, convert back to data frame and then extract
+      # UTM data
+
+      if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
+      	 (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata)) &&
+      	 (!"x" %in% colnames(gpsdata)  && !"y" %in% colnames(gpsdata))) {
+
+	 # Determine the UTM zone
+	 # See https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
+	 utm <- ceiling((180 + min(gpsdata$long))/6)
+
+	 # Create a move object from data frame
+	 gpsmb <- move(x=gpsdata$long, y=gpsdata$lat,
+	               time=as.POSIXct(gpsdata$time, origin = "1970-01-01"),
+	 	       proj=CRS("+proj=longlat +ellps=WGS84"))
+
+         # Transform lat-long to UTM easting and northing
+	 # spTransform puts easting and northing into new columns coords.x1 and coords.x2
+         crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
+         data.utm <- spTransform(gpsmb, CRSobj=crs.str)
+
+	 # Extract the UTM data and add to gpsdata data frame
+	 tempdf <- as.data.frame(data.utm)
+	 gpsdata$utm.easting <- tempdf$coords.x1
+	 gpsdata$utm.northing <- tempdf$coords.x2
+	 if (mean(gpsdata$lat) > 0.0) {
+	    utm <- paste(utm, "N", sep="")
+	 } else {
+	    utm <- paste(utm, "S", sep="")
+	 }	 
+	 gpsdata$utm.zone <- utm
+	 rm(gpsmb)
+	 rm(tempdf)
+      }
+
+      #### Delete the column names that we don't need
+
+      # This isn't strictly necessary and we may decide to revisit
+      # later, but it can eliminate some confusion over which columns
+      # to subsequently use.
+
+      canonical <- c('x', 'y', 'z', 'id', 'time', 'lat', 'long', 'utm.easting', 'utm.northing', 'utm.zone')
+      for (name in colnames(gpsdata)) {
+      	  if (!name %in% canonical) {
+	     gpsdata[name] <- NULL
+     	  }
+      }
 
       return(gpsdata)
 }
