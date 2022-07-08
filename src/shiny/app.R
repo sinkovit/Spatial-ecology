@@ -47,7 +47,6 @@ source("util.R")
 
 sessionInfo()
 
-
 # Define UI for app
 ui <- fluidPage(
   
@@ -203,10 +202,10 @@ server <- function ( input, output, session ) {
       #print("Plotting done")
       shinyjs::enable ( "runx" )
     }
-    else if ( ! is.null ( input$file.upload ) ) {
-      plotMKDE ( getMKDEData ( input$sig2obs, input$tmax,
-                               input$file.upload$datapath ) ) }
-  } )
+    else if(! is.null(input$file.upload)) {
+      plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,
+                             input$file.upload$datapath))}
+  })
   
   output$mkdePlot <- renderPlot ( { mkde.plot() } )
   

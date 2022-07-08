@@ -31,10 +31,10 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-getMKDEData <- function ( sig2obs, tmax, path.file ) {
-  # Read GPS movement data from file
-  
-  panda <- read.table ( path.file, header=TRUE)
+
+# Read GPS movement data from file
+GPSDataLoader <- function(sig2obs, tmax, cell.sz, path.file) {
+  panda <- read.table(path.file, header=TRUE)
   
   xmin <- min(panda$x)
   ymin <- min(panda$y)
@@ -42,7 +42,6 @@ getMKDEData <- function ( sig2obs, tmax, path.file ) {
   ymax <- max(panda$y)
   xrange <- xmax-xmin
   yrange <- ymax-ymin
-  cell.sz <- 10
   nx = xrange/cell.sz
   ny = yrange/cell.sz
   mv.dat <- initializeMovementData(panda$time, panda$x, panda$y, sig2obs=sig2obs, t.max=tmax)
