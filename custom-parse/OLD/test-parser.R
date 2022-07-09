@@ -1,5 +1,4 @@
-source("preprocessDataframe.R")
-source("loadDataframeFromFile.R")
+source("parser.R")
 
 # Test script for parser code
 
@@ -20,8 +19,7 @@ infiles <- c("Data/T-x-Y-z.txt",
 
 for (file in infiles) {
     print(file)
-    gpsdata <- loadDataframeFromFile(file)
-    gpsdata <- preprocessDataframe(gpsdata)
+    gpsdata <- parseGpsText(file)
     print(head(gpsdata))
     cat('\n')
 }
