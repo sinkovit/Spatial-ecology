@@ -114,7 +114,9 @@ ui <- fluidPage(
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "mkdePlot" ), type = 5),
       #plotOutput ( "mkdePlot" ),
+      hr(style = "border-top: 1px solid #000000;"),
       textOutput("table.info"),
+      #hr(style = "border-top: 1px solid #000000;"),
       #htmlOutput("table.info"),
       DT::dataTableOutput('table')
     ),
@@ -156,22 +158,22 @@ server <- function ( input, output, session ) {
 
       #data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
       #output$status <- renderPrint({"Retrieving data from MoveBank..."})
-      print("Accessing Movebank...")
+      printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
       results <-
         movebankDataLoader(username = input$movebank.username,
                            password = input$movebank.password,
                            study = input$movebank.studyid, login = login )
       #})
-      print("Done")
+      #print("Done")
       shiny::validate(need(results[[2]] == "", results[[2]]))
-      data <- results[[1]]
+      move.stack <- results[[1]]
       errors <- results[[2]]
 
       #output$status <- renderPrint({"Saving data locally..."})
       
-      print("Creating table...")
-      stat <- animalAttributes(data)
+      data.frame <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
+      stat <- animalAttributes(data.frame)
       #print(paste("stat =", stat))
       
       caption <- "m = meters"
@@ -179,7 +181,8 @@ server <- function ( input, output, session ) {
       #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
       #output$table.info <- renderUI(lapply(exampletext, tags$p))
       
-      output$table.info <- renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various pixel sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a pixel size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions\n"})
+      output$table.info <-
+        renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various pixel sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a pixel size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions\n\n"})
       
       #diamonds2 = diamonds[sample(nrow(diamonds), 5), ]
       #print(paste("class =", class(diamonds2)))
