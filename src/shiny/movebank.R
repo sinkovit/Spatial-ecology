@@ -40,17 +40,20 @@ movebankDataLoader <- function(username, password, study, login) {
   
   tryCatch(
     {
-      if(file.exists(file.local)) {
-        print("Data exists locally, loading...")
+      #if(file.exists(file.local)) {
+        if(FALSE) {
+        printf("  data exists locally, loading...")
         load(file.local)
+        printf("done\n")
         return(list(data, ""))
       } else {
-        print("Authenticating into Movebank...")
+        printf("  authenticating into Movebank...")
         login <- movebankLogin(username = username, password = password )
-        print("Retrieving data from Movebank...")
+        printf("done\n  retrieving data from Movebank...")
         d <- getMovebankData(study=strtoi(study), login=login)
-        print("Saving data locally...")
-        save ( data, file=file.local )
+        printf("done\n  saving data locally...")
+        save ( d, file=file.local )
+        printf("done\n")
         return(list(d, ""))
       }},
     error = function(error_message) {
@@ -83,19 +86,22 @@ movebankDataLoader <- function(username, password, study, login) {
 }
 
 
-movebankProcess <- function(sig2obs, tmax, data) {
-  # Data preparation
-  # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
-  # (2) Convert MoveStack to data frame
-  # (3) Convert timestamps to epoch minutes
-  printf("Processing data...")
+# Data preparation
+# (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
+# (2) Convert MoveStack to data frame
+# (3) Convert timestamps to epoch minutes
+# Code based on Bob's code @
+# https://github.com/sinkovit/Spatial-ecology/blob/Bob/Example_MB1/mb2.R
+movebankPreprocess <- function(sig2obs, tmax, data) {
+  printf("Preprocessing data...")
   data <- spTransform(data, center=TRUE)
   data_df <- as.data.frame(data)
   data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
   local_identifiers <- unique(data_df$local_identifier)
+  printf("  %d animals found\n", length(local_identifiers))
   #print(paste("local_identifiers = ", local_identifiers))
   #print(paste("length = ", length(local_identifiers)))
-  plots <- list()
+  #plots <- list()
   
   for (local_id in local_identifiers) {
     x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
@@ -120,21 +126,21 @@ movebankProcess <- function(sig2obs, tmax, data) {
       cell.sz <- yrange/ny
     }  
     
-    print(paste("local_identifier =", local_id))
-    print("Home range dimensions (pixels/voxels)")
-    print(paste("nx =", nx, "ny =", ny))
-    print("Home range dimensions (meters)")
-    print(paste("xrange =", xrange, "yrange =", yrange))
-    print(paste("cell size =", cell.sz))
+    # print(paste("local_identifier =", local_id))
+    # print("Home range dimensions (pixels/voxels)")
+    # print(paste("nx =", nx, "ny =", ny))
+    # print("Home range dimensions (meters)")
+    # print(paste("xrange =", xrange, "yrange =", yrange))
+    # print(paste("cell size =", cell.sz))
     
     # Create home range using mkde
-    mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
-    mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
-    dens.res <- initializeDensity(mkde.obj, mv.dat)
-    mkde.obj <- dens.res$mkde.obj
-    mv.dat <- dens.res$move.dat
-    plots <- append(plots, list(mkde.obj))
+    # mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
+    # mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
+    # dens.res <- initializeDensity(mkde.obj, mv.dat)
+    # mkde.obj <- dens.res$mkde.obj
+    # mv.dat <- dens.res$move.dat
+    # plots <- append(plots, list(mkde.obj))
   }
-  return(plots)
+  return(data_df)
 }
 
