@@ -75,29 +75,30 @@ ui <- fluidPage(
                   tabPanel("1. Load Data",
                            hr(style = "border-top: 1px solid #000000;"),
                            fileInput("file.upload",
-                                     "OR upload your GPS data file:",
+                                     "Upload your GPS data file:",
                                      multiple = FALSE,
                                      accept = c ( "text/csv",
                                                   "text/comma-separated-values,text/plain",
-                                                  ".csv"))),
-                  textInput("movebank.username", "Movebank Username",
+                                                  ".csv")),
+                           textInput("movebank.username", "OR get data from Movebank\nUsername",
                                      value = "mona", width = NULL,
                                      placeholder = NULL),
-                           passwordInput("movebank.password", "Movebank Password",
+                           passwordInput("movebank.password", "Password",
                                          value = "g0MB2022", width = NULL,
                                          placeholder = NULL),
-                           textInput("movebank.studyid", "Movebank Study ID",
+                           textInput("movebank.studyid", "Study ID",
                                        value = "408181528", width = NULL,
-                                       placeholder = NULL),
+                                       placeholder = NULL)),
                   tabPanel("2. Set Parameters",
-                           numericInput("sig2obs", label = h4("sig2obs"),
+                           hr(style = "border-top: 1px solid #000000;"),
+                           numericInput("sig2obs", label = "sig2obs (meters)",
                                         value = 25.0),
-                           numericInput("tmax", label = h4("t.max (minutes)"),
+                           numericInput("tmax", label = "t.max (minutes)",
                                         value = 185.0),
-                           numericInput("cellsize", label = h4("cell size (meters)"),
+                           numericInput("cellsize", label = "Cell size (meters)",
                                         value = 30 ),
                            # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-                           radioButtons("radio", label = h4("mode"),
+                           radioButtons("radio", label = "Mode",
                                         choices = list("2D" = 2, "2.5D" = 1, "3D" = 3), 
                                         selected = 2))),
       hr(style = "border-top: 2px solid #000000;"),
@@ -182,7 +183,7 @@ server <- function ( input, output, session ) {
       #output$table.info <- renderUI(lapply(exampletext, tags$p))
       
       output$table.info <-
-        renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various pixel sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a pixel size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions\n\n"})
+        renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions\n\n"})
       
       #diamonds2 = diamonds[sample(nrow(diamonds), 5), ]
       #print(paste("class =", class(diamonds2)))
