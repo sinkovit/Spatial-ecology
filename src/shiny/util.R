@@ -54,7 +54,8 @@
 # --------------------------------------------------------------------
 
 animalAttributes <- function(data_df) {
-  
+  printf("Calculating spatial attributes...\n")
+
   # Replicate C printf functionality
   printf <- function(...) cat(sprintf(...))
   
@@ -101,7 +102,7 @@ animalAttributes <- function(data_df) {
   result[ , 'East-West (m)'] <- numeric()
   result[ , 'North-South (m)'] <- numeric()
   row.index <- 1
-  
+
   for (local_id in animals) {
     if(local_id == "all") {
       long_minmax = range(data_df$location_long)
