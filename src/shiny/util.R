@@ -95,8 +95,9 @@ animalAttributes <- function(data_df) {
   #                     grid = character(), px(m) = numeric(), grid = character() )
   # Oddly above doesn't work but below works...
   result <- data.frame(id = numeric())
-  result[ , 'longitude (min)'] <- numeric()
-  result[ , 'longitude (max)'] <- numeric()
+  # result[ , 'longitude (min)'] <- numeric()
+  # result[ , 'longitude (max)'] <- numeric()
+  result[ , 'longitude [min, max]'] <- character()
   result[ , 'latitude (min)'] <- numeric()
   result[ , 'latitude (max)'] <- numeric()
   result[ , 'East-West (m)'] <- numeric()
@@ -123,11 +124,17 @@ animalAttributes <- function(data_df) {
     y_range <- y_minmax[2] - y_minmax[1]
     printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1],
            long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
-    row <- c(local_id, round(long_minmax[1],3), round(long_minmax[2],3),
+    # row <- c(local_id, round(long_minmax[1],3), round(long_minmax[2],3),
+    #          round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
+    #          round(y_range,2))
+    longitude <- paste("[", round(long_minmax[1],3), ",", round(long_minmax[2],3),
+                       "]")
+    row <- c(local_id, longitude,
              round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
              round(y_range,2))
 
     row.tail = c()
+    option.counter <- 1
     for (max_pix in max_pixels) {
       if (x_range >= y_range) {
         nx <- max_pix
@@ -148,15 +155,21 @@ animalAttributes <- function(data_df) {
       printf("%6.1f %7s ", cell.sz, dims)
 
       if(row.index == 1) {
-        cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
-        dim.label <- paste('grid dimensions (', max_pix, 'm)', sep = "")
-        #cell.size.label <- "cell size (m)"
-        columns.new <- c(cell.size.label, dim.label)
-        result[ , cell.size.label] <- numeric()
-        result[ , dim.label] <- character()
+        # cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
+        # dim.label <- paste('grid dimensions (', max_pix, 'm)', sep = "")
+        # columns.new <- c(cell.size.label, dim.label)
+        # result[ , cell.size.label] <- numeric()
+        # result[ , dim.label] <- character()
+        label <- paste("cell & grid sizes (#", option.counter, ")", sep = "")
+        #print(paste("label =", label))
+        result[ , label] <- character()
+        option.counter <- option.counter + 1
       }
 
-      row.tail <- append(row.tail, c(cell.sz, dims))
+      # row.tail <- append(row.tail, c(cell.sz, dims))
+      value <- paste(cell.sz, "&", dims)
+      #print(paste("value =", value))
+      row.tail <- append(row.tail, c(value))
     }
     row <- append(row,row.tail)
     result[row.index, ] <- row
