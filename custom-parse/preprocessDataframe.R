@@ -18,7 +18,7 @@ preprocessDataframe <- function(gpsdata) {
 # (4) If necessary, generate UTM coordinates from latitudes and
 # longitudes
 
-      library(move)
+      library(sp)
 
       #### Rename column names to conform to canonical names
 
@@ -113,10 +113,11 @@ preprocessDataframe <- function(gpsdata) {
       # (3) lat-long, converted to UTM
 
       # If we have lat-long data without x-y or UTM data, do
-      # conversion to UTM. This step is a little convoluted since we
-      # need to convert to a "move" object to use the spTransform()
-      # function, convert back to data frame and then extract
-      # UTM data
+      # conversion to UTM using sp package. Note that call to
+      # proj4string() gives warning message:
+      # In showSRID(uprojargs, format = "PROJ", multiline = "NO",
+      # prefer_proj = prefer_proj) : Discarded datum Unknown based on
+      # WGS84 ellipsoid in Proj4 definition
 
       if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
       	 (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata)) &&
@@ -126,28 +127,25 @@ preprocessDataframe <- function(gpsdata) {
 	 # See https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
 	 utm <- ceiling((180 + min(gpsdata$long))/6)
 
-	 # Create a move object from data frame
-	 gpsmb <- move(x=gpsdata$long, y=gpsdata$lat,
-	               time=as.POSIXct(gpsdata$time, origin = "1970-01-01"),
-	 	       proj=CRS("+proj=longlat +ellps=WGS84"))
+	 # Conversion using sp package
+	 gpsdata.latlong <- gpsdata[c("lat", "long")]
+	 sp::coordinates(gpsdata.latlong) <- ~long+lat
+	 sp::proj4string(gpsdata.latlong) <- CRS("+proj=longlat +ellps=WGS84")
+	 crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
+	 gpsdata.latlong <- sp::spTransform(gpsdata.latlong, CRSobj=crs.str)
+	 gpsdata$utm.easting <- gpsdata.latlong$long
+	 gpsdata$utm.northing <- gpsdata.latlong$lat
+	 rm(gpsdata.latlong)
 
-         # Transform lat-long to UTM easting and northing
-	 # spTransform puts easting and northing into new columns coords.x1 and coords.x2
-         crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
-         data.utm <- spTransform(gpsmb, CRSobj=crs.str)
-
-	 # Extract the UTM data and add to gpsdata data frame
-	 tempdf <- as.data.frame(data.utm)
-	 gpsdata$utm.easting <- tempdf$coords.x1
-	 gpsdata$utm.northing <- tempdf$coords.x2
+	 # Add N/S to UTM zone. This has to be done after conversion
+         # since sp package expects an integer value for zone
+	 
 	 if (mean(gpsdata$lat) > 0.0) {
 	    utm <- paste(utm, "N", sep="")
 	 } else {
 	    utm <- paste(utm, "S", sep="")
 	 }	 
 	 gpsdata$utm.zone <- utm
-	 rm(gpsmb)
-	 rm(tempdf)
       }
 
       #### Delete the column names that we don't need
@@ -161,6 +159,15 @@ preprocessDataframe <- function(gpsdata) {
       	  if (!name %in% canonical) {
 	     gpsdata[name] <- NULL
      	  }
+      }
+
+      #### Create new columns named xdata and ydata
+      if ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) {
+      	 gpsdata$xdata = gpsdata$utm.easting
+	 gpsdata$ydata = gpsdata$utm.northing
+      } else {
+      	 gpsdata$xdata = gpsdata$x
+	 gpsdata$ydata = gpsdata$y
       }
 
       return(gpsdata)
