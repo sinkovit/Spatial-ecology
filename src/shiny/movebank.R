@@ -97,35 +97,37 @@ movebankPreprocess <- function(sig2obs, tmax, data) {
   data <- spTransform(data, center=TRUE)
   data_df <- as.data.frame(data)
   data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  local_identifiers <- unique(data_df$local_identifier)
-  printf("%d animals found\n", length(local_identifiers))
-  #print(paste("local_identifiers = ", local_identifiers))
-  #print(paste("length = ", length(local_identifiers)))
-  #plots <- list()
-  
-  for (local_id in local_identifiers) {
-    x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
-    y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
-    t <- data_df[which(data_df$local_identifier == local_id), "time"]
-    
-    # Get data range; set grid size and cell size
-    xmin <- min(x)
-    ymin <- min(y)
-    xmax <- max(x)
-    ymax <- max(y)
-    xrange <- xmax-xmin
-    yrange <- ymax-ymin
-    
-    if (xrange >= yrange) {
-      nx <- 50
-      ny <- as.integer(nx * (yrange/xrange))
-      cell.sz <- xrange/nx
-    } else {
-      ny <- 50
-      nx <- as.integer(ny * (xrange/yrange))
-      cell.sz <- yrange/ny
-    }  
-    
+  # local_identifiers <- unique(data_df$local_identifier)
+  # printf("%d animals found\n", length(local_identifiers))
+  # #print(paste("local_identifiers = ", local_identifiers))
+  # #print(paste("length = ", length(local_identifiers)))
+  # #plots <- list()
+  # 
+  # for (local_id in local_identifiers) {
+  #   print(paste("local_id =", local_id))
+  #   x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
+  #   print(paste("x =", x))
+  #   y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
+  #   t <- data_df[which(data_df$local_identifier == local_id), "time"]
+  #   
+  #   # Get data range; set grid size and cell size
+  #   xmin <- min(x)
+  #   ymin <- min(y)
+  #   xmax <- max(x)
+  #   ymax <- max(y)
+  #   xrange <- xmax-xmin
+  #   yrange <- ymax-ymin
+  #   
+  #   if (xrange >= yrange) {
+  #     nx <- 50
+  #     ny <- as.integer(nx * (yrange/xrange))
+  #     cell.sz <- xrange/nx
+  #   } else {
+  #     ny <- 50
+  #     nx <- as.integer(ny * (xrange/yrange))
+  #     cell.sz <- yrange/ny
+  #   }  
+  #   
     # print(paste("local_identifier =", local_id))
     # print("Home range dimensions (pixels/voxels)")
     # print(paste("nx =", nx, "ny =", ny))
@@ -140,7 +142,8 @@ movebankPreprocess <- function(sig2obs, tmax, data) {
     # mkde.obj <- dens.res$mkde.obj
     # mv.dat <- dens.res$move.dat
     # plots <- append(plots, list(mkde.obj))
-  }
+#}
   return(data_df)
 }
+
 

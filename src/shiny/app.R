@@ -40,6 +40,7 @@ library(shinycssloaders)
 library(move)
 library(ggplot2)
 library(stringr)
+library(shinyBS)
 
 source("gps.R")
 source("movebank.R")
@@ -91,16 +92,23 @@ ui <- fluidPage(
                                        placeholder = NULL)),
                   tabPanel("2. Set Parameters",
                            hr(style = "border-top: 1px solid #000000;"),
-                           numericInput("sig2obs", label = "sig2obs (meters)",
-                                        value = 25.0),
-                           numericInput("tmax", label = "t.max (minutes)",
-                                        value = 185.0),
-                           numericInput("cellsize", label = "Cell size (meters)",
-                                        value = 30 ),
                            # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-                           radioButtons("radio", label = "Mode",
+                           radioButtons("radio", label = "Mode:",
                                         choices = list("2D" = 2, "2.5D" = 1, "3D" = 3), 
-                                        selected = 2))),
+                                        selected = 2),
+                           tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
+                           bsTooltip(id = "sig2obslabel", placement = "right",
+                                     title = "Location error / variance"),
+                           numericInput("sig2obs", label = "",
+                                        value = 25.0),
+                           tags$strong(id = "tmaxlabel", "t.max (minutes):"),
+                           bsTooltip(id = "tmaxlabel", placement = "right",
+                                     title = "Maximum time threshold between consecutive locations"),
+                           numericInput("tmax", label = "",
+                                        value = 185.0),
+                           bsPopover(id = "tmax", title = "title", content = "content"),
+                           numericInput("cellsize", label = "Cell size (meters)",
+                                        value = 30 ))),
       hr(style = "border-top: 2px solid #000000;"),
       actionButton("runx", label = "Run"),
       actionButton("reset", "Reset form"),
@@ -124,6 +132,7 @@ ui <- fluidPage(
   )
 )
 
+#print(paste("ui =", ui))
 
 # Define server logic required
 server <- function ( input, output, session ) {
@@ -177,34 +186,46 @@ server <- function ( input, output, session ) {
       stat <- animalAttributes(data.frame)
       #print(paste("stat =", stat))
       
-      caption <- "m = meters"
-      
       #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
       #output$table.info <- renderUI(lapply(exampletext, tags$p))
       
       output$table.info <-
-        renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions\n\n"})
+        renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
       
       #diamonds2 = diamonds[sample(nrow(diamonds), 5), ]
       #print(paste("class =", class(diamonds2)))
       #print(paste("str =", str(diamonds2)))
       #print(paste("diamonds2 =", diamonds2))
+      
+      # See https://datatables.net/reference/option/ for doc on table options
+      # Table processing can be server-side or client-side (default), see
+      # https://datatables.net/reference/option/serverSide for more info
       output$table <- DT::renderDataTable({
-        DT::datatable(stat[], extensions = 'Buttons', caption=caption,
-                      options = list(autoWidth = TRUE, dom = 'Bfrtip',
-                                     buttons = c('csv', 'excel')),
-                      selection = list(mode = 'single', selected = c(1), target = 'row'))
+        DT::datatable(stat[], extensions = 'Buttons', caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+                      options =
+                        list(autoWidth = TRUE, buttons = c('csv', 'excel'),
+                             dom = 'Bfrtip', pagingType = "full_numbers",
+                             processing = TRUE, scrollX = TRUE,
+                             stateSave = TRUE),
+                      selection = list(mode = 'single', selected = c(1),
+                                       target = 'row'))
       })
       
       
       print("Creating plot...")
+      mkde.data <- getMKDEData(data.frame, 1, input$sig2obs, input$tmax,
+                               input$cellsize)
+      print("here 1")
+      print("mkde.data:")
+      str(mkde.data)
       ##withProgress(message = "Creating plot...", {
         ##plotMKDE ( movebankProcess ( input$sig2obs, input$tmax, data ) )
       #plots <- movebankProcess(input$sig2obs, input$tmax, data)
-      #plotMKDE(plots[[1]])
+      plotMKDE(mkde.data)
       ##})
-      #print("Plotting done")
+      print("Plotting done")
       shinyjs::enable ( "runx" )
+      shinyjs::enable ( "reset" )
     }
     else if(! is.null(input$file.upload)) {
       plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,

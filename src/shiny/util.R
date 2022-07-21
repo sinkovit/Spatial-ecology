@@ -160,7 +160,7 @@ animalAttributes <- function(data_df) {
         # columns.new <- c(cell.size.label, dim.label)
         # result[ , cell.size.label] <- numeric()
         # result[ , dim.label] <- character()
-        label <- paste("cell & grid sizes (#", option.counter, ")", sep = "")
+        label <- paste("cell (m) & grid sizes (#", option.counter, ")", sep = "")
         #print(paste("label =", label))
         result[ , label] <- character()
         option.counter <- option.counter + 1
@@ -181,3 +181,78 @@ animalAttributes <- function(data_df) {
 }
 
 
+# Create home range using mkde
+getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
+  printf("Generating plot...\n")
+  # str(data_df)
+  # print(summary(data_df))
+  # row <- data_df[index, ]
+  # print("row:")
+  # str(row)
+  print(paste("index = ", index))
+  ids <- unique(data_df$local_identifier)
+  print(paste("ids =", ids))
+  id <- ids[index]
+  print(paste("id =", id))
+  # str(row)
+  # print(summary(row))
+  print(paste("sig2obs =", sig2obs))
+  
+  x <- data_df[which(data_df$local_identifier == id), "location_long.1"]
+  #print(paste("x =", x))
+  y <- data_df[which(data_df$local_identifier == id), "location_lat.1"]
+  t <- data_df[which(data_df$local_identifier == id), "time"]
+  
+  # Get data range; set grid size and cell size
+  xmin <- min(x)
+  ymin <- min(y)
+  xmax <- max(x)
+  ymax <- max(y)
+  xrange <- xmax-xmin
+  #print(paste("xrange =", xrange))
+  yrange <- ymax-ymin
+  #print(paste("yrange =", yrange))
+  
+  if (xrange >= yrange) {
+    nx <- 50
+    ny <- as.integer(nx * (yrange/xrange))
+    #cell.sz <- xrange/nx
+  } else {
+    ny <- 50
+    nx <- as.integer(ny * (xrange/yrange))
+    #cell.sz <- yrange/ny
+  }  
+
+  mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
+  # print(paste("xmin =", xmin))
+  # print(paste("cell.size =", cell.size))
+  # print(paste("nx =", nx))
+  # print(paste("ymin =", ymin))
+  # print(paste("ny =", ny))
+  
+  mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = tmax)
+  mkde.obj <- initializeMKDE2D(xmin, cell.size, nx, ymin, cell.size, ny)
+  dens.res <- initializeDensity(mkde.obj, mv.dat)
+  #print(paste("t =", t))
+  #print(paste("x =", x))
+  #print(paste("y =", y))
+  print(paste("sig2obs =", sig2obs))
+  print(paste("tmax =", tmax))
+  print(paste("xmin =", xmin))
+  print(paste("cell.size =", cell.size))
+  print(paste("nx =", nx))
+  print(paste("ymin =", ymin))
+  print(paste("ny =", ny))
+  print("mv.dat:")
+  str(mv.dat)
+  print("mkde.obj:")
+  str(mkde.obj)
+  print("dens.res:")
+  str(dens.res)
+  mkde.obj <- dens.res$mkde.obj
+  mv.dat <- dens.res$move.dat
+  # plot <- append(plots, list(mkde.obj))
+  print("leaving getMKDEData()")
+  return(mkde.obj)
+}
+  

@@ -44,7 +44,8 @@ GPSDataLoader <- function(sig2obs, tmax, cell.sz, path.file) {
   yrange <- ymax-ymin
   nx = xrange/cell.sz
   ny = yrange/cell.sz
-  mv.dat <- initializeMovementData(panda$time, panda$x, panda$y, sig2obs=sig2obs, t.max=tmax)
+  mv.dat <- initializeMovementData(panda$time, panda$x, panda$y, sig2obs=sig2obs,
+                                   t.max=tmax)
   mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
   dens.res <- initializeDensity(mkde.obj, mv.dat)
   
