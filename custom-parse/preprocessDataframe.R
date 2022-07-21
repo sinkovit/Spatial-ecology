@@ -2,9 +2,9 @@ preprocessDataframe <- function(gpsdata) {
 
 # Pre-processes a data frame containing telemetry data.
 
-# (1) Rename columns to use a canonical set of names - x, y, z, lat,
-# long, time, id utm.zone, utm.easting, utm.northing. Note that not
-# all data sets will have all columns, but they do need to contain
+# (1) Rename columns to use a canonical set of names - x, y, zdata,
+# lat, long, time, id utm.zone, utm.easting, utm.northing. Note that
+# not all data sets will have all columns, but they do need to contain
 # time and some specification of spatial coordinate (x-y, lat-long
 # and/or UTM)
 
@@ -17,6 +17,9 @@ preprocessDataframe <- function(gpsdata) {
 
 # (4) If necessary, generate UTM coordinates from latitudes and
 # longitudes
+
+# (5) If we have UTM data, then rename utm.[easting|northing] to
+# [x|y]data. Otherwise rename the x and y columns to [x|y]data
 
       library(sp)
 
@@ -38,7 +41,7 @@ preprocessDataframe <- function(gpsdata) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'utm.zone'
       }
 
-      # Vertical location (canonical name: z)
+      # Vertical location (canonical name: zdata)
       options <- c('Z', 'height-raw', 'height_raw', 'height.raw')
       for (opt in options) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'z'
@@ -85,11 +88,11 @@ preprocessDataframe <- function(gpsdata) {
       	    ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
 	 # All is good
       } else {
-      	 print("Missing required columns; must have time and lat-long or x-y")
+      	 print("Missing required columns; must have time and lat-long, x-y or UTM")
 	 # Implement error handling
       }
 
-      #### Convert time to epoch time (minutes since 1/1/1970)
+      #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
 
       if (class(gpsdata$time) == "character") {
       	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
@@ -101,27 +104,16 @@ preprocessDataframe <- function(gpsdata) {
       	 gpsdata['id'] <- 1
       }
 
-      #### Choose/set horizonal spatial coordinates
+      #### Generate UTM coordinates from lat-long
 
-      # The data set may contain redundant spatial data in multiple
-      # formats. For example, csv files downloaded from Movebank will
-      # contain lat-long plus optionally UTM coordinates. Here we
-      # impose the following precedence rules
-      #
-      # (1) UTM coordinates
-      # (2) x-y coordinates
-      # (3) lat-long, converted to UTM
-
-      # If we have lat-long data without x-y or UTM data, do
-      # conversion to UTM using sp package. Note that call to
-      # proj4string() gives warning message:
-      # In showSRID(uprojargs, format = "PROJ", multiline = "NO",
-      # prefer_proj = prefer_proj) : Discarded datum Unknown based on
-      # WGS84 ellipsoid in Proj4 definition
+      # If we have lat-long data without UTM data, do conversion to
+      # UTM using sp package. Note that call to proj4string() gives
+      # warning message: In showSRID(uprojargs, format = "PROJ",
+      # multiline = "NO", prefer_proj = prefer_proj) : Discarded datum
+      # Unknown based on WGS84 ellipsoid in Proj4 definition
 
       if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
-      	 (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata)) &&
-      	 (!"x" %in% colnames(gpsdata)  && !"y" %in% colnames(gpsdata))) {
+      	 (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata))) {
 
 	 # Determine the UTM zone
 	 # See https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
@@ -154,20 +146,26 @@ preprocessDataframe <- function(gpsdata) {
       # later, but it can eliminate some confusion over which columns
       # to subsequently use.
 
-      canonical <- c('x', 'y', 'z', 'id', 'time', 'lat', 'long', 'utm.easting', 'utm.northing', 'utm.zone')
+      canonical <- c('x', 'y', 'zdata', 'id', 'time', 'lat', 'long', 'utm.easting', 'utm.northing', 'utm.zone')
       for (name in colnames(gpsdata)) {
       	  if (!name %in% canonical) {
 	     gpsdata[name] <- NULL
      	  }
       }
 
-      #### Create new columns named xdata and ydata
+      #### Rename UTM or x-y data to xdata and ydata
+
+      # Having columns named [xy]data simplifies the rest of the data
+      # processing since the we won't need to do tests to see which
+      # columns are available (e.g., do we have UTM or xy?). Use UTM
+      # data if we have it, otherwise use xy
+
       if ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) {
-      	 gpsdata$xdata = gpsdata$utm.easting
-	 gpsdata$ydata = gpsdata$utm.northing
+      	 names(gpsdata)[names(gpsdata) == 'utm.easting'] <- 'xdata'
+      	 names(gpsdata)[names(gpsdata) == 'utm.northing'] <- 'ydata'
       } else {
-      	 gpsdata$xdata = gpsdata$x
-	 gpsdata$ydata = gpsdata$y
+      	 names(gpsdata)[names(gpsdata) == 'x'] <- 'xdata'
+      	 names(gpsdata)[names(gpsdata) == 'y'] <- 'ydata'
       }
 
       return(gpsdata)
