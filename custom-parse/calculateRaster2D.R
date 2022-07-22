@@ -1,9 +1,12 @@
-calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz) {
+calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
+                              xmin, xmax, ymin, ymax) {
 
 # gpsdata - data frame containing animal movement data
 # sig2obs - location error variance
 # t.max - maximum time between locations
 # cell.sz - cell size
+# xmin, xmax - min/max x coordinate
+# ymin, ymax - min/max y coordinate
 
   library(mkde)
   library(raster)
@@ -13,10 +16,6 @@ calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz) {
       y <- gpsdata[which(gpsdata$id == id), "ydata"]
       t <- gpsdata[which(gpsdata$id == id), "time"]
 
-      xmin <- min(x)
-      ymin <- min(y)
-      xmax <- max(x)
-      ymax <- max(y)
       xrange <- xmax - xmin
       yrange <- ymax - ymin
 
