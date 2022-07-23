@@ -1,6 +1,9 @@
 calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
                               xmin, xmax, ymin, ymax) {
 
+# Calculate rasters for each indivdual in a dataframe using mkde
+# package and return the results as a list of rasters
+#
 # gpsdata - data frame containing animal movement data
 # sig2obs - location error variance
 # t.max - maximum time between locations
@@ -10,6 +13,9 @@ calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
 
   library(mkde)
   library(raster)
+
+  # Initialize list of rasters
+  rasters <- list()
 
   for (id in unique(gpsdata$id)) {
       x <- gpsdata[which(gpsdata$id == id), "xdata"]
@@ -36,7 +42,7 @@ calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
       mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
       dens.res <- initializeDensity(mkde.obj, mv.dat)
       mkde.obj <- dens.res$mkde.obj
-      mv.dat <- dens.res$move.dat
-      plotMKDE(mkde.obj)
+      rasters <- append(rasters, list(mkde.obj))
    }
+   return(rasters)
 }
