@@ -1,6 +1,5 @@
 # Script to demonstrate how building blocks of workflow fit
-# together. Only difference from workflow2.R is that condor data is
-# read from local file
+# together, with data read from file
 
 source("loadDataframeFromFile.R")
 source("preprocessDataframe.R")
