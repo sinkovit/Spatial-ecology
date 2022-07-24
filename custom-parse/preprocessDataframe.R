@@ -146,7 +146,8 @@ preprocessDataframe <- function(gpsdata) {
       # later, but it can eliminate some confusion over which columns
       # to subsequently use.
 
-      canonical <- c('x', 'y', 'zdata', 'id', 'time', 'lat', 'long', 'utm.easting', 'utm.northing', 'utm.zone')
+      canonical <- c('x', 'y', 'xdata', 'ydata', 'zdata', 'id', 'time', 'lat', 'long',
+                      'utm.easting', 'utm.northing', 'utm.zone')
       for (name in colnames(gpsdata)) {
       	  if (!name %in% canonical) {
 	     gpsdata[name] <- NULL
