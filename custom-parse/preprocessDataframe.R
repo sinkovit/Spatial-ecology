@@ -94,7 +94,7 @@ preprocessDataframe <- function(gpsdata) {
 
       #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
 
-      if (class(gpsdata$time) == "character") {
+      if (!is.numeric(gpsdata$time)) {
       	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
       }
 

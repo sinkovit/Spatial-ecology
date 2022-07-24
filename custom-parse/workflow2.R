@@ -1,13 +1,15 @@
 # Script to demonstrate how building blocks of workflow fit
-# together. Only difference from workflow2.R is that condor data is
-# read from local file
+# together. Only difference from workflow1.R is that condor data is
+# pulled from MoveBank
 
-source("loadDataframeFromFile.R")
+source("loadDataframeFromMB.R")
 source("preprocessDataframe.R")
 source("calculateRaster2D.R")
 
 # Set parameters (these will come from the Shiny user interface)
-file <- "Data/CondorFull.csv"
+study <- 408181528
+username <- "RSinkovits"
+password <- "aBBa&0805&mb"
 sig2obs <- 25.0
 t.max <- 185
 cell.sz <- 3000
