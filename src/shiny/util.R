@@ -63,10 +63,8 @@ animalAttributes <- function(data_df) {
   custom_round <- function(x) {return (signif(x, min(2,floor(log10(x)))))}
   
   animals <- append(as.list(sort(unique(data_df$local_identifier))), "all")
-  #print(paste("animals =", animals))
   max_pixels <- c(30, 60, 100, 300)
-  #print(paste("max_pixels =", max_pixels))
-  
+
   printf("\n")
   printf("The following table gives the extent of animal movement for the\n")
   printf("individuals and for the data set as a whole, along with the grid\n")
@@ -95,8 +93,6 @@ animalAttributes <- function(data_df) {
   #                     grid = character(), px(m) = numeric(), grid = character() )
   # Oddly above doesn't work but below works...
   result <- data.frame(id = numeric())
-  # result[ , 'longitude (min)'] <- numeric()
-  # result[ , 'longitude (max)'] <- numeric()
   result[ , 'longitude [min, max]'] <- character()
   result[ , 'latitude (min)'] <- numeric()
   result[ , 'latitude (max)'] <- numeric()
@@ -124,9 +120,6 @@ animalAttributes <- function(data_df) {
     y_range <- y_minmax[2] - y_minmax[1]
     printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1],
            long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
-    # row <- c(local_id, round(long_minmax[1],3), round(long_minmax[2],3),
-    #          round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
-    #          round(y_range,2))
     longitude <- paste("[", round(long_minmax[1],3), ",", round(long_minmax[2],3),
                        "]")
     row <- c(local_id, longitude,
@@ -161,14 +154,11 @@ animalAttributes <- function(data_df) {
         # result[ , cell.size.label] <- numeric()
         # result[ , dim.label] <- character()
         label <- paste("cell (m) & grid sizes (#", option.counter, ")", sep = "")
-        #print(paste("label =", label))
         result[ , label] <- character()
         option.counter <- option.counter + 1
       }
 
-      # row.tail <- append(row.tail, c(cell.sz, dims))
       value <- paste(cell.sz, "&", dims)
-      #print(paste("value =", value))
       row.tail <- append(row.tail, c(value))
     }
     row <- append(row,row.tail)
@@ -184,22 +174,10 @@ animalAttributes <- function(data_df) {
 # Create home range using mkde
 getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
   printf("Generating plot...\n")
-  # str(data_df)
-  # print(summary(data_df))
-  # row <- data_df[index, ]
-  # print("row:")
-  # str(row)
-  print(paste("index = ", index))
   ids <- unique(data_df$local_identifier)
-  print(paste("ids =", ids))
   id <- ids[index]
-  print(paste("id =", id))
-  # str(row)
-  # print(summary(row))
-  print(paste("sig2obs =", sig2obs))
-  
+
   x <- data_df[which(data_df$local_identifier == id), "location_long.1"]
-  #print(paste("x =", x))
   y <- data_df[which(data_df$local_identifier == id), "location_lat.1"]
   t <- data_df[which(data_df$local_identifier == id), "time"]
   
@@ -209,10 +187,8 @@ getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
   xmax <- max(x)
   ymax <- max(y)
   xrange <- xmax-xmin
-  #print(paste("xrange =", xrange))
   yrange <- ymax-ymin
-  #print(paste("yrange =", yrange))
-  
+
   if (xrange >= yrange) {
     nx <- 50
     ny <- as.integer(nx * (yrange/xrange))
@@ -223,36 +199,10 @@ getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
     #cell.sz <- yrange/ny
   }  
 
-  mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
-  # print(paste("xmin =", xmin))
-  # print(paste("cell.size =", cell.size))
-  # print(paste("nx =", nx))
-  # print(paste("ymin =", ymin))
-  # print(paste("ny =", ny))
-  
   mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = tmax)
   mkde.obj <- initializeMKDE2D(xmin, cell.size, nx, ymin, cell.size, ny)
   dens.res <- initializeDensity(mkde.obj, mv.dat)
-  #print(paste("t =", t))
-  #print(paste("x =", x))
-  #print(paste("y =", y))
-  print(paste("sig2obs =", sig2obs))
-  print(paste("tmax =", tmax))
-  print(paste("xmin =", xmin))
-  print(paste("cell.size =", cell.size))
-  print(paste("nx =", nx))
-  print(paste("ymin =", ymin))
-  print(paste("ny =", ny))
-  print("mv.dat:")
-  str(mv.dat)
-  print("mkde.obj:")
-  str(mkde.obj)
-  print("dens.res:")
-  str(dens.res)
   mkde.obj <- dens.res$mkde.obj
   mv.dat <- dens.res$move.dat
-  # plot <- append(plots, list(mkde.obj))
-  print("leaving getMKDEData()")
   return(mkde.obj)
 }
-  
