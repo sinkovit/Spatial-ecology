@@ -38,10 +38,9 @@ movebankDataLoader <- function(username, password, study, login) {
     paste(getwd(), "/Study-", toString(study), ".RData", sep="")
   #print(paste("file.local =", file.local))
   
-  tryCatch(
-    {
+  tryCatch({
       #if(file.exists(file.local)) {
-        if(FALSE) {
+      if(FALSE) {
         printf("  data exists locally, loading...")
         load(file.local)
         printf("done\n")
