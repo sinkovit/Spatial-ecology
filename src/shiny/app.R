@@ -158,22 +158,16 @@ server <- function ( input, output, session ) {
   #movebank.data <- eventReactive ( input$runx, {
   #  print("run event 1")
   #})
-
-  # table.data <- evemtReactive(input$runx, {
-  #   
-  # })
-  # output$table <- DT::renderDataTable(table.data())
-
-  mkde.plot <- eventReactive(input$runx, {
-    if(!is.null(input$file.upload)) {
-      plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,
-                             input$file.upload$datapath))
-    }
-    else if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
+  
+  data.frame <- reactiveValues()
+  
+  table.data <- eventReactive(input$runx, {
+    print("table.data")
+    if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
          ! is.null ( input$movebank.password ) &&
          ! is.null ( input$movebank.studyid ) ) {
       shinyjs::disable ( "runx" )
-
+      
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
       results <-
@@ -185,58 +179,122 @@ server <- function ( input, output, session ) {
       shiny::validate(need(results[[2]] == "", results[[2]]))
       move.stack <- results[[1]]
       errors <- results[[2]]
-
+      
       #output$status <- renderPrint({"Saving data locally..."})
       
-      data.frame <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
-      table.data <- animalAttributes(data.frame)
-      #print(paste("stat =", stat))
+      data.frame$value <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
+      # print("data.frame$value 1:")
+      # str(data.frame$value)
+      data <- animalAttributes(data.frame$value)
       
-      #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
-
       output$table.info <-
         renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
       
-      # See https://datatables.net/reference/option/ for doc on table options
-      # Table processing can be server-side or client-side (default), see
-      # https://datatables.net/reference/option/serverSide for more info
-      output$table <- DT::renderDataTable({
-        DT::datatable(
-          table.data[], extensions = 'Buttons',
-          caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-          options = list(
-            autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
-            pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
-            stateSave = TRUE),
-          selection = list(mode = 'single', selected = c(1), target = 'row'))
-      })
-      
-      printf("Creating plot...")
-      index = input$table_rows_selected
-      print(paste("index =", index))
-      mkde.data <- getMKDEData(data.frame, 1, input$sig2obs, input$tmax,
-                               input$cellsize)
+      DT::datatable(
+        data[], extensions = 'Buttons',
+        caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+        options = list(
+          autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+          pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+          stateSave = TRUE),
+        selection = list(mode = 'single', selected = c(1), target = 'row'))
+    }})
+  
+  output$table <- DT::renderDataTable(table.data())
 
-      ##withProgress(message = "Creating plot...", {
-        ##plotMKDE ( movebankProcess ( input$sig2obs, input$tmax, data ) )
-      #plots <- movebankProcess(input$sig2obs, input$tmax, data)
-      ##})
-      
+  # mkde.plot <- eventReactive(input$runx, {
+  #   if(!is.null(input$file.upload)) {
+  #     plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,
+  #                            input$file.upload$datapath))
+  #   }
+  #   else if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
+  #        ! is.null ( input$movebank.password ) &&
+  #        ! is.null ( input$movebank.studyid ) ) {
+  #     shinyjs::disable ( "runx" )
+  # 
+  #     printf("Accessing Movebank...\n")
+  #     #withProgress(message = "Retrieving data from MoveBank...", {
+  #     results <-
+  #       movebankDataLoader(username = input$movebank.username,
+  #                          password = input$movebank.password,
+  #                          study = input$movebank.studyid, login = login )
+  #     #})
+  #     #print("Done")
+  #     shiny::validate(need(results[[2]] == "", results[[2]]))
+  #     move.stack <- results[[1]]
+  #     errors <- results[[2]]
+  # 
+  #     #output$status <- renderPrint({"Saving data locally..."})
+  #     
+  #     data.frame <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
+  #     table.data <- animalAttributes(data.frame)
+  #     #print(paste("stat =", stat))
+  #     
+  #     #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
+  # 
+  #     output$table.info <-
+  #       renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
+  #     
+  #     # See https://datatables.net/reference/option/ for doc on table options
+  #     # Table processing can be server-side or client-side (default), see
+  #     # https://datatables.net/reference/option/serverSide for more info
+  #     output$table <- DT::renderDataTable({
+  #       DT::datatable(
+  #         table.data[], extensions = 'Buttons',
+  #         caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+  #         options = list(
+  #           autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+  #           pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+  #           stateSave = TRUE),
+  #         selection = list(mode = 'single', selected = c(1), target = 'row'))
+  #     })
+  #     
+  #     printf("Creating plot...")
+  #     index = input$table_rows_selected
+  #     print(paste("index =", index))
+  #     mkde.data <- getMKDEData(data.frame, 1, input$sig2obs, input$tmax,
+  #                              input$cellsize)
+  # 
+  #     ##withProgress(message = "Creating plot...", {
+  #       ##plotMKDE ( movebankProcess ( input$sig2obs, input$tmax, data ) )
+  #     #plots <- movebankProcess(input$sig2obs, input$tmax, data)
+  #     ##})
+  #     
+  #     tryCatch({
+  #       plotMKDE(mkde.data)
+  #     },
+  #     error = function(error_message) {
+  #       shiny::validate(need(error_message == "",
+  #                            "Unable to plot; please adjust the parameter(s) and try again..."))
+  #     },
+  #     finally = {
+  #       shinyjs::enable("runx")
+  #       shinyjs::enable("reset")
+  #     })
+  #   }
+  # })
+  
+  mkde.plot <- eventReactive(input$table_rows_selected, {
+    print("mkde.plot:")
+    #str(data.frame$value)
+    print(paste("row =", input$table_rows_selected))
+    if(input$table_rows_selected == "all")
+      print("sorry cannot plot all at this time...")
+    else {
+      data <- getMKDEData(data.frame$value, input$table_rows_selected,
+                          input$sig2obs, input$tmax, input$cellsize)
       tryCatch({
-        plotMKDE(mkde.data)
+        plotMKDE(data)
       },
       error = function(error_message) {
+        print(paste("error_message =", error_message))
         shiny::validate(need(error_message == "",
                              "Unable to plot; please adjust the parameter(s) and try again..."))
-      },
-      finally = {
-        shinyjs::enable("runx")
-        shinyjs::enable("reset")
       })
     }
   })
-  
-  output$plot <- renderPlot ( { mkde.plot() } )
+
+  output$plot <- renderPlot({mkde.plot()})
   # Following doesn't work; runtime error:
   # "Unexpected Observer.event object for output$plot
   # Did you forget to use a render function?"
