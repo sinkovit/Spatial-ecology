@@ -211,21 +211,28 @@ server <- function ( input, output, session ) {
                                        target = 'row'))
       })
       
-      
-      print("Creating plot...")
+      printf("Creating plot...")
+      index = input$table_rows_selected
+      print(paste("index =", index))
       mkde.data <- getMKDEData(data.frame, 1, input$sig2obs, input$tmax,
                                input$cellsize)
-      print("here 1")
-      print("mkde.data:")
-      str(mkde.data)
+
       ##withProgress(message = "Creating plot...", {
         ##plotMKDE ( movebankProcess ( input$sig2obs, input$tmax, data ) )
       #plots <- movebankProcess(input$sig2obs, input$tmax, data)
-      plotMKDE(mkde.data)
       ##})
-      print("Plotting done")
-      shinyjs::enable ( "runx" )
-      shinyjs::enable ( "reset" )
+      
+      tryCatch({
+        plotMKDE(mkde.data)
+      },
+      error = function(error_message) {
+        shiny::validate(need(error_message == "",
+                             "Unable to plot; please adjust the parameter(s) and try again..."))
+      },
+      finally = {
+        shinyjs::enable("runx")
+        shinyjs::enable("reset")
+      })
     }
     else if(! is.null(input$file.upload)) {
       plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,
@@ -233,6 +240,14 @@ server <- function ( input, output, session ) {
   })
   
   output$mkdePlot <- renderPlot ( { mkde.plot() } )
+  output$file_value = renderPrint({
+    s = input$table_rows_selected
+    if (length(s)) {
+      cat('These rows were selected:\n\n')
+      cat(s, sep = ', ')
+    }
+  })
+  # output$file_value <- verbatimTextOutput( )
   
   # Reset sig2obs and t.mat; unfortunately can't "reset" input file
   # (see https://stackoverflow.com/questions/44203728/how-to-reset-a-value-of-fileinput-in-shiny
