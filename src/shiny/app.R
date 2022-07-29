@@ -111,7 +111,7 @@ ui <- fluidPage(
                                         value = 30 ))),
       hr(style = "border-top: 2px solid #000000;"),
       actionButton("runx", label = "Run"),
-      actionButton("reset", "Reset form"),
+      actionButton("reset", "Reset"),
 
 	    textOutput ( "debug" ),
 	  
@@ -121,8 +121,7 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       # https://github.com/daattali/shinycssloaders/
-      shinycssloaders::withSpinner(plotOutput ( "mkdePlot" ), type = 5),
-      #plotOutput ( "mkdePlot" ),
+      shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
       hr(style = "border-top: 1px solid #000000;"),
       textOutput("table.info"),
       #hr(style = "border-top: 1px solid #000000;"),
@@ -141,7 +140,7 @@ server <- function ( input, output, session ) {
   
   #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
   
-  # If no file selected, disable Run button...
+  # If no file uploaded nor Movebank info, disable Run button...
   observe ( {
     if ( ( is.null ( input$file.upload ) || input$file.upload == "" ) &&
          ( is.null ( input$movebank.username ) || input$movebank.username == "" )
@@ -160,14 +159,21 @@ server <- function ( input, output, session ) {
   #  print("run event 1")
   #})
 
-  mkde.plot <- eventReactive ( input$runx, {
-    if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
+  # table.data <- evemtReactive(input$runx, {
+  #   
+  # })
+  # output$table <- DT::renderDataTable(table.data())
+
+  mkde.plot <- eventReactive(input$runx, {
+    if(!is.null(input$file.upload)) {
+      plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,
+                             input$file.upload$datapath))
+    }
+    else if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
          ! is.null ( input$movebank.password ) &&
          ! is.null ( input$movebank.studyid ) ) {
       shinyjs::disable ( "runx" )
 
-      #data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
-      #output$status <- renderPrint({"Retrieving data from MoveBank..."})
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
       results <-
@@ -183,32 +189,26 @@ server <- function ( input, output, session ) {
       #output$status <- renderPrint({"Saving data locally..."})
       
       data.frame <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
-      stat <- animalAttributes(data.frame)
+      table.data <- animalAttributes(data.frame)
       #print(paste("stat =", stat))
       
       #exampletext <- rep(as.list("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."), 5)
-      #output$table.info <- renderUI(lapply(exampletext, tags$p))
-      
+
       output$table.info <-
         renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
-      
-      #diamonds2 = diamonds[sample(nrow(diamonds), 5), ]
-      #print(paste("class =", class(diamonds2)))
-      #print(paste("str =", str(diamonds2)))
-      #print(paste("diamonds2 =", diamonds2))
       
       # See https://datatables.net/reference/option/ for doc on table options
       # Table processing can be server-side or client-side (default), see
       # https://datatables.net/reference/option/serverSide for more info
       output$table <- DT::renderDataTable({
-        DT::datatable(stat[], extensions = 'Buttons', caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-                      options =
-                        list(autoWidth = TRUE, buttons = c('csv', 'excel'),
-                             dom = 'Bfrtip', pagingType = "full_numbers",
-                             processing = TRUE, scrollX = TRUE,
-                             stateSave = TRUE),
-                      selection = list(mode = 'single', selected = c(1),
-                                       target = 'row'))
+        DT::datatable(
+          table.data[], extensions = 'Buttons',
+          caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+          options = list(
+            autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+            pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+            stateSave = TRUE),
+          selection = list(mode = 'single', selected = c(1), target = 'row'))
       })
       
       printf("Creating plot...")
@@ -234,17 +234,22 @@ server <- function ( input, output, session ) {
         shinyjs::enable("reset")
       })
     }
-    else if(! is.null(input$file.upload)) {
-      plotMKDE(GPSDataLoader(input$sig2obs, input$tmax, input$cellsize,
-                             input$file.upload$datapath))}
   })
   
-  output$mkdePlot <- renderPlot ( { mkde.plot() } )
+  output$plot <- renderPlot ( { mkde.plot() } )
+  # Following doesn't work; runtime error:
+  # "Unexpected Observer.event object for output$plot
+  # Did you forget to use a render function?"
+  # output$plot <- observeEvent(input$table_rows_selected, {
+  #   print(paste("table row selected =", input_table_rows_selected))
+  #   renderPlot({mkde.plot()})
+  # })
+  
   output$file_value = renderPrint({
     s = input$table_rows_selected
     if (length(s)) {
-      cat('These rows were selected:\n\n')
-      cat(s, sep = ', ')
+      paste('Row:', s)
+      #cat(s, sep = ', ')
     }
   })
   # output$file_value <- verbatimTextOutput( )
@@ -257,7 +262,6 @@ server <- function ( input, output, session ) {
     shinyjs::disable ( "runx" )
     shinyjs::disable ( "reset" )
   } )
-  
 }
 
 shinyApp ( ui = ui, server = server )
