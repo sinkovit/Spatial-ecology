@@ -96,6 +96,7 @@ movebankPreprocess <- function(sig2obs, tmax, data) {
   data <- spTransform(data, center=TRUE)
   data_df <- as.data.frame(data)
   data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
+  printf("done\n")
   # local_identifiers <- unique(data_df$local_identifier)
   # printf("%d animals found\n", length(local_identifiers))
   # #print(paste("local_identifiers = ", local_identifiers))
