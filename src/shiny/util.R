@@ -100,74 +100,81 @@ animalAttributes <- function(data_df) {
   result[ , 'North-South (m)'] <- numeric()
   row.index <- 1
 
-  for (local_id in animals) {
-    if(local_id == "all") {
-      long_minmax = range(data_df$location_long)
-      lat_minmax = range(data_df$location_lat)
-      x_minmax = range(data_df$location_long.1)
-      y_minmax = range(data_df$location_lat.1)
-      t_minmax = range(data_df$time)
-      printf("    all ")
-    } else {
-      long_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_long"])
-      lat_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_lat"])
-      x_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_long.1"])
-      y_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_lat.1"])
-      t_minmax = range(data_df[which(data_df$local_identifier == local_id), "time"])
-      printf("%7i ", local_id)
-    }
-    x_range <- x_minmax[2] - x_minmax[1]
-    y_range <- y_minmax[2] - y_minmax[1]
-    printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1],
-           long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
-    longitude <- paste("[", round(long_minmax[1],3), ",", round(long_minmax[2],3),
-                       "]")
-    row <- c(local_id, longitude,
-             round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
-             round(y_range,2))
-
-    row.tail = c()
-    option.counter <- 1
-    for (max_pix in max_pixels) {
-      if (x_range >= y_range) {
-        nx <- max_pix
-        ny <- as.integer(nx * (y_range/x_range))
-        cell.sz <- x_range/nx
-        cell.sz <- custom_round(cell.sz)
-        nx <- as.integer(x_range/cell.sz)
-        ny <- as.integer(y_range/cell.sz)
+  tryCatch({
+    for (local_id in animals) {
+      if(local_id == "all") {
+        long_minmax = range(data_df$location_long)
+        lat_minmax = range(data_df$location_lat)
+        x_minmax = range(data_df$location_long.1)
+        y_minmax = range(data_df$location_lat.1)
+        t_minmax = range(data_df$time)
+        printf("    all ")
       } else {
-        ny <- max_pix
-        nx <- as.integer(ny * (x_range/y_range))
-        cell.sz <- y_range/ny
-        cell.sz <- custom_round(cell.sz)
-        nx <- as.integer(x_range/cell.sz)
-        ny <- as.integer(y_range/cell.sz)
+        long_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_long"])
+        lat_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_lat"])
+        x_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_long.1"])
+        y_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_lat.1"])
+        t_minmax = range(data_df[which(data_df$local_identifier == local_id), "time"])
+        #printf("%7i ", local_id)
+        printf("%s", local_id)
       }
-      dims <- sprintf("%dx%d", nx, ny)
-      printf("%6.1f %7s ", cell.sz, dims)
-
-      if(row.index == 1) {
-        # cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
-        # dim.label <- paste('grid dimensions (', max_pix, 'm)', sep = "")
-        # columns.new <- c(cell.size.label, dim.label)
-        # result[ , cell.size.label] <- numeric()
-        # result[ , dim.label] <- character()
-        label <- paste("cell (m) & grid sizes (#", option.counter, ")", sep = "")
-        result[ , label] <- character()
-        option.counter <- option.counter + 1
+      x_range <- x_minmax[2] - x_minmax[1]
+      y_range <- y_minmax[2] - y_minmax[1]
+      printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1],
+             long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
+      longitude <- paste("[", round(long_minmax[1],3), ",", round(long_minmax[2],3),
+                         "]")
+      row <- c(local_id, longitude,
+               round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
+               round(y_range,2))
+  
+      row.tail = c()
+      option.counter <- 1
+      for (max_pix in max_pixels) {
+        if (x_range >= y_range) {
+          nx <- max_pix
+          ny <- as.integer(nx * (y_range/x_range))
+          cell.sz <- x_range/nx
+          cell.sz <- custom_round(cell.sz)
+          nx <- as.integer(x_range/cell.sz)
+          ny <- as.integer(y_range/cell.sz)
+        } else {
+          ny <- max_pix
+          nx <- as.integer(ny * (x_range/y_range))
+          cell.sz <- y_range/ny
+          cell.sz <- custom_round(cell.sz)
+          nx <- as.integer(x_range/cell.sz)
+          ny <- as.integer(y_range/cell.sz)
+        }
+        dims <- sprintf("%dx%d", nx, ny)
+        printf("%6.1f %7s ", cell.sz, dims)
+  
+        if(row.index == 1) {
+          # cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
+          # dim.label <- paste('grid dimensions (', max_pix, 'm)', sep = "")
+          # columns.new <- c(cell.size.label, dim.label)
+          # result[ , cell.size.label] <- numeric()
+          # result[ , dim.label] <- character()
+          label <- paste("cell (m) & grid sizes (#", option.counter, ")", sep = "")
+          result[ , label] <- character()
+          option.counter <- option.counter + 1
+        }
+  
+        value <- paste(cell.sz, "&", dims)
+        row.tail <- append(row.tail, c(value))
       }
-
-      value <- paste(cell.sz, "&", dims)
-      row.tail <- append(row.tail, c(value))
+      row <- append(row,row.tail)
+      result[row.index, ] <- row
+      row.index <- row.index + 1
+      
+      printf("\n")
     }
-    row <- append(row,row.tail)
-    result[row.index, ] <- row
-    row.index <- row.index + 1
-    
-    printf("\n")
-  }
-  return(result)
+    return(result)
+  },
+  error = function(error_message) {
+    print(paste("error_message 2 =", error_message))
+    return(NULL)
+  })
 }
 
 

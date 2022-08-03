@@ -175,7 +175,7 @@ server <- function ( input, output, session ) {
     if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
          ! is.null ( input$movebank.password ) &&
          ! is.null ( input$movebank.studyid ) ) {
-      shinyjs::disable ( "runx" )
+      shinyjs::disable("runx")
       
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
@@ -185,12 +185,18 @@ server <- function ( input, output, session ) {
                            study = input$movebank.studyid, login = login )
       #})
       #print("Done")
-      shiny::validate(need(results[[2]] == "", results[[2]]))
+      #shiny::validate(need(results[[2]] == "", results[[2]]))
+
+      if (results[[2]] != "") {
+        shinyjs::enable("runx")
+        shiny::validate(need(results[[2]] == "", results[[2]]))
+      }
       move.stack <- results[[1]]
       errors <- results[[2]]
       
       data.frame$value <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
       data <- animalAttributes(data.frame$value)
+      shiny::validate(need(!is.null(data), "Error detected in data!"))
       
       output$table.info <-
         renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
@@ -208,6 +214,8 @@ server <- function ( input, output, session ) {
   output$table <- DT::renderDataTable(table.data())
   
   mkde.plot <- eventReactive(input$table_rows_selected, {
+    shinyjs::disable("runx")
+    
     if(input$table_rows_selected == "all")
       print("sorry cannot plot all at this time...")
     else {
@@ -219,7 +227,7 @@ server <- function ( input, output, session ) {
       error = function(error_message) {
         print(paste("error_message =", error_message))
         shiny::validate(need(error_message == "",
-                             "Unable to plot; please adjust the parameter(s) and try again..."))
+                             "Unable to plot; please try adjusting the parameter(s) and try again..."))
       },
       finally = {shinyjs::enable("runx")})
     }
