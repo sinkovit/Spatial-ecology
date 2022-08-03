@@ -49,19 +49,21 @@ movebankDataLoader <- function(username, password, study, login) {
         printf("  authenticating into Movebank...")
         login <- movebankLogin(username = username, password = password )
         printf("done\n  retrieving data from Movebank...")
+        # maybe try shiny::invalidateLater()?
         d <- getMovebankData(study=strtoi(study), login=login)
         printf("done\n  saving data locally...")
         save ( d, file=file.local )
         printf("done\n")
         return(list(d, ""))
-      }},
+      }
+    },
     error = function(error_message) {
       #print(paste("error_message =", error_message))
       if(str_detect(error_message[1], "you are not allowed to download")) {
         # Movebank data license url =
         # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
         return(list(NULL,
-                    "Please go to Movebank and accept the data license terms, then return here and try again."))
+                    "Please go to Movebank and accept the data license terms, then return here and try again..."))
       }
       if(str_detect(error_message[1],
                     "unable to find an inherited method for function ‘getMovebankData’")) {
