@@ -39,8 +39,7 @@ movebankDataLoader <- function(username, password, study, login) {
   #print(paste("file.local =", file.local))
   
   tryCatch({
-      #if(file.exists(file.local)) {
-      if(FALSE) {
+      if(file.exists(file.local)) {
         printf("  data exists locally, loading...")
         load(file.local)
         printf("done\n")
@@ -50,11 +49,11 @@ movebankDataLoader <- function(username, password, study, login) {
         login <- movebankLogin(username = username, password = password )
         printf("done\n  retrieving data from Movebank...")
         # maybe try shiny::invalidateLater()?
-        d <- getMovebankData(study=strtoi(study), login=login)
+        data <- getMovebankData(study=strtoi(study), login=login)
         printf("done\n  saving data locally...")
-        save ( d, file=file.local )
+        save(data, file=file.local)
         printf("done\n")
-        return(list(d, ""))
+        return(list(data, ""))
       }
     },
     error = function(error_message) {
