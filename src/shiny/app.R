@@ -121,7 +121,7 @@ ui <- fluidPage(
                                      title = "Maximum time threshold between consecutive locations"),
                            numericInput("tmax", label = "",
                                         value = 185.0),
-                           bsPopover(id = "tmax", title = "title", content = "content"),
+                           #bsPopover(id = "tmax", title = "title", content = "content"),
                            numericInput("cellsize", label = "Cell size (meters)",
                                         value = 3000 ))),
       hr(style = "border-top: 2px solid #000000;"),
