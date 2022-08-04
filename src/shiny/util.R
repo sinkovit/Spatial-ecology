@@ -93,9 +93,10 @@ animalAttributes <- function(data_df) {
   #                     grid = character(), px(m) = numeric(), grid = character() )
   # Oddly above doesn't work but below works...
   result <- data.frame(id = numeric())
-  result[ , 'longitude [min, max]'] <- character()
   result[ , 'latitude (min)'] <- numeric()
   result[ , 'latitude (max)'] <- numeric()
+  result[ , 'longitude (min)'] <- character()
+  result[ , 'longitude (max)'] <- character()
   result[ , 'East-West (m)'] <- numeric()
   result[ , 'North-South (m)'] <- numeric()
   row.index <- 1
@@ -124,9 +125,9 @@ animalAttributes <- function(data_df) {
              long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
       longitude <- paste("[", round(long_minmax[1],3), ",", round(long_minmax[2],3),
                          "]")
-      row <- c(local_id, longitude,
-               round(lat_minmax[1],3), round(lat_minmax[2],3), round(x_range,2),
-               round(y_range,2))
+      row <- c(local_id, round(lat_minmax[1],3), round(lat_minmax[2],3),
+               round(long_minmax[1],3), round(long_minmax[2],3),
+               round(x_range,2), round(y_range,2))
   
       row.tail = c()
       option.counter <- 1
@@ -208,7 +209,7 @@ getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
 
   mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = tmax)
   mkde.obj <- initializeMKDE2D(xmin, cell.size, nx, ymin, cell.size, ny)
-  dens.res <- initializeDensity(mkde.obj, mv.dat)
+  #dens.res <- initializeDensity(mkde.obj, mv.dat)
   mkde.obj <- dens.res$mkde.obj
   mv.dat <- dens.res$move.dat
   return(mkde.obj)
