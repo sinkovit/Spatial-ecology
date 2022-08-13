@@ -156,20 +156,18 @@ server <- function ( input, output, session ) {
   
   #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
   
-  # If no file uploaded nor Movebank info, disable Run button...
-  observe ( {
-    if ( ( is.null ( input$file.upload ) || input$file.upload == "" ) &&
-         ( is.null ( input$movebank.username ) || input$movebank.username == "" )
-         && ( is.null ( input$movebank.password ) ||
-              input$movebank.password == "" ) &&
-         ( is.null ( input$movebank.studyid ) || input$movebank.studyid == "" ) ) {
+  # If a required input is missing, disable Run button; otherwise enable...
+  observe({
+    if ((input$data_source == 'File' && isEmpty(input$file.upload)) ||
+        (input$data_source == 'Movebank' && (isEmpty(input$movebank.username) ||
+                                             isEmpty(input$movebank.password) ||
+                                             isEmpty(input$movebank.studyid)))) {
       shinyjs::disable ( "runx" )
-      shinyjs::disable ( "reset" )
     } else {
       shinyjs::enable ( "runx" )
       shinyjs::enable ( "reset" )
     }
-  } )
+  })
   
   data.frame <- reactiveValues()
   
