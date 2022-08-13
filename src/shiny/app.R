@@ -45,6 +45,7 @@ library(shinyBS)
 source("gps.R")
 source("movebank.R")
 source("util.R")
+source("loadDataFrame.R")
 
 sessionInfo()
 
@@ -172,11 +173,15 @@ server <- function ( input, output, session ) {
   data.frame <- reactiveValues()
   
   table.data <- eventReactive(input$runx, {
-    if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
-         ! is.null ( input$movebank.password ) &&
-         ! is.null ( input$movebank.studyid ) ) {
-      shinyjs::disable("runx")
-      
+    shinyjs::disable("runx")
+    
+    if(input$data_source == 'File') {
+      printf("Loading file %s...", input$file.upload$name)
+      gpsdata = loadDataFrameFromFile(input$file.upload$datapath)
+      print(paste("gpsdata =", gpsdata))
+    }
+    
+    else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
       results <-
