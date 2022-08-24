@@ -68,7 +68,7 @@ loadDataframeFromMB <- function(study, username, password) {
       printf("  data exists locally, loading...")
       load(file.local)
       printf("done\n")
-      return(list(data, ""))
+      return(list(data, NULL))
     } else {
       printf("  authenticating into Movebank...")
       login <- movebankLogin(username = username, password = password )
