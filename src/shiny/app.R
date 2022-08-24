@@ -42,10 +42,11 @@ library(ggplot2)
 library(stringr)
 library(shinyBS)
 
-source("gps.R")
+#source("gps.R")
 source("movebank.R")
 source("util.R")
 source("loadDataframe.R")
+source("processDataframe.R")
 
 sessionInfo()
 
@@ -85,7 +86,7 @@ ui <- fluidPage(
   sidebarLayout (
 
     # Sidebar panel for inputs ----
-    sidebarPanel (
+    sidebarPanel(
       id = "myapp",
       tabsetPanel(
         type = "tabs",
@@ -151,7 +152,7 @@ ui <- fluidPage(
 
 
 # Define server logic required
-server <- function ( input, output, session ) {
+server <- function(input, output, session) {
 
   shinyjs::disable("radio")
   
@@ -178,16 +179,10 @@ server <- function ( input, output, session ) {
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file.upload$name)
       results = loadDataframeFromFile(input$file.upload$datapath)
-      
-      # error handling
-      if(!is.null(results[[2]])) {
-        shinyjs::enable("runx")
-        shiny::validate(need(is.null(results[[2]]), results[[2]]))
-      }
-      
+      shinyjs::enable("runx")
+      shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
-      #print(paste("data =", data))
     }
     
     else if(input$data_source == 'Movebank') {
@@ -196,41 +191,46 @@ server <- function ( input, output, session ) {
       results <- loadDataframeFromMB(username = input$movebank.username,
                                      password = input$movebank.password,
                                      study = input$movebank.studyid)
-      #})
-      #print("Done")
-      #shiny::validate(need(results[[2]] == "", results[[2]]))
+      shinyjs::enable("runx")
+      shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
-      # error handling
-      if (!is.null(results[[2]])) {
-        shinyjs::enable("runx")
-        shiny::validate(need(results[[2]] == "", results[[2]]))
-      }
+      data = results[[1]]
+    }
+    shinyjs::enable("runx")
+    rm(results)
+
+    printf("Preprocessing data...")
+    results <- preprocessDataframe(data)
+    printf("done\n")
+    shiny::validate(need(is.null(results[[2]]), results[[2]]))
+    
+    data <- results[[1]]
+    
+      # move.stack <- results[[1]]
+      # errors <- results[[2]]
       
-      move.stack <- results[[1]]
-      errors <- results[[2]]
-      
-      data.frame$value <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
-      data <- animalAttributes(data.frame$value)
-      shiny::validate(need(!is.null(data), "Error detected in data!"))
-      
-      output$table.info <-
-        renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
-      
-      DT::datatable(
-        data[], extensions = 'Buttons',
-        caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-        options = list(
-          autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
-          pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
-          stateSave = TRUE),
-        selection = list(mode = 'single', selected = c(1), target = 'row'))
-    }})
+    #   data.frame$value <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
+    #   data <- animalAttributes(data.frame$value)
+    #   shiny::validate(need(!is.null(data), "Error detected in data!"))
+    #   
+    # output$table.info <-
+    #   renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
   
+    DT::datatable(
+      data[], extensions = 'Buttons',
+      #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      options = list(
+        autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+        pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+        stateSave = TRUE),
+      selection = list(mode = 'single', selected = c(1), target = 'row'))
+  })
+
   output$table <- DT::renderDataTable(table.data())
   
   mkde.plot <- eventReactive(input$table_rows_selected, {
     shinyjs::disable("runx")
-    
+
     if(input$table_rows_selected == "all")
       print("sorry cannot plot all at this time...")
     else {
