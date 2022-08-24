@@ -39,7 +39,7 @@ library(tools)
 # Returns a list where first item is the data and second item is the error
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
-loadDataFrameFromFile <- function(file) {
+loadDataframeFromFile <- function(file) {
   ext <- file_ext(file)
   if (ext == "csv") { 
     gpsdata <- read.csv(file, header=TRUE)
@@ -59,7 +59,7 @@ loadDataFrameFromFile <- function(file) {
 # Returns a list where first item is the data and second item is the error
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
-loadDataFrameFromMB <- function(study, username, password) {
+loadDataframeFromMB <- function(study, username, password) {
   file.local <-
     paste(getwd(), "/Study-", toString(study), ".RData", sep="")
   print(paste("file.local =", file.local))

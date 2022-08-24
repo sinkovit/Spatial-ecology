@@ -45,7 +45,7 @@ library(shinyBS)
 source("gps.R")
 source("movebank.R")
 source("util.R")
-source("loadDataFrame.R")
+source("loadDataframe.R")
 
 sessionInfo()
 
@@ -177,7 +177,7 @@ server <- function ( input, output, session ) {
     
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file.upload$name)
-      results = loadDataFrameFromFile(input$file.upload$datapath)
+      results = loadDataframeFromFile(input$file.upload$datapath)
       
       # error handling
       if(!is.null(results[[2]])) {
@@ -193,7 +193,7 @@ server <- function ( input, output, session ) {
     else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
-      results <- loadDataFrameFromMB(username = input$movebank.username,
+      results <- loadDataframeFromMB(username = input$movebank.username,
                                      password = input$movebank.password,
                                      study = input$movebank.studyid)
       #})
