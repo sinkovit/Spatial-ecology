@@ -34,22 +34,25 @@
 library(move)
 library(tools)
 
+# Parse a plain text (whitespace separate values) or csv file containing
+# biotelemetry data
+# Return a list where first item is the data and second item is the error
+# message; if successful, there error message = NULL and data will be
+# populated; if there is an error message, then data = NULL
 loadDataFrameFromFile <- function(file) {
-  
-  # Parse a plain text (whitespace separate values) or csv file
-  # containing biotelemetry data
-  
+  #print(paste("loadDataFrameFromFile() file =", file))
   ext <- file_ext(file)
   if (ext == "csv") { 
     gpsdata <- read.csv(file, header=TRUE)
   } else if (ext == "txt") {
     gpsdata <- read.table(file, header=TRUE)
-  } else { 
-    print("Unknown file extension")
-    # implement error handling
+  } else {
+    return(list(NULL,
+                paste("Unknown file extension .", ext,
+                      "; only files with .csv or .txt are accepted", sep = "")))
   }
   
-  return(gpsdata)
+  return(list(gpsdata, NULL))
 }
 
 

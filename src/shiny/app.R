@@ -177,7 +177,13 @@ server <- function ( input, output, session ) {
     
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file.upload$name)
-      gpsdata = loadDataFrameFromFile(input$file.upload$datapath)
+      results = loadDataFrameFromFile(input$file.upload$datapath)
+      if(!is.null(results[[2]])) {
+        shinyjs::enable("runx")
+        shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      }
+      printf("done\n")
+      gpsdata = results[[1]]
       print(paste("gpsdata =", gpsdata))
     }
     
