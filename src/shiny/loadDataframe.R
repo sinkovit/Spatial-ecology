@@ -60,9 +60,8 @@ loadDataframeFromFile <- function(file) {
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
 loadDataframeFromMB <- function(study, username, password) {
-  file.local <-
-    paste(getwd(), "/Study-", toString(study), ".RData", sep="")
-  print(paste("file.local =", file.local))
+  file.local <- paste(getwd(), "/Study-", toString(study), ".RData", sep="")
+  #print(paste("file.local =", file.local))
   
   tryCatch({
     if(file.exists(file.local)) {
