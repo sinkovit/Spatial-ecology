@@ -178,30 +178,34 @@ server <- function ( input, output, session ) {
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file.upload$name)
       results = loadDataFrameFromFile(input$file.upload$datapath)
+      
+      # error handling
       if(!is.null(results[[2]])) {
         shinyjs::enable("runx")
         shiny::validate(need(is.null(results[[2]]), results[[2]]))
       }
+      
       printf("done\n")
-      gpsdata = results[[1]]
-      print(paste("gpsdata =", gpsdata))
+      data = results[[1]]
+      #print(paste("data =", data))
     }
     
     else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
-      results <-
-        movebankDataLoader(username = input$movebank.username,
-                           password = input$movebank.password,
-                           study = input$movebank.studyid, login = login )
+      results <- loadDataFrameFromMB(username = input$movebank.username,
+                                     password = input$movebank.password,
+                                     study = input$movebank.studyid)
       #})
       #print("Done")
       #shiny::validate(need(results[[2]] == "", results[[2]]))
 
-      if (results[[2]] != "") {
+      # error handling
+      if (!is.null(results[[2]])) {
         shinyjs::enable("runx")
         shiny::validate(need(results[[2]] == "", results[[2]]))
       }
+      
       move.stack <- results[[1]]
       errors <- results[[2]]
       

@@ -36,11 +36,10 @@ library(tools)
 
 # Parse a plain text (whitespace separate values) or csv file containing
 # biotelemetry data
-# Return a list where first item is the data and second item is the error
+# Returns a list where first item is the data and second item is the error
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
 loadDataFrameFromFile <- function(file) {
-  #print(paste("loadDataFrameFromFile() file =", file))
   ext <- file_ext(file)
   if (ext == "csv") { 
     gpsdata <- read.csv(file, header=TRUE)
@@ -56,28 +55,57 @@ loadDataFrameFromFile <- function(file) {
 }
 
 
+# Load data from Movebank, return gpsdata and error message
+# Returns a list where first item is the data and second item is the error
+# message; if successful, there error message = NULL and data will be
+# populated; if there is an error message, then data = NULL
 loadDataFrameFromMB <- function(study, username, password) {
+  file.local <-
+    paste(getwd(), "/Study-", toString(study), ".RData", sep="")
+  print(paste("file.local =", file.local))
   
-  # Load data from Movebank, return gpsdata and error message
-  
-  login <- movebankLogin(username=username, password=password)
-  errmsg <- ""
-  
-  tryCatch(
-    {
-      gpsdata <- getMovebankLocationData(study=study, login=login)
-      return(list(gpsdata, errmsg))
-    },
-    error = function(error_message) {
-      if(grepl("It looks like you are not allowed to download", error_message[1], ignore.case = TRUE)) {
-        errmsg <- paste("You are not allowed to download study ", study, ". Go to Movebank and accept license terms", sep="")
-        return(list(NA, errmsg))
-      }
-      if(grepl("unable to find an inherited method for function", error_message[1], ignore.case = TRUE)) {
-        errmsg <- paste("Study", toString(study), "appears to be an invalid Movebank study ID")
-        return(list(NA, errmsg))
-      }
+  tryCatch({
+    if(file.exists(file.local)) {
+      printf("  data exists locally, loading...")
+      load(file.local)
+      printf("done\n")
+      return(list(data, ""))
+    } else {
+      printf("  authenticating into Movebank...")
+      login <- movebankLogin(username = username, password = password )
+      printf("done\n  retrieving data from Movebank...")
+      # maybe try shiny::invalidateLater()?
+      data <- getMovebankData(study=strtoi(study), login=login)
+      printf("done\n  saving data locally...")
+      save(data, file=file.local)
+      printf("done\n")
+      return(list(data, NULL))
     }
-  )
+  },
+  error = function(error_message) {
+    if(str_detect(error_message[1], "you are not allowed to download")) {
+      # Movebank data license url =
+      # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
+      return(list(NULL,
+                  "Please go to Movebank and accept the data license terms, then return here and try again..."))
+    }
+    if(str_detect(error_message[1],
+                  "unable to find an inherited method for function ‘getMovebankData’")) {
+      return(list(NULL, paste("Error:", study,
+                              "appears to be an invalid Movebank study ID.")))
+    }
+    if(str_detect(error_message[1], "There are no valid credentials")) {
+      return(list(NULL,
+                  "Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
+    }
+    if(str_detect(error_message[1], "No data are available for download")) {
+      return(list(NULL, "Error: no data available for download."))
+    }
+    if(str_detect(error_message[1], "Timeout was reached")) {
+      return(list(NULL,
+                  "Error: movebank.org timed out. Please wait a few minutes and try again..."))
+    }
+    return(list(NULL, error_message))
+  })
 }
 
