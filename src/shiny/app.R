@@ -113,19 +113,25 @@ ui <- fluidPage(
         tabPanel(
           "2. Set Parameters", hr(style = "border-top: 1px solid #000000;"),
           # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-          radioButtons("radio", label = "Mode:",
+          radioButtons("mode", label = "Mode:",
                        choices = list("2D" = 2, "2.5D" = 1, "3D" = 3),
                        selected = 2),
           tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
           bsTooltip(id = "sig2obslabel", placement = "right",
                     title = "Location error / variance"),
           numericInput("sig2obs", label = "", value = 25.0),
-          tags$strong(id = "tmaxlabel", "t.max (minutes):"),
+          tags$strong(id = "tmaxlabel", "time max (minutes):"),
           bsTooltip(id = "tmaxlabel", placement = "right",
                     title = "Maximum time threshold between consecutive locations"),
           numericInput("tmax", label = "", value = 185.0),
           #bsPopover(id = "tmax", title = "title", content = "content"),
-          numericInput("cellsize", label = "Cell size (meters)", value = 3000)
+          numericInput("cellsize", label = "Cell size (meters)", value = 3000),
+          radioButtons("coordinates", label = "Coordinate system:",
+                       choices = list("Latitude/Longitude" = 1, "UTM" = 2),
+                       selected = 1),
+          radioButtons("datum", label = "Datum:",
+                       choices = list("NAD 24" = 1, "NAD 83" = 2, "WGS 84" = 3),
+                       selected = 2)
         )),
       
       hr(style = "border-top: 2px solid #000000;"),
