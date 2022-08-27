@@ -43,10 +43,11 @@ library(stringr)
 library(shinyBS)
 
 #source("gps.R")
-source("movebank.R")
-source("util.R")
+#source("movebank.R")
 source("loadDataframe.R")
+source("plotDataframe.R")
 source("processDataframe.R")
+source("util.R")
 
 sessionInfo()
 
@@ -126,7 +127,7 @@ ui <- fluidPage(
           numericInput("tmax", label = "", value = 185.0, width = "50%"),
           #bsPopover(id = "tmax", title = "title", content = "content"),
           numericInput("cellsize", label = "Cell size (meters)", value = 3000,
-                       width = "75%"),
+                       min = 1, width = "75%"),
           numericInput("probability", label = "Cumulative probability", 0.9,
                        min = 0.1, max = 0.9999, width = "75%"),
           radioButtons("coordinates", label = "Coordinate system:",
@@ -180,7 +181,7 @@ server <- function(input, output, session) {
     }
   })
   
-  data.frame <- reactiveValues()
+  gps <- reactiveValues()
   
   table.data <- eventReactive(input$runx, {
     shinyjs::disable("runx")
@@ -214,12 +215,13 @@ server <- function(input, output, session) {
     shiny::validate(need(is.null(results[[2]]), results[[2]]))
     
     data <- results[[1]]
+    gps$data <- results[[1]]
     
       # move.stack <- results[[1]]
       # errors <- results[[2]]
       
     #   data.frame$value <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
-    #   data <- animalAttributes(data.frame$value)
+    data <- animalAttributes(data, input$cellsize)
     #   shiny::validate(need(!is.null(data), "Error detected in data!"))
     #   
     # output$table.info <-
@@ -243,10 +245,26 @@ server <- function(input, output, session) {
     if(input$table_rows_selected == "all")
       print("sorry cannot plot all at this time...")
     else {
-      data <- getMKDEData(data.frame$value, input$table_rows_selected,
-                          input$sig2obs, input$tmax, input$cellsize)
+      # data <- getMKDEData(data.frame$value, input$table_rows_selected,
+      #                     input$sig2obs, input$tmax, input$cellsize)
+      print(paste("selected row =", input$table_rows_selected))
+      data <- gps$data
+
+      # Spatial extent can be calculated in different ways, for example from
+      # data set itself, from digital elevation model or manually set. For
+      # now, just using min/max values for the GPS readings.
+      xmin <- min(data$xdata)
+      xmax <- max(data$xdata)
+      ymin <- min(data$ydata)
+      ymax <- max(data$ydata)
+
+      # Generate a list of rasters
+      rasters <- calculateRaster2D(data, input$sig2obs, input$tmax, input$cellsize,
+                                   xmin, xmax, ymin, ymax)
+      print(paste("rasters length =", length(rasters)))
       tryCatch({
-        plotMKDE(data)
+        # plotMKDE(data)
+        plotMKDE(rasters[[1]])
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))

@@ -53,7 +53,7 @@
 
 # --------------------------------------------------------------------
 
-animalAttributes <- function(data_df) {
+animalAttributes <- function(data_df, cell.sz) {
   printf("Calculating spatial attributes...\n")
 
   # Replicate C printf functionality
@@ -62,7 +62,7 @@ animalAttributes <- function(data_df) {
   # Custom rounding to 2 significant digits if x > 10, 1 digit otherwise
   custom_round <- function(x) {return (signif(x, min(2,floor(log10(x)))))}
   
-  animals <- append(as.list(sort(unique(data_df$local_identifier))), "all")
+  animals <- append(as.list(sort(unique(data_df$id))), "all")
   max_pixels <- c(30, 60, 100, 300)
 
   printf("\n")
@@ -104,18 +104,18 @@ animalAttributes <- function(data_df) {
   tryCatch({
     for (local_id in animals) {
       if(local_id == "all") {
-        long_minmax = range(data_df$location_long)
-        lat_minmax = range(data_df$location_lat)
-        x_minmax = range(data_df$location_long.1)
-        y_minmax = range(data_df$location_lat.1)
+        long_minmax = range(data_df$long)
+        lat_minmax = range(data_df$lat)
+        x_minmax = range(data_df$xdata)
+        y_minmax = range(data_df$ydata)
         t_minmax = range(data_df$time)
         printf("    all ")
       } else {
-        long_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_long"])
-        lat_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_lat"])
-        x_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_long.1"])
-        y_minmax = range(data_df[which(data_df$local_identifier == local_id), "location_lat.1"])
-        t_minmax = range(data_df[which(data_df$local_identifier == local_id), "time"])
+        long_minmax = range(data_df[which(data_df$id == local_id), "long"])
+        lat_minmax = range(data_df[which(data_df$id == local_id), "lat"])
+        x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
+        y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
+        t_minmax = range(data_df[which(data_df$id == local_id), "time"])
         #printf("%7i ", local_id)
         printf("%s", local_id)
       }
@@ -135,14 +135,14 @@ animalAttributes <- function(data_df) {
         if (x_range >= y_range) {
           nx <- max_pix
           ny <- as.integer(nx * (y_range/x_range))
-          cell.sz <- x_range/nx
+          # cell.sz <- x_range/nx
           cell.sz <- custom_round(cell.sz)
           nx <- as.integer(x_range/cell.sz)
           ny <- as.integer(y_range/cell.sz)
         } else {
           ny <- max_pix
           nx <- as.integer(ny * (x_range/y_range))
-          cell.sz <- y_range/ny
+          # cell.sz <- y_range/ny
           cell.sz <- custom_round(cell.sz)
           nx <- as.integer(x_range/cell.sz)
           ny <- as.integer(y_range/cell.sz)
