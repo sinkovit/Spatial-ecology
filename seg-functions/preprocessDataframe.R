@@ -89,6 +89,7 @@ preprocessDataframe <- function(gpsdata) {
 	 # All is good
       } else {
       	 print("Missing required columns; must have time and lat-long, x-y or UTM")
+	 return(gpsdata)
 	 # Implement error handling
       }
 
