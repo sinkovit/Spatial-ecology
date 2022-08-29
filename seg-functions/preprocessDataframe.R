@@ -123,7 +123,7 @@ preprocessDataframe <- function(gpsdata) {
 	 # Conversion using sp package
 	 gpsdata.latlong <- gpsdata[c("lat", "long")]
 	 sp::coordinates(gpsdata.latlong) <- ~long+lat
-	 sp::proj4string(gpsdata.latlong) <- CRS("+proj=longlat +ellps=WGS84")
+	 sp::proj4string(gpsdata.latlong) <- CRS("+proj=longlat")
 	 crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
 	 gpsdata.latlong <- sp::spTransform(gpsdata.latlong, CRSobj=crs.str)
 	 gpsdata$utm.easting <- gpsdata.latlong$long
