@@ -135,7 +135,7 @@ ui <- fluidPage(
                        selected = 1),
           radioButtons("datum", label = "Datum:",
                        choices = list("NAD 24" = 1, "NAD 83" = 2, "WGS 84" = 3),
-                       selected = 2)
+                       selected = 3)
         )),
       
       hr(style = "border-top: 2px solid #000000;"),
