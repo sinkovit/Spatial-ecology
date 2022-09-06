@@ -64,22 +64,22 @@ loadDataframeFromMB <- function(study, username, password) {
   #print(paste("file.local =", file.local))
   
   tryCatch({
-    if(file.exists(file.local)) {
-      printf("  data exists locally, loading...")
-      load(file.local)
-      printf("done\n")
-      return(list(data, NULL))
-    } else {
+    # if(file.exists(file.local)) {
+    #   printf("  data exists locally, loading...")
+    #   load(file.local)
+    #   printf("done\n")
+    #   return(list(data, NULL))
+    # } else {
       printf("  authenticating into Movebank...")
       login <- movebankLogin(username = username, password = password )
       printf("done\n  retrieving data from Movebank...")
       # maybe try shiny::invalidateLater()?
       data <- getMovebankData(study=strtoi(study), login=login)
-      printf("done\n  saving data locally...")
-      save(data, file=file.local)
+      # printf("done\n  saving data locally...")
+      # save(data, file=file.local)
       printf("done\n")
       return(list(data, NULL))
-    }
+    # }
   },
   error = function(error_message) {
     if(str_detect(error_message[1], "you are not allowed to download")) {
