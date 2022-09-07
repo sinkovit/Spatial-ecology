@@ -99,17 +99,24 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.data_source === 'File'",
             fileInput(
-              "file.upload", "Upload your GPS data file:", multiple = FALSE,
+              "file_upload", "Upload your GPS data file:", multiple = FALSE,
               accept = c("text/csv", "text/comma-separated-values,text/plain",
                          ".csv"))),
           conditionalPanel(
             condition = "input.data_source === 'Movebank'",
-            textInput("movebank.username", "Movebank Username", value = "mona",
+            textInput("movebank_username", "Movebank Username", value = "mona",
                       width = NULL, placeholder = NULL),
-            passwordInput("movebank.password", "Password", value = "g0MB2022",
+            passwordInput("movebank_password", "Password", value = "g0MB2022",
                           width = NULL, placeholder = NULL),
-            textInput("movebank.studyid", "Study ID", value = "408181528",
-                      width = NULL, placeholder = NULL))),
+            textInput("movebank_studyid", "Study ID", value = "408181528",
+                      width = NULL, placeholder = NULL),
+            checkboxInput("save_local", "Save Movebank data locally"),
+            bsTooltip(id = "save_local", placement = "right",
+                      title = "If local file already exists, will overwrite"),
+            conditionalPanel(
+              condition = "input.save_local == 1",
+              textInput("movebank_local_filename", "Local filename")),
+            )),
         
         tabPanel(
           "2. Set Parameters", hr(style = "border-top: 1px solid #000000;"),
@@ -168,12 +175,19 @@ server <- function(input, output, session) {
   
   #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
   
+  # Update MB local filename based on studyid...
+  observeEvent(input$movebank_studyid, {
+    updateTextInput(session, "movebank_local_filename",
+                    value = paste("movebank-", input$movebank_studyid, ".csv",
+                                  sep = ""))
+  })
+  
   # If a required input is missing, disable Run button; otherwise enable...
   observe({
-    if ((input$data_source == 'File' && isEmpty(input$file.upload)) ||
-        (input$data_source == 'Movebank' && (isEmpty(input$movebank.username) ||
-                                             isEmpty(input$movebank.password) ||
-                                             isEmpty(input$movebank.studyid)))) {
+    if ((input$data_source == 'File' && isEmpty(input$file_upload)) ||
+        (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
+                                             isEmpty(input$movebank_password) ||
+                                             isEmpty(input$movebank_studyid)))) {
       shinyjs::disable ( "runx" )
     } else {
       shinyjs::enable ( "runx" )
@@ -187,8 +201,8 @@ server <- function(input, output, session) {
     shinyjs::disable("runx")
     
     if(input$data_source == 'File') {
-      printf("Loading file %s...", input$file.upload$name)
-      results = loadDataframeFromFile(input$file.upload$datapath)
+      printf("Loading file %s...", input$file_upload$name)
+      results = loadDataframeFromFile(input$file_upload$datapath)
       shinyjs::enable("runx")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
@@ -198,9 +212,9 @@ server <- function(input, output, session) {
     else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       #withProgress(message = "Retrieving data from MoveBank...", {
-      results <- loadDataframeFromMB(username = input$movebank.username,
-                                     password = input$movebank.password,
-                                     study = input$movebank.studyid)
+      results <- loadDataframeFromMB(username = input$movebank_username,
+                                     password = input$movebank_password,
+                                     study = input$movebank_studyid)
       shinyjs::enable("runx")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
@@ -216,6 +230,16 @@ server <- function(input, output, session) {
     
     data <- results[[1]]
     gps$data <- results[[1]]
+    
+    # Now save MB data locally
+    if(input$data_source == "Movebank" && input$save_local == 1) {
+      printf("Saving local file %s...", input$movebank_local_filename)
+      result = saveDataframeFromMB(gps$data, input$movebank_local_filename)
+      if(is.null(result))
+        printf("done\n")
+      else
+        printf("error: %s\n", result)
+    }
     
       # move.stack <- results[[1]]
       # errors <- results[[2]]

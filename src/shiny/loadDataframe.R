@@ -74,7 +74,8 @@ loadDataframeFromMB <- function(study, username, password) {
       login <- movebankLogin(username = username, password = password )
       printf("done\n  retrieving data from Movebank...")
       # maybe try shiny::invalidateLater()?
-      data <- getMovebankData(study=strtoi(study), login=login)
+      # data <- getMovebankData(study=strtoi(study), login=login)
+      data <- getMovebankLocationData(study=strtoi(study), login=login)
       # printf("done\n  saving data locally...")
       # save(data, file=file.local)
       printf("done\n")
@@ -106,5 +107,21 @@ loadDataframeFromMB <- function(study, username, password) {
     }
     return(list(NULL, error_message))
   })
+}
+
+
+# Save the data frame to a local file
+# param data - data frame
+# param filename - local file name
+# return NULL if no problem; otherwise return a user-friendly error message
+saveDataframeFromMB <- function(data, filename) {
+  if(!is.data.frame(data))
+    return("Invalid data frame to save!")
+  
+  if(isEmpty(filename))
+    return("Invalid filename!")
+  
+  write.csv(data, filename)
+  return(NULL)
 }
 
