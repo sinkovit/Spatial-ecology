@@ -205,7 +205,7 @@ server <- function(input, output, session) {
   
   gps <- reactiveValues()
   
-  table.data <- eventReactive(input$runx, {
+  table.data <- eventReactive(input$load_data, {
     shinyjs::disable("runx")
     
     if(input$data_source == 'File') {
