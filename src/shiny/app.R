@@ -79,6 +79,10 @@ ui <- fluidPage(
     "))
   ),
   
+  # CSS to hide fileInput "Upload Complete"
+  # original idea from https://stackoverflow.com/a/49631736
+  includeCSS("app.css"),
+  
   useShinyjs(), # include shinyjs
 
   titlePanel ( "Welcome to the Space Use Ecology Gateway!" ),
@@ -90,12 +94,13 @@ ui <- fluidPage(
     sidebarPanel(
       id = "myapp",
       tabsetPanel(
-        type = "tabs",
+        type = "pills",
+        header = hr(style = "border-top: 2px solid #000000;"),
         
         tabPanel(
-          "1. Load Data", hr(style = "border-top: 1px solid #000000;"),
+          "1. Load Data",
           radioButtons("data_source", "Load data from :",
-                       choices = c("File", "Movebank")),
+                       choices = c ( "File", "Movebank" ) ),
           conditionalPanel(
             condition = "input.data_source === 'File'",
             fileInput(
@@ -116,10 +121,14 @@ ui <- fluidPage(
             conditionalPanel(
               condition = "input.save_local == 1",
               textInput("movebank_local_filename", "Local filename")),
-            )),
+            ),
+          hr(style = "border-top: 2px solid #000000;"),
+          actionButton("load_data", label = "Load data"),
+          actionButton("reset_data", "Reset data"),
+        ),
         
         tabPanel(
-          "2. Set Parameters", hr(style = "border-top: 1px solid #000000;"),
+          "2. Set Parameters",
           # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
           radioButtons("mode", label = "Mode:",
                        choices = list("2D" = 2, "2.5D" = 1, "3D" = 3),
@@ -142,15 +151,13 @@ ui <- fluidPage(
                        selected = 1),
           radioButtons("datum", label = "Datum:",
                        choices = list("NAD 24" = 1, "NAD 83" = 2, "WGS 84" = 3),
-                       selected = 3)
+                       selected = 3),
+          hr(style = "border-top: 2px solid #000000;"),
+          actionButton("runx", label = "Run"),
+          actionButton("reset_parameters", "Reset parameters"),
         )),
       
-      hr(style = "border-top: 2px solid #000000;"),
-      actionButton("runx", label = "Run"),
-      actionButton("reset", "Reset"),
-
 	    textOutput ( "debug" ),
-	  
 	    verbatimTextOutput ( "file_value" ),
     ),
 
@@ -182,16 +189,17 @@ server <- function(input, output, session) {
                                   sep = ""))
   })
   
-  # If a required input is missing, disable Run button; otherwise enable...
+  # If a required load data input is missing, disable buttons; otherwise enable...
   observe({
     if ((input$data_source == 'File' && isEmpty(input$file_upload)) ||
         (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
                                              isEmpty(input$movebank_password) ||
                                              isEmpty(input$movebank_studyid)))) {
-      shinyjs::disable ( "runx" )
+      shinyjs::disable("load_data")
+      shinyjs::disable("reset_data")
     } else {
-      shinyjs::enable ( "runx" )
-      shinyjs::enable ( "reset" )
+      shinyjs::enable ( "load_data" )
+      shinyjs::enable ( "reset_data" )
     }
   })
   
@@ -312,10 +320,22 @@ server <- function(input, output, session) {
   # Reset sig2obs and t.mat; unfortunately can't "reset" input file
   # (see https://stackoverflow.com/questions/44203728/how-to-reset-a-value-of-fileinput-in-shiny
   # for a trick)
-  observeEvent ( input$reset, {
-    shinyjs::reset ( "myapp" )
-    shinyjs::disable ( "runx" )
-    shinyjs::disable ( "reset" )
+  # observeEvent ( input$reset, {
+  #   shinyjs::reset ( "myapp" )
+  #   shinyjs::disable ( "runx" )
+  #   shinyjs::disable ( "reset" )
+  # } )
+  
+  observeEvent ( input$reset_data, {
+    data_source = input$data_source
+    updateRadioButtons ( session, "data_source", selected = data_source )
+    shinyjs::reset ( "file_upload" )
+    shinyjs::reset ( "movebank_username" )
+    shinyjs::reset ( "movebank_password" )
+    shinyjs::reset ( "movebank_studyid" )
+    shinyjs::reset ( "save_local" )
+    shinyjs::disable ( "load_data" )
+    shinyjs::disable ( "reset_data" )
   } )
 }
 
