@@ -42,8 +42,6 @@ library(ggplot2)
 library(stringr)
 library(shinyBS)
 
-#source("gps.R")
-#source("movebank.R")
 source("loadDataframe.R")
 source("plotDataframe.R")
 source("processDataframe.R")
@@ -94,11 +92,13 @@ ui <- fluidPage(
     sidebarPanel(
       id = "myapp",
       tabsetPanel(
+        id = "controls",
         type = "pills",
         header = hr(style = "border-top: 2px solid #000000;"),
         
         tabPanel(
           "1. Load Data",
+          value = 1,
           radioButtons("data_source", "Load data from :",
                        choices = c ( "File", "Movebank" ) ),
           conditionalPanel(
@@ -129,6 +129,7 @@ ui <- fluidPage(
         
         tabPanel(
           "2. Set Parameters",
+          value = 2,
           # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
           radioButtons("mode", label = "Mode:",
                        choices = list("2D" = 2, "2.5D" = 1, "3D" = 3),
@@ -162,13 +163,11 @@ ui <- fluidPage(
     ),
 
     # Main panel for displaying outputs ----
-    mainPanel(
+    mainPanel (
+      htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
       hr(style = "border-top: 1px solid #000000;"),
-      textOutput("table.info"),
-      #hr(style = "border-top: 1px solid #000000;"),
-      #htmlOutput("table.info"),
       shinycssloaders::withSpinner(DT::dataTableOutput('table'), type = 5)
     ),
   )
@@ -176,9 +175,10 @@ ui <- fluidPage(
 
 
 # Define server logic required
-server <- function(input, output, session) {
+server <- function ( input, output, session ) {
 
-  shinyjs::disable("radio")
+  #shinyjs::disable("radio")
+  shinyjs::disable ( "runx" )
   
   #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
   
@@ -206,12 +206,12 @@ server <- function(input, output, session) {
   gps <- reactiveValues()
   
   table.data <- eventReactive(input$load_data, {
-    shinyjs::disable("runx")
+    #shinyjs::disable("runx")
     
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file_upload$name)
       results = loadDataframeFromFile(input$file_upload$datapath)
-      shinyjs::enable("runx")
+      #shinyjs::enable("runx")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
@@ -223,12 +223,12 @@ server <- function(input, output, session) {
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
-      shinyjs::enable("runx")
+      #shinyjs::enable("runx")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
       data = results[[1]]
     }
-    shinyjs::enable("runx")
+    #shinyjs::enable("runx")
     rm(results)
 
     printf("Preprocessing data...")
@@ -256,9 +256,17 @@ server <- function(input, output, session) {
     data <- animalAttributes(data, input$cellsize)
     #   shiny::validate(need(!is.null(data), "Error detected in data!"))
     #   
-    # output$table.info <-
-    #   renderText({"The following table gives the extent of animal movement for the individuals and for the data set as a whole, along with the grid dimensions resulting from various cell sizes. Keep in mind that larger grids result in longer calculations, so you may want to choose a cell size that result in a smaller grid for preliminary calculations.\n E-W(m) and N-S(m) are the east-west and north-south ranges, in meters px(m) is the pixel size in meters and grid is the resulting grid dimensions.\n\n"})
+    output$plot.instructions <- renderUI ( {
+      tagList (
+        h5 ( "To plot:" ),
+        tags$ol (
+          tags$li("Set parameters (left)"),
+          tags$li("Choose an animal (below)"),
+          tags$li("Run (left below)")
+        ))})
   
+    updateTabsetPanel ( session, "controls", selected = "2" )
+    
     DT::datatable(
       data[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
@@ -266,12 +274,18 @@ server <- function(input, output, session) {
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
         stateSave = TRUE),
-      selection = list(mode = 'single', selected = c(1), target = 'row'))
+      selection = list(mode = 'single', target = 'row'))
   })
 
   output$table <- DT::renderDataTable(table.data())
   
-  mkde.plot <- eventReactive(input$table_rows_selected, {
+  observeEvent ( input$table_rows_selected, {
+    shinyjs::enable ( "runx" )
+  })
+  
+  #mkde.plot <- eventReactive(input$table_rows_selected, {
+  mkde.plot <- eventReactive(input$runx, {
+    shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
 
     if(input$table_rows_selected == "all")
