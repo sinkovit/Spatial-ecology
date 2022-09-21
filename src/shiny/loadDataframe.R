@@ -105,6 +105,10 @@ loadDataframeFromMB <- function(study, username, password) {
       return(list(NULL,
                   "Error: movebank.org timed out. Please wait a few minutes and try again..."))
     }
+    if(str_detect(error_message[1], "Empty reply from server")) {
+      return(list(NULL,
+                  "Error: empty reply from movebank.org server. Please wait a few minutes and try again..."))
+    }
     return(list(NULL, error_message))
   })
 }
