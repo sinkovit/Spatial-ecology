@@ -110,18 +110,18 @@ ui <- fluidPage(
             radioButtons("coordinates", label = "Coordinate system:",
                           choices = list("Latitude/Longitude" = 1, "UTM" = 2),
                           selected = 1),
+            conditionalPanel (
+              condition = "input.coordinates === '2'",
+              numericInput ("zone", label = "Zone", value = 30, min = 1, max = 60, step = 1, width = "50%")),
             radioButtons("datum", label = "Datum:",
-                         choices = list("NAD 24" = 1, "NAD 83" = 2, "WGS 84" = 3),
+                         choices = list("NAD 27" = 1, "NAD 83" = 2, "WGS 84" = 3),
                          selected = 3),
           ),
           conditionalPanel(
             condition = "input.data_source === 'Movebank'",
-            textInput("movebank_username", "Movebank Username", value = "",
-                      width = NULL, placeholder = NULL),
-            passwordInput("movebank_password", "Password", value = "",
-                          width = NULL, placeholder = NULL),
-            textInput("movebank_studyid", "Study ID", value = "",
-                      width = NULL, placeholder = NULL),
+            textInput("movebank_username", "Movebank username"),
+            passwordInput("movebank_password", "Password"),
+            textInput("movebank_studyid", "Study ID"),
             checkboxInput("save_local", "Save Movebank data locally"),
             bsTooltip(id = "save_local", placement = "right",
                       title = "If local file already exists, will overwrite"),
@@ -152,8 +152,15 @@ ui <- fluidPage(
           #bsPopover(id = "tmax", title = "title", content = "content"),
           numericInput("cellsize", label = "Cell size (meters)", value = 3000,
                        min = 1, width = "75%"),
-          numericInput("probability", label = "Cumulative probability", 0.9,
-                       min = 0.1, max = 0.9999, width = "75%"),
+          tags$strong(id = "bufferlabel", "Buffer (meters):"),
+          bsTooltip(id = "bufferlabel", placement = "right",
+                    title = "Brownian Bridge buffer"),
+          numericInput("buffer", label = "", value = 100.0, width = "50%"),
+          tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
+          bsTooltip(id = "probabilitylabel", placement = "right",
+                    title = "Used to plot probability range; should be comma separated values"),
+          textInput ("probability", label = NULL,
+                     value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"),
           hr(style = "border-top: 2px solid #000000;"),
           actionButton("runx", label = "Run"),
           actionButton("reset_parameters", "Reset parameters"),
@@ -316,10 +323,8 @@ server <- function ( input, output, session ) {
                                    xmin, xmax, ymin, ymax)
       print(paste("DEBUG: rasters length =", length(rasters)))
       tryCatch({
-        # plotMKDE(data)
-        plotMKDE (rasters[[input$table_rows_selected]])
-        print (paste ("DEBUG: probability = ", input$probability))
-        #plotMKDE (rasters[[1]], probs = input$probability)
+        probs = as.numeric ( unlist (strsplit (input$probability, ",")))
+        plotMKDE (rasters[[1]], probs = probs)
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
