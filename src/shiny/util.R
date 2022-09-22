@@ -61,6 +61,7 @@ animalAttributes <- function(data_df, cell.sz) {
   
   # Custom rounding to 2 significant digits if x > 10, 1 digit otherwise
   custom_round <- function(x) {return (signif(x, min(2,floor(log10(x)))))}
+  cell.sz = custom_round (cell.sz)
   
   animals <- append(as.list(sort(unique(data_df$id))), "all")
   max_pixels <- c(30, 60, 100, 300)
@@ -136,14 +137,14 @@ animalAttributes <- function(data_df, cell.sz) {
           nx <- max_pix
           ny <- as.integer(nx * (y_range/x_range))
           # cell.sz <- x_range/nx
-          cell.sz <- custom_round(cell.sz)
+          # cell.sz <- custom_round(cell.sz)
           nx <- as.integer(x_range/cell.sz)
           ny <- as.integer(y_range/cell.sz)
         } else {
           ny <- max_pix
           nx <- as.integer(ny * (x_range/y_range))
           # cell.sz <- y_range/ny
-          cell.sz <- custom_round(cell.sz)
+          # cell.sz <- custom_round(cell.sz)
           nx <- as.integer(x_range/cell.sz)
           ny <- as.integer(y_range/cell.sz)
         }
