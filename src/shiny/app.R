@@ -145,12 +145,12 @@ ui <- fluidPage(
           bsTooltip(id = "sig2obslabel", placement = "right",
                     title = "Location error / variance"),
           numericInput("sig2obs", label = "", value = 25.0, width = "50%"),
-          tags$strong(id = "tmaxlabel", "time max (minutes):"),
+          tags$strong(id = "tmaxlabel", "Time max (minutes):"),
           bsTooltip(id = "tmaxlabel", placement = "right",
                     title = "Maximum time threshold between consecutive locations"),
           numericInput("tmax", label = "", value = 185.0, width = "50%"),
           #bsPopover(id = "tmax", title = "title", content = "content"),
-          numericInput("cellsize", label = "Cell size (meters)", value = 3000,
+          numericInput("cellsize", label = "Cell size (meters):", value = 0,
                        min = 1, width = "75%"),
           tags$strong(id = "bufferlabel", "Buffer (meters):"),
           bsTooltip(id = "bufferlabel", placement = "right",
@@ -198,7 +198,15 @@ server <- function ( input, output, session ) {
                                   sep = ""))
   })
   
-  # If a required load data input is missing, disable buttons; otherwise enable...
+  observeEvent (input$cellsize, {
+    print (paste ("cell size =", input$cellsize))
+    if (input$cellsize > 0 )
+      shinyjs::enable ("runx")
+    else
+      print ("invalid cell size")
+  })
+  
+  # If the required load data input is missing, disable buttons; otherwise enable...
   observe({
     if ((input$data_source == 'File' && isEmpty(input$file_upload)) ||
         (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
@@ -309,18 +317,18 @@ server <- function ( input, output, session ) {
       # Spatial extent can be calculated in different ways, for example from
       # data set itself, from digital elevation model or manually set. For
       # now, just using min/max values for the GPS readings.
-      xmin <- min(data$xdata)
-      xmax <- max(data$xdata)
-      ymin <- min(data$ydata)
-      ymax <- max(data$ydata)
+      xmin <- min(data$xdata) - input$buffer
+      xmax <- max(data$xdata) + input$buffer
+      ymin <- min(data$ydata) - input$buffer
+      ymax <- max(data$ydata) + input$buffer
 
       # Generate a list of rasters
       if (exists ("rasters"))
         print ("DEBUG: exists!")
       else
         print ("DEBUG: no!")
-      rasters <- calculateRaster2D(data, input$sig2obs, input$tmax, input$cellsize,
-                                   xmin, xmax, ymin, ymax)
+      rasters <- calculateRaster2D(data, input$sig2obs, input$tmax,
+                                   input$cellsize, xmin, xmax, ymin, ymax)
       print(paste("DEBUG: rasters length =", length(rasters)))
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
