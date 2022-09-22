@@ -185,25 +185,15 @@ ui <- fluidPage(
 # Define server logic required
 server <- function ( input, output, session ) {
 
-  #shinyjs::disable("radio")
+  gps <- reactiveValues()
+  
   shinyjs::disable ( "runx" )
-  #shinyjs::hide ("plot")
-  
-  #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
-  
+
   # Update MB local filename based on studyid...
   observeEvent(input$movebank_studyid, {
     updateTextInput(session, "movebank_local_filename",
                     value = paste("movebank-", input$movebank_studyid, ".csv",
                                   sep = ""))
-  })
-  
-  observeEvent (input$cellsize, {
-    print (paste ("cell size =", input$cellsize))
-    if (input$cellsize > 0 )
-      shinyjs::enable ("runx")
-    else
-      print ("invalid cell size")
   })
   
   # If the required load data input is missing, disable buttons; otherwise enable...
@@ -220,7 +210,15 @@ server <- function ( input, output, session ) {
     }
   })
   
-  gps <- reactiveValues()
+  # If there is data and cell size is valid and a table row is selected, enable
+  # Run button
+  observe ({
+    # input$table_rows_selected
+    if (! isEmpty (gps$data) && input$cellsize >= 1)
+      shinyjs::enable ("runx")
+    else
+      shinyjs::disable ("runx")
+  })
   
   table.data <- eventReactive(input$load_data, {
     #shinyjs::disable("runx")
@@ -324,9 +322,9 @@ server <- function ( input, output, session ) {
 
       # Generate a list of rasters
       if (exists ("rasters"))
-        print ("DEBUG: exists!")
+        print ("DEBUG: rasters exists!")
       else
-        print ("DEBUG: no!")
+        print ("DEBUG: no rasters!")
       rasters <- calculateRaster2D(data, input$sig2obs, input$tmax,
                                    input$cellsize, xmin, xmax, ymin, ymax)
       print(paste("DEBUG: rasters length =", length(rasters)))
