@@ -106,14 +106,21 @@ ui <- fluidPage(
             fileInput(
               "file_upload", "Upload your GPS data file:", multiple = FALSE,
               accept = c("text/csv", "text/comma-separated-values,text/plain",
-                         ".csv"))),
+                         ".csv")),
+            radioButtons("coordinates", label = "Coordinate system:",
+                          choices = list("Latitude/Longitude" = 1, "UTM" = 2),
+                          selected = 1),
+            radioButtons("datum", label = "Datum:",
+                         choices = list("NAD 24" = 1, "NAD 83" = 2, "WGS 84" = 3),
+                         selected = 3),
+          ),
           conditionalPanel(
             condition = "input.data_source === 'Movebank'",
-            textInput("movebank_username", "Movebank Username", value = "mona",
+            textInput("movebank_username", "Movebank Username", value = "",
                       width = NULL, placeholder = NULL),
-            passwordInput("movebank_password", "Password", value = "g0MB2022",
+            passwordInput("movebank_password", "Password", value = "",
                           width = NULL, placeholder = NULL),
-            textInput("movebank_studyid", "Study ID", value = "408181528",
+            textInput("movebank_studyid", "Study ID", value = "",
                       width = NULL, placeholder = NULL),
             checkboxInput("save_local", "Save Movebank data locally"),
             bsTooltip(id = "save_local", placement = "right",
@@ -147,12 +154,6 @@ ui <- fluidPage(
                        min = 1, width = "75%"),
           numericInput("probability", label = "Cumulative probability", 0.9,
                        min = 0.1, max = 0.9999, width = "75%"),
-          radioButtons("coordinates", label = "Coordinate system:",
-                       choices = list("Latitude/Longitude" = 1, "UTM" = 2),
-                       selected = 1),
-          radioButtons("datum", label = "Datum:",
-                       choices = list("NAD 24" = 1, "NAD 83" = 2, "WGS 84" = 3),
-                       selected = 3),
           hr(style = "border-top: 2px solid #000000;"),
           actionButton("runx", label = "Run"),
           actionButton("reset_parameters", "Reset parameters"),
@@ -179,6 +180,7 @@ server <- function ( input, output, session ) {
 
   #shinyjs::disable("radio")
   shinyjs::disable ( "runx" )
+  #shinyjs::hide ("plot")
   
   #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
   
@@ -207,6 +209,7 @@ server <- function ( input, output, session ) {
   
   table.data <- eventReactive(input$load_data, {
     #shinyjs::disable("runx")
+    #shinyjs::hide ( "plot" )
     
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file_upload$name)
@@ -293,7 +296,7 @@ server <- function ( input, output, session ) {
     else {
       # data <- getMKDEData(data.frame$value, input$table_rows_selected,
       #                     input$sig2obs, input$tmax, input$cellsize)
-      print(paste("selected row =", input$table_rows_selected))
+      print(paste("DEBUG: selected row =", input$table_rows_selected))
       data <- gps$data
 
       # Spatial extent can be calculated in different ways, for example from
@@ -305,12 +308,18 @@ server <- function ( input, output, session ) {
       ymax <- max(data$ydata)
 
       # Generate a list of rasters
+      if (exists ("rasters"))
+        print ("DEBUG: exists!")
+      else
+        print ("DEBUG: no!")
       rasters <- calculateRaster2D(data, input$sig2obs, input$tmax, input$cellsize,
                                    xmin, xmax, ymin, ymax)
-      print(paste("rasters length =", length(rasters)))
+      print(paste("DEBUG: rasters length =", length(rasters)))
       tryCatch({
         # plotMKDE(data)
-        plotMKDE(rasters[[1]])
+        plotMKDE (rasters[[input$table_rows_selected]])
+        print (paste ("DEBUG: probability = ", input$probability))
+        #plotMKDE (rasters[[1]], probs = input$probability)
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
