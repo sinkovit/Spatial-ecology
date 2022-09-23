@@ -175,9 +175,22 @@ ui <- fluidPage(
       htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
-      hr(style = "border-top: 1px solid #000000;"),
-      shinycssloaders::withSpinner(DT::dataTableOutput('table'), type = 5)
-    ),
+      hr(style = "border-top: 2px solid #000000;"),
+      
+      tabsetPanel(
+        id = "tables",
+        type = "pills",
+        header = hr(style = "border-top: 1px solid #000000;"),
+
+        tabPanel (
+          "All",
+          value = 1,
+          shinycssloaders::withSpinner (DT::dataTableOutput ('table_all'), type = 5)),
+        tabPanel (
+          "Summary",
+          value = 2,
+          shinycssloaders::withSpinner (DT::dataTableOutput ('table_summary'), type = 5)))
+    )
   )
 )
 
@@ -187,7 +200,7 @@ server <- function ( input, output, session ) {
 
   gps <- reactiveValues()
   
-  shinyjs::disable ( "runx" )
+  shinyjs::hide ("tables")
 
   # Update MB local filename based on studyid...
   observeEvent(input$movebank_studyid, {
@@ -214,20 +227,16 @@ server <- function ( input, output, session ) {
   # Run button
   observe ({
     # input$table_rows_selected
-    if (! isEmpty (gps$data) && input$cellsize >= 1)
+    if (! isEmpty (gps$original) && input$cellsize >= 1)
       shinyjs::enable ("runx")
     else
       shinyjs::disable ("runx")
   })
   
-  table.data <- eventReactive(input$load_data, {
-    #shinyjs::disable("runx")
-    #shinyjs::hide ( "plot" )
-    
+  table_all.data <- eventReactive(input$load_data, {
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file_upload$name)
       results = loadDataframeFromFile(input$file_upload$datapath)
-      #shinyjs::enable("runx")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
@@ -235,16 +244,13 @@ server <- function ( input, output, session ) {
     
     else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
-      #withProgress(message = "Retrieving data from MoveBank...", {
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
-      #shinyjs::enable("runx")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
       data = results[[1]]
     }
-    #shinyjs::enable("runx")
     rm(results)
 
     printf("Preprocessing data...")
@@ -252,39 +258,40 @@ server <- function ( input, output, session ) {
     printf("done\n")
     shiny::validate(need(is.null(results[[2]]), results[[2]]))
     
+    tmp <- results[[1]]
     data <- results[[1]]
     gps$data <- results[[1]]
+    gps$original <- results[[1]]
     
     # Now save MB data locally
     if(input$data_source == "Movebank" && input$save_local == 1) {
       printf("Saving local file %s...", input$movebank_local_filename)
-      result = saveDataframeFromMB(gps$data, input$movebank_local_filename)
+      result = saveDataframeFromMB(gps$original, input$movebank_local_filename)
       if(is.null(result))
         printf("done\n")
       else
         printf("error: %s\n", result)
     }
     
-      # move.stack <- results[[1]]
-      # errors <- results[[2]]
-      
-    #   data.frame$value <- movebankPreprocess(input$sig2obs, input$tmax, move.stack)
     data <- animalAttributes(data, input$cellsize)
-    #   shiny::validate(need(!is.null(data), "Error detected in data!"))
-    #   
+    gps$summary <- data
+    
     output$plot.instructions <- renderUI ( {
       tagList (
         h5 ( "To plot:" ),
         tags$ol (
           tags$li("Set parameters (left)"),
-          tags$li("Choose an animal (below)"),
+          tags$li("Choose an animal from Summary table (below)"),
           tags$li("Run (left below)")
         ))})
   
     updateTabsetPanel ( session, "controls", selected = "2" )
+    shinyjs::show ("tables")
+    
+    tmp <- gps$original
     
     DT::datatable(
-      data[], extensions = 'Buttons',
+      tmp[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list(
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
@@ -292,8 +299,23 @@ server <- function ( input, output, session ) {
         stateSave = TRUE),
       selection = list(mode = 'single', target = 'row'))
   })
+  
+  table_summary.data <- eventReactive (gps$summary, {
+    tmp <- gps$summary
+    shinyjs::show ("tables")
 
-  output$table <- DT::renderDataTable(table.data())
+    DT::datatable(
+      tmp[], extensions = 'Buttons',
+      #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      options = list(
+        autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+        pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+        stateSave = TRUE),
+      selection = list(mode = 'single', target = 'row'))
+  })
+  
+  output$table_all <- DT::renderDataTable(table_all.data())
+  output$table_summary <- DT::renderDataTable(table_summary.data())
   
   observeEvent ( input$table_rows_selected, {
     shinyjs::enable ( "runx" )
@@ -343,23 +365,6 @@ server <- function ( input, output, session ) {
 
   output$plot <- renderPlot({mkde.plot()})
 
-  # output$file_value = renderPrint({
-  #   s = input$table_rows_selected
-  #   if (length(s)) {
-  #     paste('Row:', s)
-  #     #cat(s, sep = ', ')
-  #   }
-  # })
-
-  # Reset sig2obs and t.mat; unfortunately can't "reset" input file
-  # (see https://stackoverflow.com/questions/44203728/how-to-reset-a-value-of-fileinput-in-shiny
-  # for a trick)
-  # observeEvent ( input$reset, {
-  #   shinyjs::reset ( "myapp" )
-  #   shinyjs::disable ( "runx" )
-  #   shinyjs::disable ( "reset" )
-  # } )
-  
   observeEvent ( input$reset_data, {
     data_source = input$data_source
     updateRadioButtons ( session, "data_source", selected = data_source )
