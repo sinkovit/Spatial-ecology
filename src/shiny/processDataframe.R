@@ -71,21 +71,21 @@ preprocessDataframe <- function(gpsdata) {
       names(gpsdata)[names(gpsdata) == 'utm_northing'] <- 'utm.northing'
 
       # UTM zone (canonical name: utm.zone)
-      options <- c('Z', 'utm-zone', 'utm_zone', 'utmzone', 'zone')
+      options <- c('utm-zone', 'utm_zone', 'utmzone', 'zone')
       for (opt in options) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'utm.zone'
       }
 
       # Vertical location (canonical name: zdata)
-      options <- c('Z', 'height-raw', 'height_raw', 'height.raw')
+      options <- c('Zdata', 'ZDATA', 'z', Z', 'height-raw', 'height_raw', 'height.raw')
       for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'z'
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'zdata'
       }
 
       # Latitude (canonical name: lat)
       options <- c('Lat', 'LAT', 'location_lat', 'Location_lat', 'LOCATION_LAT',
       	      	   'location-lat', 'Location-lat', 'LOCATION-LAT', 'location.lat',
-		   'Location.lat', 'LOCATION.LAT', 'latitute', 'Latitute', 'LATITUDE')
+		   'Location.lat', 'LOCATION.LAT', 'latitude', 'Latitude', 'LATITUDE')
       for (opt in options) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'lat'
       }
