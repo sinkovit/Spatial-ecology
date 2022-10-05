@@ -77,7 +77,7 @@ preprocessDataframe <- function(gpsdata) {
       }
 
       # Vertical location (canonical name: zdata)
-      options <- c('Zdata', 'ZDATA', 'z', Z', 'height-raw', 'height_raw', 'height.raw')
+      options <- c('Zdata', 'ZDATA', 'z', 'Z', 'height-raw', 'height_raw', 'height.raw')
       for (opt in options) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'zdata'
       }
