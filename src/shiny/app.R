@@ -226,7 +226,7 @@ server <- function ( input, output, session ) {
   # If there is data and cell size is valid and a table row is selected, enable
   # Run button
   observe ({
-    # input$table_rows_selected
+    # input$table_summary_rows_selected
     if (! isEmpty (gps$original) && input$cellsize >= 1)
       shinyjs::enable ("runx")
     else
@@ -234,6 +234,7 @@ server <- function ( input, output, session ) {
   })
   
   table_all.data <- eventReactive(input$load_data, {
+    printf ("creating table_all\n")
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file_upload$name)
       results = loadDataframeFromFile(input$file_upload$datapath)
@@ -289,6 +290,7 @@ server <- function ( input, output, session ) {
     shinyjs::show ("tables")
     
     tmp <- gps$original
+    print (paste ("selected table row =", input$table_summary_rows_selected))
     
     DT::datatable(
       tmp[], extensions = 'Buttons',
@@ -301,6 +303,7 @@ server <- function ( input, output, session ) {
   })
   
   table_summary.data <- eventReactive (gps$summary, {
+    printf ("creating table_summary\n")
     tmp <- gps$summary
     shinyjs::show ("tables")
 
@@ -311,27 +314,28 @@ server <- function ( input, output, session ) {
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
         stateSave = TRUE),
-      selection = list(mode = 'single', target = 'row'))
+      selection = list(mode = 'single', selected = 1, target = 'row'))
   })
   
   output$table_all <- DT::renderDataTable(table_all.data())
   output$table_summary <- DT::renderDataTable(table_summary.data())
   
-  observeEvent ( input$table_rows_selected, {
-    shinyjs::enable ( "runx" )
-  })
+  # observeEvent ( input$table_summary_rows_selected, {
+  #   shinyjs::enable ( "runx" )
+  # })
   
-  #mkde.plot <- eventReactive(input$table_rows_selected, {
+  #mkde.plot <- eventReactive(input$table_summary_rows_selected, {
   mkde.plot <- eventReactive(input$runx, {
     shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
+    print (paste ("selected summary table row =", input$table_summary_rows_selected))
 
-    if(input$table_rows_selected == "all")
+    if(input$table_summary_rows_selected == "all")
       print("sorry cannot plot all at this time...")
     else {
-      # data <- getMKDEData(data.frame$value, input$table_rows_selected,
+      # data <- getMKDEData(data.frame$value, input$table_summary_rows_selected,
       #                     input$sig2obs, input$tmax, input$cellsize)
-      print(paste("DEBUG: selected row =", input$table_rows_selected))
+      print(paste("DEBUG: selected row =", input$table_summary_rows_selected))
       data <- gps$data
 
       # Spatial extent can be calculated in different ways, for example from
@@ -343,13 +347,23 @@ server <- function ( input, output, session ) {
       ymax <- max(data$ydata) + input$buffer
 
       # Generate a list of rasters
-      if (exists ("rasters"))
-        print ("DEBUG: rasters exists!")
-      else
-        print ("DEBUG: no rasters!")
-      rasters <- calculateRaster2D(data, input$sig2obs, input$tmax,
-                                   input$cellsize, xmin, xmax, ymin, ymax)
-      print(paste("DEBUG: rasters length =", length(rasters)))
+      # if (exists ("rasters"))
+      #   print ("DEBUG: rasters exists!")
+      # else
+      #   print ("DEBUG: no rasters!")
+      rasters <- calculateRaster2D (data, input$sig2obs, input$tmax,
+                                    input$cellsize, xmin, xmax, ymin, ymax)
+      # print(paste("DEBUG: rasters length =", length(rasters)))
+      # if (exists ("rasters")) {
+      #   print ("DEBUG 2: rasters exists!")
+      #   if (exists ("269", rasters))
+      #     print ("DEBUG 2: 269 exists!")
+      #   else
+      #     print ("DEBUG 2: 269 does NOT exists")
+      # }
+      # else
+      #   print ("DEBUG 2: no rasters!")
+      
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         plotMKDE (rasters[[1]], probs = probs)
