@@ -275,7 +275,9 @@ server <- function ( input, output, session ) {
     }
     
     data <- animalAttributes(data, input$cellsize)
+    print (paste ("data:", str (data)))
     gps$summary <- data
+    print (paste ("gps summary 1:", str (gps$summary)))
     
     output$plot.instructions <- renderUI ( {
       tagList (
@@ -286,7 +288,9 @@ server <- function ( input, output, session ) {
           tags$li("Run (left below)")
         ))})
   
+    print ("here 1")
     updateTabsetPanel ( session, "controls", selected = "2" )
+    print ("here")
     shinyjs::show ("tables")
     
     tmp <- gps$original
@@ -304,8 +308,10 @@ server <- function ( input, output, session ) {
   
   table_summary.data <- eventReactive (gps$summary, {
     printf ("creating table_summary\n")
+    print (paste ("gps summary 2:", str (gps$summary)))
     tmp <- gps$summary
     shinyjs::show ("tables")
+    print (paste ("tmp:", str (tmp)))
 
     DT::datatable(
       tmp[], extensions = 'Buttons',
@@ -366,7 +372,7 @@ server <- function ( input, output, session ) {
       
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        plotMKDE (rasters[[1]], probs = probs)
+        plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx)
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
