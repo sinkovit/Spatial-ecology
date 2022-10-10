@@ -259,7 +259,6 @@ server <- function ( input, output, session ) {
     printf("done\n")
     shiny::validate(need(is.null(results[[2]]), results[[2]]))
     
-    tmp <- results[[1]]
     data <- results[[1]]
     gps$data <- results[[1]]
     gps$original <- results[[1]]
@@ -290,11 +289,10 @@ server <- function ( input, output, session ) {
     updateTabsetPanel ( session, "controls", selected = "2" )
     shinyjs::show ("tables")
     
-    tmp <- gps$original
     print (paste ("selected table row =", input$table_summary_rows_selected))
     
     DT::datatable(
-      tmp[], extensions = 'Buttons',
+      gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list(
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
