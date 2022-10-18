@@ -369,8 +369,8 @@ server <- function ( input, output, session ) {
       
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx)
-#		 xlab='', ylab='')
+        plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+		 xlab='', ylab='')
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
