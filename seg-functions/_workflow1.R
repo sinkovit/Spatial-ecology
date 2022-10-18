@@ -7,9 +7,10 @@ source("calculateRaster2D.R")
 
 # Set parameters (these will come from the Shiny user interface)
 file <- "Data/CondorFull.csv"
+#file <- "Data/pandabob.txt"
 sig2obs <- 25.0
 t.max <- 185
-cell.sz <- 3000
+cell.sz <- 6000
 
 # Read and pre-process data
 gpsdata <- loadDataframeFromFile(file)
