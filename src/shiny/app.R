@@ -227,7 +227,11 @@ server <- function ( input, output, session ) {
   # Run button
   observe ({
     # input$table_summary_rows_selected
-    if (! isEmpty (gps$original) && input$cellsize >= 1)
+    if (! isEmpty (gps$original)  &&
+       is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
+       is.numeric(input$tmax)     && input$tmax >= 0 &&
+       is.numeric(input$cellsize) && input$cellsize >= 1 &&
+       is.numeric(input$buffer)   && input$buffer >= 0)
       shinyjs::enable ("runx")
     else
       shinyjs::disable ("runx")
@@ -366,6 +370,7 @@ server <- function ( input, output, session ) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx)
+#		 xlab='', ylab='')
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
