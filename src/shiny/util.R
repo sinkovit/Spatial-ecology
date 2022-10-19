@@ -59,117 +59,53 @@ animalAttributes <- function(data_df, cell.sz) {
   # Replicate C printf functionality
   printf <- function(...) cat(sprintf(...))
   
-  # Custom rounding to 2 significant digits if x > 10, 1 digit otherwise
-  custom_round <- function(x) {return (signif(x, min(2,floor(log10(x)))))}
-  cell.sz = custom_round (cell.sz)
-  
   animals <- append(as.list(sort(unique(data_df$id))), "all")
   max_pixels <- c(30, 60, 100, 300)
 
-  printf("\n")
-  printf("The following table gives the extent of animal movement for the\n")
-  printf("individuals and for the data set as a whole, along with the grid\n")
-  printf("dimensions resulting from various pixel sizes. Keep in mind that larger\n")
-  printf("grids result in longer calculations, so you may want to choose a pixel\n")
-  printf("size that result in a smaller grid for preliminary calculations.\n")
-  printf("\n")
-  printf("E-W(m) and N-S(m) are the east-west and north-south ranges, in meters\n")
-  printf("px(m) is the pixel size in meters and grid is the resulting grid dimensions\n")
-  printf("\n")
-  
-  printf("%7s ", "id")
-  printf("%9s %9s %9s %9s %10s %10s ", "long_min", "long_max", "lat_min", "lat_max", "E-W(m)  ", "N-S(m)  ")
-  for (max_pix in max_pixels) {
-    printf("%6s %7s ", "px(m)", "grid")
-  }
-  printf("\n------- --------- --------- --------- --------- ---------- ---------- ------ ------- ")
-  printf("------ ------- ------ ------- ------ -------\n")
-  
-  #result <- data.frame(id = numeric(), 'long min' = numeric(),
-  #                     long_max = numeric(), lat_min = numeric(),
-  #                     lat_max = numeric(), E_W = numeric(),
-  #                     N_S = numeric())
-  #, px(m) = numeric(), grid = character(),
-  #                     px(m) = numeric(), grid = character(), px(m) = numeric(),
-  #                     grid = character(), px(m) = numeric(), grid = character() )
-  # Oddly above doesn't work but below works...
   result <- data.frame(id = numeric())
-  result[ , 'latitude (min)'] <- numeric()
-  result[ , 'latitude (max)'] <- numeric()
-  result[ , 'longitude (min)'] <- character()
-  result[ , 'longitude (max)'] <- character()
-  result[ , 'East-West (m)'] <- numeric()
-  result[ , 'North-South (m)'] <- numeric()
+  result[ , 'Easting (min)'] <- numeric()
+  result[ , 'Easting (max)'] <- numeric()
+  result[ , 'Northing (min)'] <- character()
+  result[ , 'Northing (max)'] <- character()
+  result[ , 'Area (m2)'] <- numeric()
   row.index <- 1
 
   tryCatch({
     for (local_id in animals) {
       if(local_id == "all") {
-        long_minmax = range(data_df$long)
-        lat_minmax = range(data_df$lat)
         x_minmax = range(data_df$xdata)
         y_minmax = range(data_df$ydata)
         t_minmax = range(data_df$time)
         printf("    all ")
       } else {
-        long_minmax = range(data_df[which(data_df$id == local_id), "long"])
-        lat_minmax = range(data_df[which(data_df$id == local_id), "lat"])
         x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
         y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
         t_minmax = range(data_df[which(data_df$id == local_id), "time"])
-        #printf("%7i ", local_id)
-        printf("%s", local_id)
       }
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
-      printf("%9.4f %9.4f %9.4f %9.4f %10.2f %10.2f ", long_minmax[1],
-             long_minmax[2], lat_minmax[1], lat_minmax[2], x_range, y_range)
-      longitude <- paste("[", round(long_minmax[1],3), ",", round(long_minmax[2],3),
-                         "]")
-      row <- c(local_id, round(lat_minmax[1],3), round(lat_minmax[2],3),
-               round(long_minmax[1],3), round(long_minmax[2],3),
-               round(x_range,2), round(y_range,2))
+      area <- sprintf("%10.2e", x_range * y_range)
+      row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area)
   
       row.tail = c()
-      option.counter <- 1
+
+      # Loop over pixel sizes
       for (max_pix in max_pixels) {
-        if (x_range >= y_range) {
-          nx <- max_pix
-          ny <- as.integer(nx * (y_range/x_range))
-          # cell.sz <- x_range/nx
-          # cell.sz <- custom_round(cell.sz)
-          nx <- as.integer(x_range/cell.sz)
-          ny <- as.integer(y_range/cell.sz)
-        } else {
-          ny <- max_pix
-          nx <- as.integer(ny * (x_range/y_range))
-          # cell.sz <- y_range/ny
-          # cell.sz <- custom_round(cell.sz)
-          nx <- as.integer(x_range/cell.sz)
-          ny <- as.integer(y_range/cell.sz)
-        }
+      	nx <- as.integer(x_range/max_pix)
+      	ny <- as.integer(y_range/max_pix)
         dims <- sprintf("%dx%d", nx, ny)
-        printf("%6.1f %7s ", cell.sz, dims)
-  
         if(row.index == 1) {
-          # cell.size.label <- paste('cell size (',max_pix, "m)", sep = "")
-          # dim.label <- paste('grid dimensions (', max_pix, 'm)', sep = "")
-          # columns.new <- c(cell.size.label, dim.label)
-          # result[ , cell.size.label] <- numeric()
-          # result[ , dim.label] <- character()
-          label <- paste("cell (m) & grid sizes (#", option.counter, ")", sep = "")
+          label <- sprintf("Grid \n (%d m)", max_pix)
           result[ , label] <- character()
-          option.counter <- option.counter + 1
         }
-  
-        value <- paste(cell.sz, "&", dims)
+        value <- paste(dims)
         row.tail <- append(row.tail, c(value))
       }
+
       row <- append(row,row.tail)
       result[row.index, ] <- row
       row.index <- row.index + 1
       
-      printf("\n")
     }
     return(result)
   },
