@@ -3,7 +3,8 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    # Input
    # mkde2d.obj: MKDE object
    # probs: list of probabilities for image contours
-   # basename: base file name for raster and shape files - basename_[all|outer]contour.[asc|dbf|shp|shx]
+   # basename: base file name for raster and shape files
+   #           basename_[all|outer]contour.[asc|dbf|shp|shx]
    # all: if true, use all probability contours, if false use only outer contour
    #
    # Output
@@ -14,7 +15,6 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    # createContours(mkde2d.obj, probs, "tejon-pig", all=FALSE)
 
    library(rgdal)
-   library(rgeos)
 
    # Create raster from MKDE object
    rst.mkde = mkdeToRaster(mkde2d.obj) 
@@ -41,7 +41,7 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
    writeOGR(obj = raster.contour, dsn=".", layer = filename, driver = "ESRI Shapefile", overwrite = T)
 
-   # Create/write raster of outer contour
+   # Create/write raster of contour(s)
    raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
    writeRaster(rst.cont, filename, format = "ascii", overwrite = T)
    writeOGR(obj = raster.contour, dsn=".", layer = filename, driver = "ESRI Shapefile", overwrite = T)
