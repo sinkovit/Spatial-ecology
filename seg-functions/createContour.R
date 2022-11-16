@@ -14,7 +14,9 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    # createContours(rasters[[1]], probs, "condor", all=TRUE)
    # createContours(mkde2d.obj, probs, "tejon-pig", all=FALSE)
 
-   library(rgdal)
+   library(raster)
+   library(mkde)
+   library(sp)
 
    # Create raster from MKDE object
    rst.mkde = mkdeToRaster(mkde2d.obj) 
@@ -33,18 +35,19 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
       contour_probs <- tail(probs, n=1)
    }
    
-   # Create/display/write shapefiles
+   # Create/display/write shapefiles and raster of contours
    cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
    rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
    plot(rst.cont)
    contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 2.0)
    raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-   writeOGR(obj = raster.contour, dsn=".", layer = filename, driver = "ESRI Shapefile", overwrite = T)
-
-   # Create/write raster of contour(s)
-   raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
    writeRaster(rst.cont, filename, format = "ascii", overwrite = T)
-   writeOGR(obj = raster.contour, dsn=".", layer = filename, driver = "ESRI Shapefile", overwrite = T)
+   raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+   shapefile(x = raster.contour, file = filename, overwrite = T) # Avoids use of rgdal
+
+   ##### This is the old way using rgdal
+   ##### library(rgdal)
+   ##### writeOGR(obj = raster.contour, dsn=".", layer = filename, driver = "ESRI Shapefile", overwrite = T)
 
    return(0)
 }
