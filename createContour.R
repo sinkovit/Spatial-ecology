@@ -13,8 +13,6 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    # Usage examples
    # createContours(rasters[[1]], probs, "condor", all=TRUE)
    # createContours(mkde2d.obj, probs, "tejon-pig", all=FALSE)
-   #
-   # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 
    library(raster)
    library(mkde)
@@ -38,7 +36,6 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    }
    
    # Create/display/write shapefiles and raster of contours
-   # Note that spChFIDs doesn't seem to do anything
    cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
    rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
    plot(rst.cont)
