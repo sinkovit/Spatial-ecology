@@ -47,9 +47,6 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
   library(mkde)
   library(raster)
 
-  # Initialize list of rasters
-  rasters <- list()
-
   x <- gpsdata[which(gpsdata$id == id), "xdata"]
   y <- gpsdata[which(gpsdata$id == id), "ydata"]
   t <- gpsdata[which(gpsdata$id == id), "time"]
@@ -72,6 +69,6 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
   mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
   dens.res <- initializeDensity(mkde.obj, mv.dat)
   mkde.obj <- dens.res$mkde.obj
-  rasters <- append(rasters, list(mkde.obj))
-  return(rasters)
+
+  return (mkde.obj)
 }

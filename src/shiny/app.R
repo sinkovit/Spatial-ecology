@@ -359,9 +359,11 @@ server <- function ( input, output, session ) {
       #   print ("DEBUG: rasters exists!")
       # else
       #   print ("DEBUG: no rasters!")
-      rasters <- calculateRaster2D (data, as.numeric (id), input$sig2obs,
-                                    input$tmax, input$cellsize, xmin, xmax, ymin,
-                                    ymax)
+      rasters <- list()
+      raster <- calculateRaster2D (data, as.numeric (id), input$sig2obs,
+                                   input$tmax, input$cellsize, xmin, xmax, ymin,
+                                   ymax)
+      rasters <- append (rasters, list (raster))
       # print(paste("DEBUG: rasters length =", length(rasters)))
       # if (exists ("rasters")) {
       #   print ("DEBUG 2: rasters exists!")
