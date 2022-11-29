@@ -349,13 +349,19 @@ server <- function ( input, output, session ) {
       ymin <- min(data$ydata) - input$buffer
       ymax <- max(data$ydata) + input$buffer
 
+      # Get selected row animal id
+      summary <- gps$summary
+      id = data.frame (summary$id[input$table_summary_rows_selected])
+      printf ("row %d id = %s\n", input$table_summary_rows_selected, id)
+      
       # Generate a list of rasters
       # if (exists ("rasters"))
       #   print ("DEBUG: rasters exists!")
       # else
       #   print ("DEBUG: no rasters!")
-      rasters <- calculateRaster2D (data, "269", input$sig2obs, input$tmax,
-                                    input$cellsize, xmin, xmax, ymin, ymax)
+      rasters <- calculateRaster2D (data, as.numeric (id), input$sig2obs,
+                                    input$tmax, input$cellsize, xmin, xmax, ymin,
+                                    ymax)
       # print(paste("DEBUG: rasters length =", length(rasters)))
       # if (exists ("rasters")) {
       #   print ("DEBUG 2: rasters exists!")
