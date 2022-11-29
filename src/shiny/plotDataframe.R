@@ -31,8 +31,8 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
-                              xmin, xmax, ymin, ymax) {
+calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
+                               ymin, ymax) {
 
 # Calculate rasters for each indivdual in a dataframe using mkde
 # package and return the results as a list of rasters
@@ -50,7 +50,7 @@ calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
   # Initialize list of rasters
   rasters <- list()
 
-  for (id in unique(gpsdata$id)) {
+  #for (id in unique(gpsdata$id)) {
       x <- gpsdata[which(gpsdata$id == id), "xdata"]
       y <- gpsdata[which(gpsdata$id == id), "ydata"]
       t <- gpsdata[which(gpsdata$id == id), "time"]
@@ -76,6 +76,6 @@ calculateRaster2D <- function(gpsdata, sig2obs, t.max, cell.sz,
       dens.res <- initializeDensity(mkde.obj, mv.dat)
       mkde.obj <- dens.res$mkde.obj
       rasters <- append(rasters, list(mkde.obj))
-   }
+   #}
    return(rasters)
 }
