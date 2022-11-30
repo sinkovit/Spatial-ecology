@@ -238,7 +238,6 @@ server <- function ( input, output, session ) {
   })
   
   table_all.data <- eventReactive(input$load_data, {
-    printf ("creating table_all\n")
     if(input$data_source == 'File') {
       printf("Loading file %s...", input$file_upload$name)
       results = loadDataframeFromFile(input$file_upload$datapath)
@@ -265,8 +264,6 @@ server <- function ( input, output, session ) {
     
     data <- results[[1]]
     gps$data <- results[[1]]
-    # print ("DEBUG: gps$data = ")
-    # str (gps$data)
     gps$original <- results[[1]]
     
     # Now save MB data locally
@@ -295,8 +292,6 @@ server <- function ( input, output, session ) {
     updateTabsetPanel ( session, "controls", selected = "2" )
     shinyjs::show ("tables")
     
-    print (paste ("selected table row =", input$table_summary_rows_selected))
-    
     DT::datatable(
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
@@ -308,7 +303,6 @@ server <- function ( input, output, session ) {
   })
   
   table_summary.data <- eventReactive (gps$summary, {
-    printf ("creating table_summary\n")
     tmp <- gps$summary
     shinyjs::show ("tables")
 
@@ -329,18 +323,18 @@ server <- function ( input, output, session ) {
   #   shinyjs::enable ( "runx" )
   # })
   
-  #mkde.plot <- eventReactive(input$table_summary_rows_selected, {
   mkde.plot <- eventReactive(input$runx, {
     shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
-    print (paste ("selected summary table row =", input$table_summary_rows_selected))
 
-    if(input$table_summary_rows_selected == "all")
-      print("sorry cannot plot all at this time...")
-    else {
-      # data <- getMKDEData(data.frame$value, input$table_summary_rows_selected,
-      #                     input$sig2obs, input$tmax, input$cellsize)
-      print(paste("DEBUG: selected row =", input$table_summary_rows_selected))
+    summary <- gps$summary
+    id <- summary$id[input$table_summary_rows_selected]
+
+    if (id == "all") {
+      shinyjs::enable("runx")
+      shiny::validate (need (id != "all",
+                             "Sorry cannot plot multiple animals at this time..."))
+    } else {
       data <- gps$data
 
       # Spatial extent can be calculated in different ways, for example from
@@ -352,61 +346,23 @@ server <- function ( input, output, session ) {
       ymax <- max(data$ydata) + input$buffer
 
       # Get selected row animal id
-      summary <- gps$summary
-      #id = data.frame (summary$id[input$table_summary_rows_selected])
-      id <- summary$id[input$table_summary_rows_selected]
+      #summary <- gps$summary
+      #id <- summary$id[input$table_summary_rows_selected]
       
-      # Generate a list of rasters
-      # if (exists ("rasters"))
-      #   print ("DEBUG: rasters exists!")
-      # else
-      #   print ("DEBUG: no rasters!")
-      #rasters <- list()
       rasters <- gps$rasters
-      printf ("rasters class = %s\n", class (rasters))
       raster <- NULL
       
-      #if (is.null (rasters)) {
       if (! is.null (rasters) && ! is.null (rasters[[id]])) {
-        print ("DEBUG: gps rasters exists =")
-        print (paste ("number of rasters = ", length (rasters)))
-        str (rasters)
         raster <- rasters[[id]]
-        print ("DEBUG: raster = ")
-        str (raster)
       } else {
-        print ("DEBUG: no valid rasters")
         raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
                                      input$cellsize, xmin, xmax, ymin, ymax)
-        printf ("row %d id = %s\n", input$table_summary_rows_selected, id)
-        print ("DEBUG: raster before =")
-        str (raster)
-        #tmp <- list ("id" = id, "raster" = raster)
-        print (paste ("rasters length before = ", length (rasters)))
         rasters[[id]] <- raster
-        print ("DEBUG: rasters after =")
-        str (rasters)
-        #print ("DEBUG: tmp = ")
-        #str (tmp)
-        #rasters <- append (rasters, list (raster))
-        print (paste ("rasters length after = ", length (rasters)))
         gps$rasters <- rasters
       }
       
-      # print(paste("DEBUG: rasters length =", length(rasters)))
-      # if (exists ("rasters")) {
-      #   print ("DEBUG 2: rasters exists!")
-      #   if (exists ("269", rasters))
-      #     print ("DEBUG 2: 269 exists!")
-      #   else
-      #     print ("DEBUG 2: 269 does NOT exists")
-      # }
-      # else
-      #   print ("DEBUG 2: no rasters!")
-      
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        #plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
         plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
                   xlab='', ylab='')
       },
