@@ -1,3 +1,36 @@
+# This software is Copyright © 2022 The Regents of the University of California.
+# All Rights Reserved. Permission to copy, modify, and distribute this software
+# and its documentation for educational, research and non-profit purposes,
+# without fee, and without a written agreement is hereby granted, provided that
+# this entire copyright appear in all copies. Permission to make commercial use
+# of this software may be obtained by contacting:
+# 
+# Office of Innovation and Commercialization
+# 9500 Gilman Drive, Mail Code 0910
+# University of California
+# La Jolla, CA 92093-0910
+# (858) 534-5815
+# invent@ucsd.edu
+#
+# This software program and documentation are copyrighted by The Regents of the
+# University of California. The software program and documentation are supplied
+# “as is”, without any accompanying services from The Regents. The Regents does
+# not warrant that the operation of the program will be uninterrupted or
+# error-free. The end-user understands that the program was developed for
+# research purposes and is advised not to rely exclusively on the program for
+# any reason.
+# 
+# IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+# DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+# LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+# EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE. THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED
+# HEREUNDER IS ON AN “AS IS” BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO
+# OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+# MODIFICATIONS.
+
 library(shiny)
 library(mkde)
 library(raster)
@@ -7,113 +40,29 @@ library(shinycssloaders)
 library(move)
 library(ggplot2)
 library(stringr)
+library(shinyBS)
+
+source("loadDataframe.R")
+source("plotDataframe.R")
+source("processDataframe.R")
+source("util.R")
 
 sessionInfo()
 
-# https://github.com/sinkovit/Spatial-ecology/blob/Bob/Example_MB1/getdata_trycatch.R
-data_loader <- function(username, password, study, login) {
-  tryCatch(
-    {
-      login <- movebankLogin(username = username, password = password )
-      d <- getMovebankData(study=strtoi(study), login=login)
-      return(list(d, ""))
-    },
-    error = function(error_message) {
-      if(str_detect(error_message[1], "you are not allowed to download")) {
-        return(list(NULL,
-                    "Please go to Movebank and accept the data license terms, then return here and try again."))
-      }
-      if(str_detect(error_message[1],
-                    "unable to find an inherited method for function ‘getMovebankData’")) {
-        return(list(NULL, paste("Error:", study,
-                              "appears to be an invalid Movebank study ID.")))
-      }
-      if(str_detect(error_message[1], "There are no valid credentials")) {
-        return(list(NULL,"Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
-      }
-      if(str_detect(error_message[1], "No data are available for download")) {
-        return(list(NULL,"Error: no data available for download."))
-      }
-      return(list(NULL, error_message))
-    }
-  )
-}
-
-
-getMKDEData <- function ( sig2obs, tmax, path.file ) {
-  # Read GPS movement data from file
-
-  panda <- read.table ( path.file, header=TRUE)
-
-  xmin <- min(panda$x)
-  ymin <- min(panda$y)
-  xmax <- max(panda$x)
-  ymax <- max(panda$y)
-  xrange <- xmax-xmin
-  yrange <- ymax-ymin
-  cell.sz <- 10
-  nx = xrange/cell.sz
-  ny = yrange/cell.sz
-  mv.dat <- initializeMovementData(panda$time, panda$x, panda$y, sig2obs=sig2obs, t.max=tmax)
-  mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
-  dens.res <- initializeDensity(mkde.obj, mv.dat)
-  
-  mkde.obj <- dens.res$mkde.obj
-  mv.dat <- dens.res$move.dat
-  return ( mkde.obj )
-}
-
-
-mb2 <- function ( sig2obs, tmax, data ) {
-  # Data preparation
-  # (1) Convert lat/long to aeqd (Azimuthal Equidistance) projection
-  # (2) Convert MoveStack to data frame
-  # (3) Convert timestamps to epoch minutes
-  data <- spTransform(data, center=TRUE)
-  data_df <- as.data.frame(data)
-  data_df$time = as.numeric(as.POSIXct(data_df$timestamp)) / 60
-  #print ( paste ( "data_df = ", data_df ) )
-  
-  for (local_id in unique(data_df$local_identifier)) {
-    x <- data_df[which(data_df$local_identifier == local_id), "location_long.1"]
-    y <- data_df[which(data_df$local_identifier == local_id), "location_lat.1"]
-    t <- data_df[which(data_df$local_identifier == local_id), "time"]
-    
-    # Get data range; set grid size and cell size
-    xmin <- min(x)
-    ymin <- min(y)
-    xmax <- max(x)
-    ymax <- max(y)
-    xrange <- xmax-xmin
-    yrange <- ymax-ymin
-    
-    if (xrange >= yrange) {
-      nx <- 500
-      ny <- as.integer(nx * (yrange/xrange))
-      cell.sz <- xrange/nx
-    } else {
-      ny <- 500
-      nx <- as.integer(ny * (xrange/yrange))
-      cell.sz <- yrange/ny
-    }  
-    
-    print(paste("local_identifier =", local_id))
-    print("Home range dimensions (pixels/voxels)")
-    print(paste("nx =", nx, "ny =", ny))
-    print("Home range dimensions (meters)")
-    print(paste("xrange =", xrange, "yrange =", yrange))
-    print(paste("cell size =", cell.sz))
-    
-    # Create home range using mkde
-    mv.dat <- initializeMovementData(t, x, y, sig2obs=sig2obs, t.max=tmax)
-    mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
-    dens.res <- initializeDensity(mkde.obj, mv.dat)
-    mkde.obj <- dens.res$mkde.obj
-    mv.dat <- dens.res$move.dat
-    return ( mkde.obj )
-  }
-}
-
+# Used to disable
+callback <- c(
+  "var id = $(table.table().node()).closest('.datatables').attr('id');",
+  "table.on('click', 'tbody', function(){",
+  "  setTimeout(function(){",
+  "    var indexes = table.rows({selected:true}).indexes();",
+  "    var indices = Array(indexes.length);",
+  "    for(var i = 0; i < indices.length; ++i){",
+  "      indices[i] = indexes[i];",
+  "    }",
+  "    Shiny.setInputValue(id + '_rows_selected', indices);",
+  "  }, 0);",
+  "});"
+)
 
 # Define UI for app
 ui <- fluidPage(
@@ -128,62 +77,120 @@ ui <- fluidPage(
     "))
   ),
   
+  # CSS to hide fileInput "Upload Complete"
+  # original idea from https://stackoverflow.com/a/49631736
+  includeCSS("app.css"),
+  
   useShinyjs(), # include shinyjs
 
-  titlePanel ( "Welcome to the Spatial Ecology Gateway!" ),
-
+  titlePanel ( "Welcome to the Space Use Ecology Gateway!" ),
+  
   # Sidebar layout with input and output definitions ----
   sidebarLayout (
 
     # Sidebar panel for inputs ----
-    sidebarPanel (
+    sidebarPanel(
       id = "myapp",
-
-      textInput ( "movebank.username", "Movebank Username", value = "",
-                  width = NULL, placeholder = NULL ),
-      passwordInput ( "movebank.password", "Movebank Password", value = "",
-                  width = NULL, placeholder = NULL),
-      textInput ( "movebank.studyid", "Movebank Study ID", value = "",
-                  width = NULL, placeholder = NULL ),
-
-      hr ( style = "border-top: 1px solid #000000;" ),
-    
-	    # Input: Select a file ----
-	    fileInput ( "file.upload", "Please upload your GPS data file:",
-                  multiple = FALSE,
-                 accept = c ( "text/csv",
-                          "text/comma-separated-values,text/plain",
+      tabsetPanel(
+        id = "controls",
+        type = "pills",
+        header = hr(style = "border-top: 2px solid #000000;"),
+        
+        tabPanel(
+          "1. Load Data",
+          value = 1,
+          radioButtons("data_source", "Load data from :",
+                       choices = c ( "File", "Movebank" ) ),
+          conditionalPanel(
+            condition = "input.data_source === 'File'",
+            fileInput(
+              "file_upload", "Upload your GPS data file:", multiple = FALSE,
+              accept = c("text/csv", "text/comma-separated-values,text/plain",
                          ".csv")),
-
-	    # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-	    radioButtons ( "radio", label = h4 ( "Mode" ),
-    			    choices = list ( "2D" = 2, "3D" = 3 ), 
-    			    selected = 2 ),
-
-	    # Copy the line below to make a number input box into the UI.
-	    numericInput ( "sig2obs", label = h4 ( "sig2obs" ), value = 25.0 ),
-
-	    # Copy the line below to make a number input box into the UI.
-	    numericInput ( "tmax", label = h3("t.max"), value = 185.0 ),
-
-	    actionButton ( "runx", label = "Run" ),
-	    actionButton ( "reset", "Reset form" ),
-
+            radioButtons("coordinates", label = "Coordinate system:",
+                          choices = list("Latitude/Longitude" = 1, "UTM" = 2),
+                          selected = 1),
+            conditionalPanel (
+              condition = "input.coordinates === '2'",
+              numericInput ("zone", label = "Zone", value = 30, min = 1, max = 60, step = 1, width = "50%")),
+            radioButtons("datum", label = "Datum:",
+                         choices = list("NAD 27" = 1, "NAD 83" = 2, "WGS 84" = 3),
+                         selected = 3),
+          ),
+          conditionalPanel(
+            condition = "input.data_source === 'Movebank'",
+            textInput("movebank_username", "Movebank username"),
+            passwordInput("movebank_password", "Password"),
+            textInput("movebank_studyid", "Study ID"),
+            checkboxInput("save_local", "Save Movebank data locally"),
+            bsTooltip(id = "save_local", placement = "right",
+                      title = "If local file already exists, will overwrite"),
+            conditionalPanel(
+              condition = "input.save_local == 1",
+              textInput("movebank_local_filename", "Local filename")),
+            ),
+          hr(style = "border-top: 2px solid #000000;"),
+          actionButton("load_data", label = "Load data"),
+          actionButton("reset_data", "Reset data"),
+        ),
+        
+        tabPanel(
+          "2. Set Parameters",
+          value = 2,
+          # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
+          radioButtons("mode", label = "Mode:",
+                       choices = list("2D" = 2, "2.5D" = 1, "3D" = 3),
+                       selected = 2),
+          tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
+          bsTooltip(id = "sig2obslabel", placement = "right",
+                    title = "Location error / variance"),
+          numericInput("sig2obs", label = "", value = 25.0, width = "50%"),
+          tags$strong(id = "tmaxlabel", "Time max (minutes):"),
+          bsTooltip(id = "tmaxlabel", placement = "right",
+                    title = "Maximum time threshold between consecutive locations"),
+          numericInput("tmax", label = "", value = 185.0, width = "50%"),
+          #bsPopover(id = "tmax", title = "title", content = "content"),
+          numericInput("cellsize", label = "Cell size (meters):", value = 0,
+                       min = 1, width = "75%"),
+          tags$strong(id = "bufferlabel", "Buffer (meters):"),
+          bsTooltip(id = "bufferlabel", placement = "right",
+                    title = "Brownian Bridge buffer"),
+          numericInput("buffer", label = "", value = 100.0, width = "50%"),
+          tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
+          bsTooltip(id = "probabilitylabel", placement = "right",
+                    title = "Used to plot probability range; should be comma separated values"),
+          textInput ("probability", label = NULL,
+                     value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"),
+          hr(style = "border-top: 2px solid #000000;"),
+          actionButton("runx", label = "Run"),
+          actionButton("reset_parameters", "Reset parameters"),
+        )),
+      
 	    textOutput ( "debug" ),
-	  
 	    verbatimTextOutput ( "file_value" ),
     ),
 
     # Main panel for displaying outputs ----
-    mainPanel(
+    mainPanel (
+      htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
-      shinycssloaders::withSpinner(plotOutput ( "mkdePlot" ), type = 5),
-      #plotOutput ( "mkdePlot" ),
+      shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
+      hr(style = "border-top: 2px solid #000000;"),
       
-      #wellPanel(
-      #  verbatimTextOutput("status"),
-      #),
-    ),
+      tabsetPanel(
+        id = "tables",
+        type = "pills",
+        header = hr(style = "border-top: 1px solid #000000;"),
+
+        tabPanel (
+          "All",
+          value = 1,
+          shinycssloaders::withSpinner (DT::dataTableOutput ('table_all'), type = 5)),
+        tabPanel (
+          "Summary",
+          value = 2,
+          shinycssloaders::withSpinner (DT::dataTableOutput ('table_summary'), type = 5)))
+    )
   )
 )
 
@@ -191,70 +198,196 @@ ui <- fluidPage(
 # Define server logic required
 server <- function ( input, output, session ) {
 
-  movebank.outfile <- paste ( "movebank.data" )
-  shinyjs::disable("radio")
+  gps <- reactiveValues()
   
-  #output$status <- renderPrint({"Please load your data from either MoveBank or browse to a local file..."})
+  shinyjs::hide ("tables")
+
+  # Update MB local filename based on studyid...
+  observeEvent(input$movebank_studyid, {
+    updateTextInput(session, "movebank_local_filename",
+                    value = paste("movebank-", input$movebank_studyid, ".csv",
+                                  sep = ""))
+  })
   
-  # If no file selected, disable Run button...
-  observe ( {
-    if ( ( is.null ( input$file.upload ) || input$file.upload == "" ) &&
-         ( is.null ( input$movebank.username ) || input$movebank.username == "" )
-         && ( is.null ( input$movebank.password ) ||
-              input$movebank.password == "" ) &&
-         ( is.null ( input$movebank.studyid ) || input$movebank.studyid == "" ) ) {
-      shinyjs::disable ( "runx" )
-      shinyjs::disable ( "reset" )
+  # If the required load data input is missing, disable buttons; otherwise enable...
+  observe({
+    if ((input$data_source == 'File' && isEmpty(input$file_upload)) ||
+        (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
+                                             isEmpty(input$movebank_password) ||
+                                             isEmpty(input$movebank_studyid)))) {
+      shinyjs::disable("load_data")
+      shinyjs::disable("reset_data")
     } else {
-      shinyjs::enable ( "runx" )
-      shinyjs::enable ( "reset" )
+      shinyjs::enable ( "load_data" )
+      shinyjs::enable ( "reset_data" )
     }
-  } )
+  })
+  
+  # If there is data and cell size is valid and a table row is selected, enable
+  # Run button
+  observe ({
+    # input$table_summary_rows_selected
+    if (! isEmpty (gps$original)  &&
+       is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
+       is.numeric(input$tmax)     && input$tmax >= 0 &&
+       is.numeric(input$cellsize) && input$cellsize >= 1 &&
+       is.numeric(input$buffer)   && input$buffer >= 0)
+      shinyjs::enable ("runx")
+    else
+      shinyjs::disable ("runx")
+  })
+  
+  table_all.data <- eventReactive(input$load_data, {
+    if(input$data_source == 'File') {
+      printf("Loading file %s...", input$file_upload$name)
+      results = loadDataframeFromFile(input$file_upload$datapath)
+      shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      printf("done\n")
+      data = results[[1]]
+    }
+    
+    else if(input$data_source == 'Movebank') {
+      printf("Accessing Movebank...\n")
+      results <- loadDataframeFromMB(username = input$movebank_username,
+                                     password = input$movebank_password,
+                                     study = input$movebank_studyid)
+      shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
-  mkde.plot <- eventReactive ( input$runx, {
-    if ( ! is.null ( input$movebank.username ) && input$movebank.username != "" &&
-         ! is.null ( input$movebank.password ) &&
-         ! is.null ( input$movebank.studyid ) ) {
+      data = results[[1]]
+    }
+    rm(results)
+
+    printf("Preprocessing data...")
+    results <- preprocessDataframe(data)
+    printf("done\n")
+    shiny::validate(need(is.null(results[[2]]), results[[2]]))
+    
+    data <- results[[1]]
+    gps$data <- results[[1]]
+    gps$original <- results[[1]]
+    
+    # Now save MB data locally
+    if(input$data_source == "Movebank" && input$save_local == 1) {
+      printf("Saving local file %s...", input$movebank_local_filename)
+      result = saveDataframeFromMB(gps$original, input$movebank_local_filename)
+      if(is.null(result))
+        printf("done\n")
+      else
+        printf("error: %s\n", result)
+    }
+    
+    data <- animalAttributes(data, input$cellsize)
+    gps$summary <- data
+    updateTabsetPanel ( session, "tables", selected = "2" )
+    
+    output$plot.instructions <- renderUI ( {
+      tagList (
+        h5 ( "To plot:" ),
+        tags$ol (
+          tags$li("Set parameters (left)"),
+          tags$li("Choose an animal from Summary table (below)"),
+          tags$li("Run (left below)")
+        ))})
+  
+    updateTabsetPanel ( session, "controls", selected = "2" )
+    shinyjs::show ("tables")
+    
+    DT::datatable(
+      gps$original[], extensions = 'Buttons',
+      #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      options = list(
+        autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+        pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+        stateSave = TRUE),
+      selection = list(mode = 'single', target = 'row'))
+  })
+  
+  table_summary.data <- eventReactive (gps$summary, {
+    tmp <- gps$summary
+    shinyjs::show ("tables")
+
+    DT::datatable(
+      tmp[], extensions = 'Buttons',
+      #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      options = list(
+        autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+        pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+        stateSave = TRUE),
+      selection = list(mode = 'single', selected = 1, target = 'row'))
+  })
+  
+  output$table_all <- DT::renderDataTable(table_all.data())
+  output$table_summary <- DT::renderDataTable(table_summary.data())
+  
+  # observeEvent ( input$table_summary_rows_selected, {
+  #   shinyjs::enable ( "runx" )
+  # })
+  
+  mkde.plot <- eventReactive(input$runx, {
+    shinyjs::hide ( "plot.instructions" )
+    shinyjs::disable("runx")
+
+    summary <- gps$summary
+    id <- summary$id[input$table_summary_rows_selected]
+
+    if (id == "all") {
+      shinyjs::enable("runx")
+      shiny::validate (need (id != "all",
+                             "Sorry cannot plot multiple animals at this time..."))
+    } else {
+      data <- gps$data
+
+      # Spatial extent can be calculated in different ways, for example from
+      # data set itself, from digital elevation model or manually set. For
+      # now, just using min/max values for the GPS readings.
+      xmin <- min(data$xdata) - input$buffer
+      xmax <- max(data$xdata) + input$buffer
+      ymin <- min(data$ydata) - input$buffer
+      ymax <- max(data$ydata) + input$buffer
+
+      # Get selected row animal id
+      #summary <- gps$summary
+      #id <- summary$id[input$table_summary_rows_selected]
       
-      #data <- getMovebankData ( study=strtoi ( input$movebank.studyid ), login=login )
-      #output$status <- renderPrint({"Retrieving data from MoveBank..."})
-      print("Accessing Movebank...")
-      #withProgress(message = "Retrieving data from MoveBank...", {
-        results <- data_loader(username = input$movebank.username,
-                               password = input$movebank.password,
-                              study = input$movebank.studyid, login = login )
-      #})
-      print("Done")
-      shiny::validate(need(results[[2]] == "", results[[2]]))
-      data <- results[[1]]
-      errors <- results[[2]]
-
-      #output$status <- renderPrint({"Saving data locally..."})
-      #save ( data, file=movebank.outfile )
-      shinyjs::disable ( "runx" )
-      print("Creating plot...")
-      #withProgress(message = "Creating plot...", {
-        plotMKDE ( mb2 ( input$sig2obs, input$tmax, data ) )
-      #})
-      print("Plotting done")
-      shinyjs::enable ( "runx" )
+      rasters <- gps$rasters
+      raster <- NULL
+      
+      if (! is.null (rasters) && ! is.null (rasters[[id]])) {
+        raster <- rasters[[id]]
+      } else {
+        raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
+                                     input$cellsize, xmin, xmax, ymin, ymax)
+        rasters[[id]] <- raster
+        gps$rasters <- rasters
+      }
+      
+      tryCatch({
+        probs = as.numeric ( unlist (strsplit (input$probability, ",")))
+        plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+                  xlab='', ylab='')
+      },
+      error = function(error_message) {
+        print(paste("error_message =", error_message))
+        shiny::validate(need(error_message == "",
+                             "Unable to plot; please try adjusting the parameter(s) and try again..."))
+      },
+      finally = {shinyjs::enable("runx")})
     }
-    else if ( ! is.null ( input$file.upload ) ) {
-      plotMKDE ( getMKDEData ( input$sig2obs, input$tmax,
-                               input$file.upload$datapath ) ) }
+  })
+
+  output$plot <- renderPlot({mkde.plot()})
+
+  observeEvent ( input$reset_data, {
+    data_source = input$data_source
+    updateRadioButtons ( session, "data_source", selected = data_source )
+    shinyjs::reset ( "file_upload" )
+    shinyjs::reset ( "movebank_username" )
+    shinyjs::reset ( "movebank_password" )
+    shinyjs::reset ( "movebank_studyid" )
+    shinyjs::reset ( "save_local" )
+    shinyjs::disable ( "load_data" )
+    shinyjs::disable ( "reset_data" )
   } )
-  
-  output$mkdePlot <- renderPlot ( { mkde.plot() } )
-  
-  # Reset sig2obs and t.mat; unfortunately can't "reset" input file
-  # (see https://stackoverflow.com/questions/44203728/how-to-reset-a-value-of-fileinput-in-shiny
-  # for a trick)
-  observeEvent ( input$reset, {
-    shinyjs::reset ( "myapp" )
-    shinyjs::disable ( "runx" )
-    shinyjs::disable ( "reset" )
-  } )
-  
 }
 
 shinyApp ( ui = ui, server = server )
