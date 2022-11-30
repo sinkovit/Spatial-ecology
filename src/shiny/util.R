@@ -54,7 +54,7 @@
 # --------------------------------------------------------------------
 
 animalAttributes <- function(data_df, cell.sz) {
-  printf("Calculating spatial attributes...\n")
+  printf("Calculating spatial attributes...")
 
   # Replicate C printf functionality
   printf <- function(...) cat(sprintf(...))
@@ -76,7 +76,6 @@ animalAttributes <- function(data_df, cell.sz) {
         x_minmax = range(data_df$xdata)
         y_minmax = range(data_df$ydata)
         t_minmax = range(data_df$time)
-        printf("    all ")
       } else {
         x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
         y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
@@ -107,10 +106,11 @@ animalAttributes <- function(data_df, cell.sz) {
       row.index <- row.index + 1
       
     }
+    printf ("done\n")
     return(result)
   },
   error = function(error_message) {
-    print(paste("error_message 2 =", error_message))
+    #print(paste("error_message 2 =", error_message))
     return(NULL)
   })
 }
