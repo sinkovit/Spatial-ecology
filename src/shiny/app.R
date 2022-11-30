@@ -265,6 +265,8 @@ server <- function ( input, output, session ) {
     
     data <- results[[1]]
     gps$data <- results[[1]]
+    # print ("DEBUG: gps$data = ")
+    # str (gps$data)
     gps$original <- results[[1]]
     
     # Now save MB data locally
@@ -351,19 +353,46 @@ server <- function ( input, output, session ) {
 
       # Get selected row animal id
       summary <- gps$summary
-      id = data.frame (summary$id[input$table_summary_rows_selected])
-      printf ("row %d id = %s\n", input$table_summary_rows_selected, id)
+      #id = data.frame (summary$id[input$table_summary_rows_selected])
+      id <- summary$id[input$table_summary_rows_selected]
       
       # Generate a list of rasters
       # if (exists ("rasters"))
       #   print ("DEBUG: rasters exists!")
       # else
       #   print ("DEBUG: no rasters!")
-      rasters <- list()
-      raster <- calculateRaster2D (data, as.numeric (id), input$sig2obs,
-                                   input$tmax, input$cellsize, xmin, xmax, ymin,
-                                   ymax)
-      rasters <- append (rasters, list (raster))
+      #rasters <- list()
+      rasters <- gps$rasters
+      printf ("rasters class = %s\n", class (rasters))
+      raster <- NULL
+      
+      #if (is.null (rasters)) {
+      if (! is.null (rasters) && ! is.null (rasters[[id]])) {
+        print ("DEBUG: gps rasters exists =")
+        print (paste ("number of rasters = ", length (rasters)))
+        str (rasters)
+        raster <- rasters[[id]]
+        print ("DEBUG: raster = ")
+        str (raster)
+      } else {
+        print ("DEBUG: no valid rasters")
+        raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
+                                     input$cellsize, xmin, xmax, ymin, ymax)
+        printf ("row %d id = %s\n", input$table_summary_rows_selected, id)
+        print ("DEBUG: raster before =")
+        str (raster)
+        #tmp <- list ("id" = id, "raster" = raster)
+        print (paste ("rasters length before = ", length (rasters)))
+        rasters[[id]] <- raster
+        print ("DEBUG: rasters after =")
+        str (rasters)
+        #print ("DEBUG: tmp = ")
+        #str (tmp)
+        #rasters <- append (rasters, list (raster))
+        print (paste ("rasters length after = ", length (rasters)))
+        gps$rasters <- rasters
+      }
+      
       # print(paste("DEBUG: rasters length =", length(rasters)))
       # if (exists ("rasters")) {
       #   print ("DEBUG 2: rasters exists!")
@@ -377,8 +406,9 @@ server <- function ( input, output, session ) {
       
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
-		 xlab='', ylab='')
+        #plotMKDE (rasters[[1]], probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+        plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+                  xlab='', ylab='')
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
