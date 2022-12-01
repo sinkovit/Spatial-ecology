@@ -13,6 +13,8 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    # Usage examples
    # createContours(rasters[[1]], probs, "condor", all=TRUE)
    # createContours(mkde2d.obj, probs, "tejon-pig", all=FALSE)
+   #
+   # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 
    library(raster)
    library(mkde)
