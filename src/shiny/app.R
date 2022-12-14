@@ -102,6 +102,7 @@ ui <- fluidPage(
           value = 1,
           radioButtons ("data_source", "Load data from :",
                        choices = c ("Movebank", "Gateway", "Your computer")),
+          
           conditionalPanel (
             condition = "input.data_source === 'Your computer'",
             fileInput ("file_upload", label = NULL,
@@ -109,11 +110,13 @@ ui <- fluidPage(
                        accept = c ("text/csv",
                                    "text/comma-separated-values,text/plain",
                                    ".csv"))),
+          
           conditionalPanel (
             condition = "input.data_source === 'Gateway'",
-            shinyFilesButton ('file', label='Browse',
+            shinyFilesButton ('file_gateway', label='Browse',
                               title='Select your GPS data file',
                               multiple=FALSE, viewtype = "detail"),
+            verbatimTextOutput ("file_gateway_display"),
             tags$p()),
           
           conditionalPanel (
@@ -128,6 +131,7 @@ ui <- fluidPage(
                          choices = list("NAD 27" = 1, "NAD 83" = 2, "WGS 84" = 3),
                          selected = 3),
           ),
+          
           conditionalPanel(
             condition = "input.data_source === 'Movebank'",
             textInput("movebank_username", "Movebank username"),
@@ -214,8 +218,19 @@ server <- function ( input, output, session ) {
   
   shinyjs::hide ("tables")
   
-  volumes <- c (Home = fs::path_home())
-  shinyFileChoose (input, "file", roots = volumes, session = session)
+  # setup & display the gateway browser & selected file
+  # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
+  #               getVolumes()())
+  gateway_volumes <- c (Home = fs::path_home())
+  shinyFileChoose (input, "file_gateway", roots = gateway_volumes,
+                   session = session)
+  output$file_gateway_display <-
+    renderPrint ({
+      if (is.integer (input$file_gateway)) {
+        cat ("No file selected")
+      } else {
+        parseFilePaths (gateway_volumes, input$file_gateway)
+      }})
 
   # Catch the "Load data" button event and check to see if data has changed
   observeEvent (input$load_data, {
