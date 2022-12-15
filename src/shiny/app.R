@@ -41,6 +41,7 @@ library(move)
 library(ggplot2)
 library(stringr)
 library(shinyBS)
+library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
 
 source("loadDataframe.R")
 source("plotDataframe.R")
@@ -99,14 +100,27 @@ ui <- fluidPage(
         tabPanel(
           "1. Load Data",
           value = 1,
-          radioButtons("data_source", "Load data from :",
-                       choices = c ( "File", "Movebank" ) ),
-          conditionalPanel(
-            condition = "input.data_source === 'File'",
-            fileInput(
-              "file_upload", "Upload your GPS data file:", multiple = FALSE,
-              accept = c("text/csv", "text/comma-separated-values,text/plain",
-                         ".csv")),
+          radioButtons ("data_source", "Load data from :",
+                       choices = c ("Movebank", "Gateway", "Your computer")),
+          
+          conditionalPanel (
+            condition = "input.data_source === 'Your computer'",
+            fileInput ("file_upload", label = NULL,
+                       multiple = FALSE, buttonLabel = "Browse",
+                       accept = c ("text/csv",
+                                   "text/comma-separated-values,text/plain",
+                                   ".csv"))),
+          
+          conditionalPanel (
+            condition = "input.data_source === 'Gateway'",
+            shinyFilesButton ('file_gateway', label='Browse',
+                              title='Select your GPS data file',
+                              multiple=FALSE, viewtype = "detail"),
+            verbatimTextOutput ("file_gateway_display"),
+            tags$p()),
+          
+          conditionalPanel (
+            condition = "input.data_source === 'Gateway' || input.data_source === 'Your computer'",
             radioButtons("coordinates", label = "Coordinate system:",
                           choices = list("Latitude/Longitude" = 1, "UTM" = 2),
                           selected = 1),
@@ -117,6 +131,7 @@ ui <- fluidPage(
                          choices = list("NAD 27" = 1, "NAD 83" = 2, "WGS 84" = 3),
                          selected = 3),
           ),
+          
           conditionalPanel(
             condition = "input.data_source === 'Movebank'",
             textInput("movebank_username", "Movebank username"),
@@ -199,9 +214,34 @@ ui <- fluidPage(
 server <- function ( input, output, session ) {
 
   gps <- reactiveValues()
+  reload_data <- TRUE
   
   shinyjs::hide ("tables")
+  
+  # setup & display the gateway browser & selected file
+  # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
+  #               getVolumes()())
+  gateway_volumes <- c (Home = fs::path_home())
+  shinyFileChoose (input, "file_gateway", roots = gateway_volumes,
+                   session = session)
+  output$file_gateway_display <-
+    renderPrint ({
+      if (is.integer (input$file_gateway)) {
+        cat ("No file selected")
+      } else {
+        parseFilePaths (gateway_volumes, input$file_gateway)
+      }})
 
+  # Catch the "Load data" button event and check to see if data has changed
+  observeEvent (input$load_data, {
+    print ("Load data observeEvent")
+    if (input$data_source == 'Gateway') {
+      print (paste ("load from file", input$file_upload))
+    } else if (input$data_source == 'Movebank') {
+      print (paste ("load from MB id = ", input$movebank_studyid))
+    }
+  })
+  
   # Update MB local filename based on studyid...
   observeEvent(input$movebank_studyid, {
     updateTextInput(session, "movebank_local_filename",
@@ -211,7 +251,7 @@ server <- function ( input, output, session ) {
   
   # If the required load data input is missing, disable buttons; otherwise enable...
   observe({
-    if ((input$data_source == 'File' && isEmpty(input$file_upload)) ||
+    if ((input$data_source == 'Gateway' && isEmpty(input$file_upload)) ||
         (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
                                              isEmpty(input$movebank_password) ||
                                              isEmpty(input$movebank_studyid)))) {
@@ -238,7 +278,8 @@ server <- function ( input, output, session ) {
   })
   
   table_all.data <- eventReactive(input$load_data, {
-    if(input$data_source == 'File') {
+    print ("here 1")
+    if(input$data_source == 'Gateway') {
       printf("Loading file %s...", input$file_upload$name)
       results = loadDataframeFromFile(input$file_upload$datapath)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
