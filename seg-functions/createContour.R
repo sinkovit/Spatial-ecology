@@ -1,4 +1,4 @@
-createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
+createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE) {
 
    # Input
    # mkde2d.obj: MKDE object
@@ -11,8 +11,8 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
    # Completion code (0 for success)
    #
    # Usage examples
-   # createContours(rasters[[1]], probs, "condor", all=TRUE)
-   # createContours(mkde2d.obj, probs, "tejon-pig", all=FALSE)
+   # createContours(rasters[[1]], probs, "condor", 11, "WGS84", all=TRUE)
+   # createContours(mkde2d.obj, probs, "tejon-pig", 11, "NAD83", all=FALSE)
    #
    # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 
@@ -36,20 +36,25 @@ createContours <- function(mkde2d.obj, probs, basename, all=TRUE) {
       filename <- paste(basename, "_outercontour", sep="")
       contour_probs <- tail(probs, n=1)
    }
-   
-   # Create/display/write shapefiles and raster of contours
+
+   # Create CRS string
+   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
+
+   # Plot contours
    cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
    rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
    plot(rst.cont)
    contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 2.0)
-   raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-   writeRaster(rst.cont, filename, format = "ascii", overwrite = T)
-   raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
-   shapefile(x = raster.contour, file = filename, overwrite = T) # Avoids use of rgdal
 
-   ##### This is the old way using rgdal
-   ##### library(rgdal)
-   ##### writeOGR(obj = raster.contour, dsn=".", layer = filename, driver = "ESRI Shapefile", overwrite = T)
+   # Create raster of contours
+   raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
+   proj4string(raster.contour) = CRS(crsstr)
+   writeRaster(rst.cont, filename, format = "ascii", overwrite = T)
+
+   # Create shapefiles of contours
+   raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+   proj4string(raster.contour) = CRS(crsstr)
+   shapefile(x = raster.contour, file = filename, overwrite = T)
 
    return(0)
 }

@@ -1,4 +1,4 @@
-minConvexPolygon <- function(gpsdata, utm.zone, ids) {
+minConvexPolygon <- function(gpsdata, utm.zone, datum, ids) {
 
    # Input
    # gpsdata: Data frame containing animal GPS data
@@ -8,8 +8,8 @@ minConvexPolygon <- function(gpsdata, utm.zone, ids) {
    # Minimum convex polygon data superimposed on map
    #
    # Usage example
-   # minConvexPolygon(gpsdata, 11)
-   # minConvexPolygon(gpsdata, "11N")
+   # minConvexPolygon(gpsdata, 11, "WGS84", c(269, 284))
+   # minConvexPolygon(gpsdata, 12, "NAD83, c(123, 234, 456))
    #
    # Note - to get MCP/map to display, call function without saving results to variable
 
@@ -24,7 +24,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, ids) {
    # Generate the basemap using all data
    gpsdata.sp <- gpsdata[, c("id", "xdata", "ydata")]
    coordinates(gpsdata.sp) <- c("xdata", "ydata")
-   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=WGS84 +units=m +no_defs", sep="")
+   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
    proj4string(gpsdata.sp) <- CRS(crsstr)
    gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
    mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1])-0.005, 
