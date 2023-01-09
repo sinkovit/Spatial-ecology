@@ -101,7 +101,32 @@ ui <- fluidPage(
           "1. Load Data",
           value = 1,
           radioButtons ("data_source", "Load data from :",
-                       choices = c ("Movebank", "Gateway", "Your computer")),
+                       choices = c ("Gateway", "Movebank", "Your computer")),
+
+          conditionalPanel (
+            condition = "input.data_source === 'Gateway'",
+            fluidRow (id = "gateway_browse_row",
+                      column (id = "gateway_browse_column", width = 4, offset = 0,
+                              # style='padding-left:15px; padding-right:0px', 
+                              shinyFilesButton ('gateway_file', label='Browse',
+                                                title='Select your GPS data file',
+                                                multiple=FALSE, viewtype = "detail")),
+                      column (width = 8, offset = 0,
+                              verbatimTextOutput ("gateway_file_display"))),
+            tags$p()),
+
+          conditionalPanel(
+            condition = "input.data_source === 'Movebank'",
+            textInput("movebank_username", "Movebank username"),
+            passwordInput("movebank_password", "Password"),
+            textInput("movebank_studyid", "Study ID"),
+            checkboxInput("save_local", "Save Movebank data locally"),
+            bsTooltip(id = "save_local", placement = "right",
+                      title = "If local file already exists, will overwrite"),
+            conditionalPanel(
+              condition = "input.save_local == 1",
+              textInput("movebank_local_filename", "Local filename")),
+          ),
           
           conditionalPanel (
             condition = "input.data_source === 'Your computer'",
@@ -110,15 +135,7 @@ ui <- fluidPage(
                        accept = c ("text/csv",
                                    "text/comma-separated-values,text/plain",
                                    ".csv"))),
-          
-          conditionalPanel (
-            condition = "input.data_source === 'Gateway'",
-            shinyFilesButton ('file_gateway', label='Browse',
-                              title='Select your GPS data file',
-                              multiple=FALSE, viewtype = "detail"),
-            verbatimTextOutput ("file_gateway_display"),
-            tags$p()),
-          
+
           conditionalPanel (
             condition = "input.data_source === 'Gateway' || input.data_source === 'Your computer'",
             radioButtons("coordinates", label = "Coordinate system:",
@@ -132,18 +149,6 @@ ui <- fluidPage(
                          selected = 3),
           ),
           
-          conditionalPanel(
-            condition = "input.data_source === 'Movebank'",
-            textInput("movebank_username", "Movebank username"),
-            passwordInput("movebank_password", "Password"),
-            textInput("movebank_studyid", "Study ID"),
-            checkboxInput("save_local", "Save Movebank data locally"),
-            bsTooltip(id = "save_local", placement = "right",
-                      title = "If local file already exists, will overwrite"),
-            conditionalPanel(
-              condition = "input.save_local == 1",
-              textInput("movebank_local_filename", "Local filename")),
-            ),
           hr(style = "border-top: 2px solid #000000;"),
           actionButton("load_data", label = "Load data"),
           actionButton("reset_data", "Reset data"),
@@ -222,14 +227,14 @@ server <- function ( input, output, session ) {
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
   #               getVolumes()())
   gateway_volumes <- c (Home = fs::path_home())
-  shinyFileChoose (input, "file_gateway", roots = gateway_volumes,
+  shinyFileChoose (input, "gateway_file", roots = gateway_volumes,
                    session = session)
-  output$file_gateway_display <-
+  output$gateway_file_display <-
     renderPrint ({
-      if (is.integer (input$file_gateway)) {
+      if (is.integer (input$gateway_file)) {
         cat ("No file selected")
       } else {
-        parseFilePaths (gateway_volumes, input$file_gateway)
+        parseFilePaths (gateway_volumes, input$gateway_file)
       }})
 
   # Catch the "Load data" button event and check to see if data has changed
