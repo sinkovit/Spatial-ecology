@@ -84,7 +84,8 @@ ui <- fluidPage(
   
   useShinyjs(), # include shinyjs
 
-  titlePanel ( "Welcome to the Space Use Ecology Gateway!" ),
+  titlePanel ( h3 ("Welcome to the Space Use Ecology Gateway!",
+                   align = "center" )),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout (
@@ -112,7 +113,7 @@ ui <- fluidPage(
                                                 title='Select your GPS data file',
                                                 multiple=FALSE, viewtype = "detail")),
                       column (width = 8, offset = 0,
-                              verbatimTextOutput ("gateway_file_display"))),
+                              htmlOutput ("gateway_file_display"))),
             tags$p()),
 
           conditionalPanel(
@@ -158,25 +159,27 @@ ui <- fluidPage(
         tabPanel(
           "2. Set Parameters",
           value = 2,
-          # disable https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
-          radioButtons("mode", label = "Mode:",
-                       choices = list("2D" = 2, "2.5D" = 1, "3D" = 3),
-                       selected = 2),
+          tags$strong (id = "modelabel", "Mode:"),
+          bsTooltip (id = "modelabel", placement = "right",
+                     title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"),
+          # doesn't work: https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
+          radioButtons ("mode", label = NULL,
+                        choices = list ("2D" = '2D', "2.5D" = '25D', "3D" = '3D')),
           tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
           bsTooltip(id = "sig2obslabel", placement = "right",
                     title = "Location error / variance"),
-          numericInput("sig2obs", label = "", value = 25.0, width = "50%"),
+          numericInput ("sig2obs", label = NULL, value = 25.0, width = "50%"),
           tags$strong(id = "tmaxlabel", "Time max (minutes):"),
           bsTooltip(id = "tmaxlabel", placement = "right",
                     title = "Maximum time threshold between consecutive locations"),
-          numericInput("tmax", label = "", value = 185.0, width = "50%"),
+          numericInput ("tmax", label = NULL, value = 185.0, width = "50%"),
           #bsPopover(id = "tmax", title = "title", content = "content"),
           numericInput("cellsize", label = "Cell size (meters):", value = 0,
                        min = 1, width = "75%"),
           tags$strong(id = "bufferlabel", "Buffer (meters):"),
           bsTooltip(id = "bufferlabel", placement = "right",
                     title = "Brownian Bridge buffer"),
-          numericInput("buffer", label = "", value = 100.0, width = "50%"),
+          numericInput ("buffer", label = NULL, value = 100.0, width = "50%"),
           tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
           bsTooltip(id = "probabilitylabel", placement = "right",
                     title = "Used to plot probability range; should be comma separated values"),
@@ -223,6 +226,53 @@ server <- function ( input, output, session ) {
   reload_data <- TRUE
   
   shinyjs::hide ("tables")
+  shinyjs::disable (selector = "[type=radio][value=25D]")
+  shinyjs::disable (selector = "[type=radio][value=3D]")
+  
+  # Check parameters, if invalid will turn border to red, otherwise no color
+  observe ({
+    if (!is.numeric (input$sig2obs) || input$sig2obs <= 0) {
+      color <- "solid #FF0000"
+    } else {
+      color <- ""
+    }
+    runjs (paste0 ("document.getElementById('sig2obs').style.border ='", color,
+                   "'"))
+
+    if (!is.numeric (input$tmax) || input$tmax <= 0) {
+      color <- "solid #FF0000"
+    } else {
+      color <- ""
+    }
+    runjs (paste0 ("document.getElementById('tmax').style.border ='", color,
+                   "'"))
+
+    if (!is.numeric (input$cellsize) || input$cellsize <= 0) {
+      color <- "solid #FF0000"
+    } else {
+      color <- ""
+    }
+    runjs (paste0 ("document.getElementById('cellsize').style.border ='", color,
+                   "'"))
+
+    if (!is.numeric (input$buffer) || input$buffer < 0) {
+      color <- "solid #FF0000"
+    } else {
+      color <- ""
+    }
+    runjs (paste0 ("document.getElementById('buffer').style.border ='", color,
+                   "'"))
+    
+    # if (isEmpty (input$probability) ||
+    #     regexpr ("([0-9].[0-9][0-9],?\s?)+", input$probability, ignore.case = TRUE) == -1) {
+    #   color <- "solid #FF0000"
+    # } else {
+    #   color <- ""
+    # }
+    # runjs (paste0 ("document.getElementById('probability').style.border ='", color,
+    #                "'"))
+  })
+  
   
   # setup & display the gateway browser & selected file
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
@@ -231,12 +281,12 @@ server <- function ( input, output, session ) {
   shinyFileChoose (input, "gateway_file", roots = gateway_volumes,
                    session = session)
   output$gateway_file_display <-
-    renderPrint ({
+    renderUI ({
       if (is.integer (input$gateway_file)) {
-        cat ("No file selected")
+        HTML ("No file selected")
       } else {
         tmp <- parseFilePaths (gateway_volumes, input$gateway_file)
-        cat (tmp$name)
+        HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
 
   # Catch the "Load data" button event and check to see if data has changed
@@ -440,6 +490,7 @@ server <- function ( input, output, session ) {
     data_source = input$data_source
     updateRadioButtons ( session, "data_source", selected = data_source )
     shinyjs::reset ( "local_file" )
+    #shinyjs::reset ("gateway_file_display")
     shinyjs::reset ( "movebank_username" )
     shinyjs::reset ( "movebank_password" )
     shinyjs::reset ( "movebank_studyid" )
