@@ -157,9 +157,9 @@ getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
 isEmpty <- function(x) {
   if (is.null(x))
     return(TRUE)
-  if (is.character(x) && nchar(str_replace_all(x, " ", "")) < 1)
-    return(TRUE)
   if (length(x) < 1)
+    return(TRUE)
+  if (is.character(x) && nchar(str_replace_all(x, " ", "")) < 1)
     return(TRUE)
   return(FALSE)
 }

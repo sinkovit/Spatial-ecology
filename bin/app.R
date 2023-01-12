@@ -101,24 +101,42 @@ ui <- fluidPage(
           "1. Load Data",
           value = 1,
           radioButtons ("data_source", "Load data from :",
-                       choices = c ("Movebank", "Gateway", "Your computer")),
+                       choices = c ("Gateway", "Movebank", "Your computer")),
+
+          conditionalPanel (
+            condition = "input.data_source === 'Gateway'",
+            fluidRow (id = "gateway_browse_row",
+                      column (id = "gateway_browse_column", width = 4, offset = 0,
+                              # style='padding-left:15px; padding-right:0px', 
+                              shinyFilesButton ('gateway_file', label='Browse',
+                                                title='Select your GPS data file',
+                                                multiple=FALSE, viewtype = "detail")),
+                      column (width = 8, offset = 0,
+                              verbatimTextOutput ("gateway_file_display"))),
+            tags$p()),
+
+          conditionalPanel(
+            condition = "input.data_source === 'Movebank'",
+            textInput("movebank_username", "Movebank username"),
+            passwordInput("movebank_password", "Password"),
+            textInput("movebank_studyid", "Study ID"),
+            checkboxInput ("movebank_save_local",
+                           "Save Movebank data to your computer"),
+            bsTooltip(id = "movebank_save_local", placement = "right",
+                      title = "If local file already exists, will overwrite"),
+            conditionalPanel(
+              condition = "input.movebank_save_local == 1",
+              textInput("movebank_local_filename", "Local filename")),
+          ),
           
           conditionalPanel (
             condition = "input.data_source === 'Your computer'",
-            fileInput ("file_upload", label = NULL,
+            fileInput ("local_file", label = NULL,
                        multiple = FALSE, buttonLabel = "Browse",
                        accept = c ("text/csv",
                                    "text/comma-separated-values,text/plain",
                                    ".csv"))),
-          
-          conditionalPanel (
-            condition = "input.data_source === 'Gateway'",
-            shinyFilesButton ('file_gateway', label='Browse',
-                              title='Select your GPS data file',
-                              multiple=FALSE, viewtype = "detail"),
-            verbatimTextOutput ("file_gateway_display"),
-            tags$p()),
-          
+
           conditionalPanel (
             condition = "input.data_source === 'Gateway' || input.data_source === 'Your computer'",
             radioButtons("coordinates", label = "Coordinate system:",
@@ -132,18 +150,6 @@ ui <- fluidPage(
                          selected = 3),
           ),
           
-          conditionalPanel(
-            condition = "input.data_source === 'Movebank'",
-            textInput("movebank_username", "Movebank username"),
-            passwordInput("movebank_password", "Password"),
-            textInput("movebank_studyid", "Study ID"),
-            checkboxInput("save_local", "Save Movebank data locally"),
-            bsTooltip(id = "save_local", placement = "right",
-                      title = "If local file already exists, will overwrite"),
-            conditionalPanel(
-              condition = "input.save_local == 1",
-              textInput("movebank_local_filename", "Local filename")),
-            ),
           hr(style = "border-top: 2px solid #000000;"),
           actionButton("load_data", label = "Load data"),
           actionButton("reset_data", "Reset data"),
@@ -222,25 +228,26 @@ server <- function ( input, output, session ) {
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
   #               getVolumes()())
   gateway_volumes <- c (Home = fs::path_home())
-  shinyFileChoose (input, "file_gateway", roots = gateway_volumes,
+  shinyFileChoose (input, "gateway_file", roots = gateway_volumes,
                    session = session)
-  output$file_gateway_display <-
+  output$gateway_file_display <-
     renderPrint ({
-      if (is.integer (input$file_gateway)) {
+      if (is.integer (input$gateway_file)) {
         cat ("No file selected")
       } else {
-        parseFilePaths (gateway_volumes, input$file_gateway)
+        tmp <- parseFilePaths (gateway_volumes, input$gateway_file)
+        cat (tmp$name)
       }})
 
   # Catch the "Load data" button event and check to see if data has changed
-  observeEvent (input$load_data, {
-    print ("Load data observeEvent")
-    if (input$data_source == 'Gateway') {
-      print (paste ("load from file", input$file_upload))
-    } else if (input$data_source == 'Movebank') {
-      print (paste ("load from MB id = ", input$movebank_studyid))
-    }
-  })
+  # observeEvent (input$load_data, {
+  #   printf ("Load data observeEvent")
+  #   if (input$data_source == 'Gateway') {
+  #     print (paste ("load from file", input$local_file))
+  #   } else if (input$data_source == 'Movebank') {
+  #     print (paste ("load from MB id = ", input$movebank_studyid))
+  #   }
+  # })
   
   # Update MB local filename based on studyid...
   observeEvent(input$movebank_studyid, {
@@ -251,7 +258,9 @@ server <- function ( input, output, session ) {
   
   # If the required load data input is missing, disable buttons; otherwise enable...
   observe({
-    if ((input$data_source == 'Gateway' && isEmpty(input$file_upload)) ||
+    if ((input$data_source == 'Gateway') &&
+        isEmpty (parseFilePaths (gateway_volumes, input$gateway_file)$name) ||
+        (input$data_source == 'Your computer' && isEmpty(input$local_file)) ||
         (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
                                              isEmpty(input$movebank_password) ||
                                              isEmpty(input$movebank_studyid)))) {
@@ -278,15 +287,15 @@ server <- function ( input, output, session ) {
   })
   
   table_all.data <- eventReactive(input$load_data, {
-    print ("here 1")
     if(input$data_source == 'Gateway') {
-      printf("Loading file %s...", input$file_upload$name)
-      results = loadDataframeFromFile(input$file_upload$datapath)
+      file <- parseFilePaths (gateway_volumes, input$gateway_file)
+      printf ("Loading gateway file %s...", file$name)
+      results = loadDataframeFromFile (file$datapath)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
     }
-    
+
     else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       results <- loadDataframeFromMB(username = input$movebank_username,
@@ -296,6 +305,15 @@ server <- function ( input, output, session ) {
 
       data = results[[1]]
     }
+    
+    else if(input$data_source == 'Your computer') {
+      printf("Loading local file %s...", input$local_file$name)
+      results = loadDataframeFromFile(input$local_file$datapath)
+      shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      printf("done\n")
+      data = results[[1]]
+    }
+    
     rm(results)
 
     printf("Preprocessing data...")
@@ -308,7 +326,7 @@ server <- function ( input, output, session ) {
     gps$original <- results[[1]]
     
     # Now save MB data locally
-    if(input$data_source == "Movebank" && input$save_local == 1) {
+    if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
       printf("Saving local file %s...", input$movebank_local_filename)
       result = saveDataframeFromMB(gps$original, input$movebank_local_filename)
       if(is.null(result))
@@ -421,11 +439,11 @@ server <- function ( input, output, session ) {
   observeEvent ( input$reset_data, {
     data_source = input$data_source
     updateRadioButtons ( session, "data_source", selected = data_source )
-    shinyjs::reset ( "file_upload" )
+    shinyjs::reset ( "local_file" )
     shinyjs::reset ( "movebank_username" )
     shinyjs::reset ( "movebank_password" )
     shinyjs::reset ( "movebank_studyid" )
-    shinyjs::reset ( "save_local" )
+    shinyjs::reset ( "movebank_save_local" )
     shinyjs::disable ( "load_data" )
     shinyjs::disable ( "reset_data" )
   } )
