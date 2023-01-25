@@ -226,7 +226,7 @@ server <- function ( input, output, session ) {
   gps <- reactiveValues()
   #clear_plot <- FALSE
   #reload_data <- reactiveVal (FALSE)
-  #clear_plot <- reactiveVal (FALSE)
+  clear_plot <- reactiveVal (FALSE)
   
   shinyjs::hide ("tables")
   #shinyjs::hide ("plot")
@@ -358,7 +358,7 @@ server <- function ( input, output, session ) {
     if (! is.null (gps$rasters)) {
       printf ( paste ("gps$rasters is not null\n"))
       #clear_plot <- TRUE
-      #clear_plot (TRUE)
+      clear_plot (TRUE)
       shinyjs::show ("plot.instructions")
       #shinyjs::hide ("plot")
       # output$plot <- NULL  # this makes reload data plot not work!
@@ -490,10 +490,11 @@ server <- function ( input, output, session ) {
   #   }
   # })
   
-  mkde.plot <- eventReactive(input$runx, {
-    printf ( paste ("run button event!\n"))
+  mkde.plot <- eventReactive (input$runx, {
+  #mkde.plot <- eventReactive (list (input$runx, clear_plot()), {
+    printf ( paste ("mkde.plot event!\n"))
     #printf ( paste ("reload_data = ", reload_data(), "\n"))
-    printf ( paste ("gps = ", gps, "\n"))
+    #printf ( paste ("gps = ", gps, "\n"))
     #tmp <- reload_data()
     #printf ( paste ("tmp = ", tmp, "\n"))
     
@@ -502,6 +503,19 @@ server <- function ( input, output, session ) {
     #   reload_data (FALSE)
     #   return()
     # } else {
+    
+    printf (paste ("clear_plot = ", clear_plot(), "\n"))
+    if (clear_plot()) {
+      printf ("clearing plot\n")
+      clear_plot (FALSE)
+      return()
+    }
+    
+    printf (paste ("gps$summary length =", length (gps$summary), "\n"))
+    
+    if (length (gps$summary) > 0) {
+      printf ("plotting...\n")
+      
     shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
 
@@ -550,14 +564,18 @@ server <- function ( input, output, session ) {
                              "Unable to plot; please try adjusting the parameter(s) and try again..."))
       },
       finally = {shinyjs::enable("runx")})
-    }
+    }}
   })
 
   output$plot <- renderPlot ({
+  #output$plot <- renderPlot (list (input$runx, clear_plot()), {
     printf ("in renderPlot\n")
-    # if (clear_plot)
-    #   return()
-    # else
+    printf (paste ("clear_plot =", clear_plot(), "\n"))
+    if (clear_plot()) {
+      clear_plot (FALSE)
+      return()
+    }
+    else
       mkde.plot()
   })
 
