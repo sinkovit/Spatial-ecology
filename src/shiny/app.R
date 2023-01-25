@@ -199,12 +199,13 @@ ui <- fluidPage(
       htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
-      hr(style = "border-top: 2px solid #000000;"),
+      #plotOutput ("plot"),
+      #hr(style = "border-top: 2px solid #000000;"),
       
       tabsetPanel(
         id = "tables",
         type = "pills",
-        header = hr(style = "border-top: 1px solid #000000;"),
+        #header = hr(style = "border-top: 1px solid #000000;"),
 
         tabPanel (
           "All",
@@ -223,9 +224,12 @@ ui <- fluidPage(
 server <- function ( input, output, session ) {
 
   gps <- reactiveValues()
-  reload_data <- TRUE
+  #clear_plot <- FALSE
+  #reload_data <- reactiveVal (FALSE)
+  #clear_plot <- reactiveVal (FALSE)
   
   shinyjs::hide ("tables")
+  #shinyjs::hide ("plot")
   shinyjs::disable (selector = "[type=radio][value=25D]")
   shinyjs::disable (selector = "[type=radio][value=3D]")
   
@@ -293,9 +297,11 @@ server <- function ( input, output, session ) {
   # observeEvent (input$load_data, {
   #   printf ("Load data observeEvent")
   #   if (input$data_source == 'Gateway') {
-  #     print (paste ("load from file", input$local_file))
+  #     print (paste ("load from gateway", input$gateway_file))
   #   } else if (input$data_source == 'Movebank') {
   #     print (paste ("load from MB id = ", input$movebank_studyid))
+  #   } else if (input$data_source == 'Your computer') {
+  #     print (paste ("load data from computer", input$local_file))
   #   }
   # })
   
@@ -336,7 +342,37 @@ server <- function ( input, output, session ) {
       shinyjs::disable ("runx")
   })
   
-  table_all.data <- eventReactive(input$load_data, {
+  #table_all.data <- eventReactive(input$load_data, {
+  observeEvent (input$load_data, {
+    printf ("Load data button pressed!\n")
+    #shinyjs::show ("plot")
+    #printf ( paste ("gps$rasters :", gps$rasters, "\n"))
+    #printf ( paste ("is.null (gps$rasters) = ", is.null (gps$rasters), "\n"))
+    #output$plot <- NULL  # app hangs?
+    #mkde.plot <- NULL  #plot is not cleared
+    #printf (paste ("dev.list =", dev.list(), "\n"))
+    #try(dev.off(dev.list()["RStudioGD"]), silent=TRUE) # doesn't work
+    #output$plot <- ggplot()   # runtime error
+    #output$plot <- renderPlot (NULL)  # 1st plot doesn't even plot!
+    
+    if (! is.null (gps$rasters)) {
+      printf ( paste ("gps$rasters is not null\n"))
+      #clear_plot <- TRUE
+      #clear_plot (TRUE)
+      shinyjs::show ("plot.instructions")
+      #shinyjs::hide ("plot")
+      # output$plot <- NULL  # this makes reload data plot not work!
+      #shinyjs::reset ("plot")   # reset doesn't work on plots
+      #shinyjs::hide ("plot")
+      #output$plot <<- NULL  # this also makes reload data plot not work!
+    # } else {
+    #   printf ( paste ("gps$rasters = null\n"))
+    #   shinyjs::show ("plot")
+      
+      #output$plot <- renderPlot ({return()})  # does clear plot but then new data plot doesn't work!
+    }
+    #printf ( paste ("clear_plot = ", clear_plot, "\n"))
+    
     if(input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_file)
       printf ("Loading gateway file %s...", file$name)
@@ -401,22 +437,35 @@ server <- function ( input, output, session ) {
     updateTabsetPanel ( session, "controls", selected = "2" )
     shinyjs::show ("tables")
     
-    DT::datatable(
+    # following code works with line #341
+    # DT::datatable(
+    #   gps$original[], extensions = 'Buttons',
+    #   #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+    #   options = list(
+    #     autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
+    #     pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+    #     stateSave = TRUE),
+    #   selection = list(mode = 'single', target = 'row'))
+  })
+  
+  table_all.data <- eventReactive (gps$original, {
+    DT::datatable (
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-      options = list(
+      options = list (
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
         stateSave = TRUE),
       selection = list(mode = 'single', target = 'row'))
-  })
+    })
   
   table_summary.data <- eventReactive (gps$summary, {
-    tmp <- gps$summary
+    #tmp <- gps$summary
     shinyjs::show ("tables")
 
-    DT::datatable(
-      tmp[], extensions = 'Buttons',
+    DT::datatable (
+      #tmp[], extensions = 'Buttons',
+      gps$summary[], extension = "Buttons",
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list(
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
@@ -432,7 +481,27 @@ server <- function ( input, output, session ) {
   #   shinyjs::enable ( "runx" )
   # })
   
+  # mkde.plot <- observeEvent (clear_plot(), {
+  #   printf (paste ("clear_plot observe: ", clear_plot(), "\n"))
+  #   if (clear_plot()) {
+  #     clear_plot (FALSE)
+  #     printf (paste ("clearing plot!", "\n"))
+  #     return()
+  #   }
+  # })
+  
   mkde.plot <- eventReactive(input$runx, {
+    printf ( paste ("run button event!\n"))
+    #printf ( paste ("reload_data = ", reload_data(), "\n"))
+    printf ( paste ("gps = ", gps, "\n"))
+    #tmp <- reload_data()
+    #printf ( paste ("tmp = ", tmp, "\n"))
+    
+    # if (tmp || ! gps)
+    # {
+    #   reload_data (FALSE)
+    #   return()
+    # } else {
     shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
 
@@ -484,7 +553,13 @@ server <- function ( input, output, session ) {
     }
   })
 
-  output$plot <- renderPlot({mkde.plot()})
+  output$plot <- renderPlot ({
+    printf ("in renderPlot\n")
+    # if (clear_plot)
+    #   return()
+    # else
+      mkde.plot()
+  })
 
   observeEvent ( input$reset_data, {
     data_source = input$data_source
