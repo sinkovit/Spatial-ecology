@@ -199,12 +199,13 @@ ui <- fluidPage(
       htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
-      hr(style = "border-top: 2px solid #000000;"),
+      #plotOutput ("plot"),
+      #hr(style = "border-top: 2px solid #000000;"),
       
       tabsetPanel(
         id = "tables",
         type = "pills",
-        header = hr(style = "border-top: 1px solid #000000;"),
+        #header = hr(style = "border-top: 1px solid #000000;"),
 
         tabPanel (
           "All",
@@ -223,7 +224,7 @@ ui <- fluidPage(
 server <- function ( input, output, session ) {
 
   gps <- reactiveValues()
-  reload_data <- TRUE
+  clear_plot <- reactiveVal (FALSE)
   
   shinyjs::hide ("tables")
   shinyjs::disable (selector = "[type=radio][value=25D]")
@@ -273,7 +274,6 @@ server <- function ( input, output, session ) {
     #                "'"))
   })
   
-  
   # setup & display the gateway browser & selected file
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
   #               getVolumes()())
@@ -289,16 +289,6 @@ server <- function ( input, output, session ) {
         HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
 
-  # Catch the "Load data" button event and check to see if data has changed
-  # observeEvent (input$load_data, {
-  #   printf ("Load data observeEvent")
-  #   if (input$data_source == 'Gateway') {
-  #     print (paste ("load from file", input$local_file))
-  #   } else if (input$data_source == 'Movebank') {
-  #     print (paste ("load from MB id = ", input$movebank_studyid))
-  #   }
-  # })
-  
   # Update MB local filename based on studyid...
   observeEvent(input$movebank_studyid, {
     updateTextInput(session, "movebank_local_filename",
@@ -336,7 +326,18 @@ server <- function ( input, output, session ) {
       shinyjs::disable ("runx")
   })
   
-  table_all.data <- eventReactive(input$load_data, {
+  observeEvent (input$load_data, {
+    
+    # if there are rasters, then we need to clear the data and plot
+    if (! is.null (gps$rasters)) {
+      clear_plot (TRUE)
+      gps$data <- NULL
+      gps$original <- NULL
+      gps$rasters <- NULL
+      gps$summary <- NULL
+      shinyjs::show ("plot.instructions")
+    }
+
     if(input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_file)
       printf ("Loading gateway file %s...", file$name)
@@ -400,23 +401,24 @@ server <- function ( input, output, session ) {
   
     updateTabsetPanel ( session, "controls", selected = "2" )
     shinyjs::show ("tables")
-    
-    DT::datatable(
+  })
+  
+  table_all.data <- eventReactive (gps$original, {
+    DT::datatable (
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-      options = list(
+      options = list (
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
         stateSave = TRUE),
       selection = list(mode = 'single', target = 'row'))
-  })
+    })
   
   table_summary.data <- eventReactive (gps$summary, {
-    tmp <- gps$summary
     shinyjs::show ("tables")
 
-    DT::datatable(
-      tmp[], extensions = 'Buttons',
+    DT::datatable (
+      gps$summary[], extension = "Buttons",
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list(
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
@@ -428,11 +430,7 @@ server <- function ( input, output, session ) {
   output$table_all <- DT::renderDataTable(table_all.data())
   output$table_summary <- DT::renderDataTable(table_summary.data())
   
-  # observeEvent ( input$table_summary_rows_selected, {
-  #   shinyjs::enable ( "runx" )
-  # })
-  
-  mkde.plot <- eventReactive(input$runx, {
+  mkde.plot <- eventReactive (input$runx, {
     shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
 
@@ -442,7 +440,7 @@ server <- function ( input, output, session ) {
     if (id == "all") {
       shinyjs::enable("runx")
       shiny::validate (need (id != "all",
-                             "Sorry cannot plot multiple animals at this time..."))
+                             "Sorry cannot plot multiple animals currently..."))
     } else {
       data <- gps$data
 
@@ -454,10 +452,6 @@ server <- function ( input, output, session ) {
       ymin <- min(data$ydata) - input$buffer
       ymax <- max(data$ydata) + input$buffer
 
-      # Get selected row animal id
-      #summary <- gps$summary
-      #id <- summary$id[input$table_summary_rows_selected]
-      
       rasters <- gps$rasters
       raster <- NULL
       
@@ -484,7 +478,14 @@ server <- function ( input, output, session ) {
     }
   })
 
-  output$plot <- renderPlot({mkde.plot()})
+  output$plot <- renderPlot ({
+    if (clear_plot()) {
+      clear_plot (FALSE)
+      return()
+    }
+    else
+      mkde.plot()
+  })
 
   observeEvent ( input$reset_data, {
     data_source = input$data_source
