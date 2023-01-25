@@ -199,7 +199,6 @@ ui <- fluidPage(
       htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
-      #plotOutput ("plot"),
       #hr(style = "border-top: 2px solid #000000;"),
       
       tabsetPanel(
