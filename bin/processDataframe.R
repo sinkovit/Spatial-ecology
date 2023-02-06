@@ -133,11 +133,14 @@ preprocessDataframe <- function(gpsdata) {
       	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
       }
 
-      #### Add an 'id' column if it doesn't already exist
+      #### Add an 'id' column if it doesn't already exist and convert to string
+      #### Handing as string adds flexibility since not all data sets will use
+      #### integers to label animals
 
       if (!"id" %in% colnames(gpsdata)) {
       	 gpsdata['id'] <- 1
       }
+      gpsdata$id <- as.character(gpsdata$id)
 
       #### Generate UTM coordinates from lat-long
 
