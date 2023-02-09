@@ -94,7 +94,7 @@ animalAttributes <- function(data_df, cell.sz) {
       	ny <- as.integer(y_range/max_pix)
         dims <- sprintf("%dx%d", nx, ny)
         if(row.index == 1) {
-          label <- sprintf("Grid \n (%d m)", max_pix)
+          label <- sprintf("Grid \n (%dm)", max_pix)
           result[ , label] <- character()
         }
         value <- paste(dims)
