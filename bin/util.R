@@ -53,9 +53,10 @@
 
 # --------------------------------------------------------------------
 
-animalAttributes <- function(data_df, cell.sz) {
+animalAttributes <- function(data_df, cell.sz, areaUnits) {
   printf <- function(...) cat(sprintf(...))
   printf("Calculating spatial attributes...")
+  printf(areaUnits)
 
   library(sp)
   library(adehabitatHR)
@@ -63,17 +64,18 @@ animalAttributes <- function(data_df, cell.sz) {
 
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
-  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout="ha", percent=100)
+  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
   
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
+  areaString <- paste("Area (", areaUnits, ")", sep="")
 
   result <- data.frame(id = numeric())
   result[ , 'Easting (min)'] <- numeric()
   result[ , 'Easting (max)'] <- numeric()
   result[ , 'Northing (min)'] <- character()
   result[ , 'Northing (max)'] <- character()
-  result[ , 'Area (ha)'] <- numeric()
+  result[ , areaString] <- character()
   row.index <- 1
 
   tryCatch({

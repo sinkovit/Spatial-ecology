@@ -215,10 +215,22 @@ ui <- dashboardPage(
           bsTooltip(id = "probabilitylabel", placement = "right",
                     title = "Used to plot probability range; should be comma separated values"),
           textInput ("probability", label = NULL,
-                     value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"),
+                     value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"),	  
           hr(style = "border-top: 2px solid #000000;"),
           actionButton("runx", label = "Run"),
           actionButton("reset_parameters", "Reset parameters"),
+
+	  # RSS choose/update units for animal areas
+	  # Note that the actionButton doesn't connect to anything
+	  # and need to add code to update the summary table
+          hr(style = "border-top: 2px solid #000000;"),
+          tags$strong (id = "areaUnitsLabel", "Area units:"),
+          bsTooltip (id = "areaUnitsLabel", placement = "right",
+                     title = "Sets units for area calculations"),
+          radioButtons ("areaUnits", label = NULL,
+                        choices = list ("m2" = 'm2', "ha" = 'ha', "km2" = 'km2'),
+			selected = "ha", inline = TRUE),
+	  actionButton("updateUnits", label = "Update area units"),
         )),
       
 	    textOutput ( "debug" ),
@@ -417,8 +429,8 @@ server <- function ( input, output, session ) {
       else
         printf("error: %s\n", result)
     }
-    
-    data <- animalAttributes(data, input$cellsize)
+
+    data <- animalAttributes(data, input$cellsize, input$areaUnits)
     gps$summary <- data
     updateTabsetPanel ( session, "tables", selected = "2" )
     
