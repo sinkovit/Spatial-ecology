@@ -41,6 +41,7 @@ library(move)
 library(ggplot2)
 library(stringr)
 library(shinyBS)
+library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
 
 source("loadDataframe.R")
@@ -66,17 +67,42 @@ callback <- c(
 )
 
 # Define UI for app
-ui <- fluidPage(
+#ui <- fluidPage(
+ui <- dashboardPage(
   
-  tags$head(
-    tags$style(HTML("
-      .shiny-output-error-validation {
-        color: red;
-        font-size: medium;
-        font-weight: bold;
-      }
-    "))
-  ),
+  # skin = "black",
+  # title = "Space Use Ecology",
+  
+  # code from https://stackoverflow.com/a/41145602
+  dashboardHeader(#title = "Space Use Ecology Gateway",
+    #title = span("Space Use Ecology Gateway", style = "color: black;"),
+    # tags$head(tags$link(rel = "stylesheet", type = "text/css",
+    #                     href = "custom.css")),
+    # tags$li(a(href = 'http://shinyapps.company.com',
+    #           icon("power-off"),
+    #           title = "Back to Apps Home"),
+    #         class = "dropdown"),
+    tags$li(
+      a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
+        img(src = 'logo.png', title = "Space Use Ecology Gateway",
+            #height = "52px"), style = "padding: 0px"),
+            )),
+      class = "dropdown")),
+  dashboardSidebar(disable = TRUE),
+  dashboardBody(
+    tags$head(tags$link(rel = "stylesheet", type = "text/css",
+                        href = "custom.css")),
+    
+  
+  # tags$head(
+  #   tags$style(HTML("
+  #     .shiny-output-error-validation {
+  #       color: red;
+  #       font-size: medium;
+  #       font-weight: bold;
+  #     }
+  #   "))
+  # ),
   
   # CSS to hide fileInput "Upload Complete"
   # original idea from https://stackoverflow.com/a/49631736
@@ -84,8 +110,8 @@ ui <- fluidPage(
   
   useShinyjs(), # include shinyjs
 
-  titlePanel ( h3 ("Welcome to the Space Use Ecology Gateway!",
-                   align = "center" )),
+  # titlePanel ( h3 ("Welcome to the Space Use Ecology Gateway!",
+  #                  align = "center" )),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout (
@@ -107,12 +133,12 @@ ui <- fluidPage(
           conditionalPanel (
             condition = "input.data_source === 'Gateway'",
             fluidRow (id = "gateway_browse_row",
-                      column (id = "gateway_browse_column", width = 4, offset = 0,
-                              # style='padding-left:15px; padding-right:0px', 
+                      column (id = "gateway_browse_button", width = 4, offset = 0,
+                              #style='padding:0px', 
                               shinyFilesButton ('gateway_file', label='Browse',
                                                 title='Select your GPS data file',
                                                 multiple=FALSE, viewtype = "detail")),
-                      column (width = 8, offset = 0,
+                      column (id = "gateway_browse_file", width = 8, offset = 0,
                               htmlOutput ("gateway_file_display"))),
             tags$p()),
 
@@ -199,6 +225,7 @@ ui <- fluidPage(
       htmlOutput ( "plot.instructions" ),
       # https://github.com/daattali/shinycssloaders/
       shinycssloaders::withSpinner(plotOutput ( "plot" ), type = 5),
+      #plotOutput ("plot"),
       #hr(style = "border-top: 2px solid #000000;"),
       
       tabsetPanel(
@@ -215,6 +242,7 @@ ui <- fluidPage(
           value = 2,
           shinycssloaders::withSpinner (DT::dataTableOutput ('table_summary'), type = 5)))
     )
+  )
   )
 )
 
