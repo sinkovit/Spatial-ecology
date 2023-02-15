@@ -82,12 +82,17 @@ ui <- dashboardPage(
     #           icon("power-off"),
     #           title = "Back to Apps Home"),
     #         class = "dropdown"),
-    tags$li(
-      a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
-        img(src = 'logo.png', title = "Space Use Ecology Gateway",
-            #height = "52px"), style = "padding: 0px"),
-            )),
-      class = "dropdown")),
+    
+    title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
+              img(src = "logo.png"))
+
+    # tags$li(
+    #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
+    #     img(src = 'logo.png', title = "Space Use Ecology Gateway",
+    #         #height = "52px"), style = "padding: 0px"),
+    #         )),
+    #   class = "dropdown")
+    ),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
     tags$head(tags$link(rel = "stylesheet", type = "text/css",
