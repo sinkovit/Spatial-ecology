@@ -195,7 +195,7 @@ ui <- dashboardPage(
                      title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"),
           # doesn't work: https://stackoverflow.com/questions/58310378/disable-single-radio-choice-from-grouped-radio-action-buttons
           radioButtons ("mode", label = NULL,
-                        choices = list ("2D" = '2D', "2.5D" = '25D', "3D" = '3D')),
+                        choices = list ("2D" = '2D', "2.5D" = '25D', "3D" = '3D'), inline = TRUE),
           tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
           bsTooltip(id = "sig2obslabel", placement = "right",
                     title = "Location error / variance"),
@@ -543,6 +543,22 @@ server <- function ( input, output, session ) {
     shinyjs::disable ( "load_data" )
     shinyjs::disable ( "reset_data" )
   } )
+
+  #RSS
+  observeEvent ( input$updateUnits, {
+    print("Units updated")
+    results = loadDataframeFromFile(input$local_file$datapath)
+    shiny::validate(need(is.null(results[[2]]), results[[2]]))
+    data = results[[1]]
+    rm(results)
+    results <- preprocessDataframe(data)
+    data <- results[[1]]
+    gps$data <- results[[1]]
+    gps$original <- results[[1]]
+    data <- animalAttributes(data, input$cellsize, input$areaUnits)
+    gps$summary <- data
+  } )
+
 }
 
 shinyApp ( ui = ui, server = server )

@@ -85,7 +85,16 @@ animalAttributes <- function(data_df, cell.sz, areaUnits) {
       t_minmax = range(data_df[which(data_df$id == local_id), "time"])
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
-      area <- as.integer(area_mcp[1, as.character(local_id)])
+
+
+      area_raw <- area_mcp[1, as.character(local_id)]
+      if (area_raw < 100) {
+      	 area <- sprintf("%.3f", area_raw)
+      } else if (area_raw < 1000000) {
+      	 area <- as.integer(area_raw)
+      } else {
+      	 area <- sprintf("%.3e", area_raw)      	
+      }
 
       row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area)
       row.tail = c()
