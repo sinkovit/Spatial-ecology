@@ -544,18 +544,9 @@ server <- function ( input, output, session ) {
     shinyjs::disable ( "reset_data" )
   } )
 
-  #RSS
   observeEvent ( input$updateUnits, {
     print("Units updated")
-    results = loadDataframeFromFile(input$local_file$datapath)
-    shiny::validate(need(is.null(results[[2]]), results[[2]]))
-    data = results[[1]]
-    rm(results)
-    results <- preprocessDataframe(data)
-    data <- results[[1]]
-    gps$data <- results[[1]]
-    gps$original <- results[[1]]
-    data <- animalAttributes(data, input$cellsize, input$areaUnits)
+    data <- animalAttributes(gps$original, input$cellsize, input$areaUnits)
     gps$summary <- data
   } )
 
