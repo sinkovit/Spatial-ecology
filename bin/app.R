@@ -45,6 +45,7 @@ library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
 
 source("loadDataframe.R")
+source("minConvexPolygon.R")
 source("plotDataframe.R")
 source("processDataframe.R")
 source("util.R")
@@ -359,6 +360,7 @@ server <- function ( input, output, session ) {
   })
   
   observeEvent (input$load_data, {
+    print("** load data!")
     
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
@@ -398,6 +400,8 @@ server <- function ( input, output, session ) {
     }
     
     rm(results)
+    printf(paste("loaded data # rows =", nrow(data), "; columns :"))
+    print(names(data))
 
     printf("Preprocessing data...")
     results <- preprocessDataframe(data)
@@ -405,6 +409,10 @@ server <- function ( input, output, session ) {
     shiny::validate(need(is.null(results[[2]]), results[[2]]))
     
     data <- results[[1]]
+    printf(paste("preprocessed dataframe # rows =", nrow(data), "; columns :"))
+    print(names(data))
+    
+    #print(paste("preprocessed dataframe = ", data))
     gps$data <- results[[1]]
     gps$original <- results[[1]]
     
@@ -418,7 +426,12 @@ server <- function ( input, output, session ) {
         printf("error: %s\n", result)
     }
     
+    printf("Calculating spatial attributes...")
     data <- animalAttributes(data, input$cellsize)
+    printf ("done\n")
+    printf(paste("attributes # rows =", nrow(data), "; columns :"))
+    print(names(data))
+    
     gps$summary <- data
     updateTabsetPanel ( session, "tables", selected = "2" )
     
@@ -436,6 +449,7 @@ server <- function ( input, output, session ) {
   })
   
   table_all.data <- eventReactive (gps$original, {
+    print("** calculating all table!")
     DT::datatable (
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
@@ -447,6 +461,7 @@ server <- function ( input, output, session ) {
     })
   
   table_summary.data <- eventReactive (gps$summary, {
+    print("** calculating summary table!")
     shinyjs::show ("tables")
 
     DT::datatable (
@@ -463,12 +478,14 @@ server <- function ( input, output, session ) {
   output$table_summary <- DT::renderDataTable(table_summary.data())
   
   mkde.plot <- eventReactive (input$runx, {
+    print("** mkde.plot!")
     shinyjs::hide ( "plot.instructions" )
     shinyjs::disable("runx")
 
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
 
+    # "all" is no longer a row in the table...
     if (id == "all") {
       shinyjs::enable("runx")
       shiny::validate (need (id != "all",
@@ -492,6 +509,7 @@ server <- function ( input, output, session ) {
       } else {
         raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
                                      input$cellsize, xmin, xmax, ymin, ymax)
+        #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
         rasters[[id]] <- raster
         gps$rasters <- rasters
       }
@@ -500,6 +518,7 @@ server <- function ( input, output, session ) {
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
                   xlab='', ylab='')
+        #raster
       },
       error = function(error_message) {
         print(paste("error_message =", error_message))
@@ -511,12 +530,15 @@ server <- function ( input, output, session ) {
   })
 
   output$plot <- renderPlot ({
+    #print("in output plot...")
     if (clear_plot()) {
       clear_plot (FALSE)
       return()
     }
-    else
+    else {
       mkde.plot()
+      #renderPlot(mkde.plot())
+    }
   })
 
   observeEvent ( input$reset_data, {
@@ -530,7 +552,17 @@ server <- function ( input, output, session ) {
     shinyjs::reset ( "movebank_save_local" )
     shinyjs::disable ( "load_data" )
     shinyjs::disable ( "reset_data" )
+    printf(paste("reset gps # rows =", nrow(gps), "; columns :"))
+    print(names(gps))
   } )
+  
+  observeEvent(input$reset_parameters, {
+    shinyjs::reset("sig2obs")
+    shinyjs::reset("tmax")
+    shinyjs::reset("cellsize")
+    shinyjs::reset("buffer")
+    shinyjs::reset("probability")
+  })
 }
 
 shinyApp ( ui = ui, server = server )
