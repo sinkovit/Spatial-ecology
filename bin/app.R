@@ -542,14 +542,18 @@ server <- function ( input, output, session ) {
   })
 
   observeEvent ( input$reset_data, {
-    data_source = input$data_source
-    updateRadioButtons ( session, "data_source", selected = data_source )
+    #data_source = input$data_source
+    #updateRadioButtons ( session, "data_source", selected = data_source )
+    shinyjs::reset("data_source")
     shinyjs::reset ( "local_file" )
     #shinyjs::reset ("gateway_file_display")
     shinyjs::reset ( "movebank_username" )
     shinyjs::reset ( "movebank_password" )
     shinyjs::reset ( "movebank_studyid" )
     shinyjs::reset ( "movebank_save_local" )
+    shinyjs::reset("coordinates")
+    shinyjs::reset("zone")
+    shinyjs::reset("datum")
     shinyjs::disable ( "load_data" )
     shinyjs::disable ( "reset_data" )
     printf(paste("reset gps # rows =", nrow(gps), "; columns :"))
