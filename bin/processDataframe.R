@@ -124,7 +124,7 @@ preprocessDataframe <- function(gpsdata) {
 	 # All is good
       } else {
       	 return(list(NULL,
-      	             "Missing required columns; must have time and lat-long, x-y or UTM"))
+      	             "Missing required columns; must have time and lat-long, x-y or UTM"), NULL)
       }
 
       #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
@@ -178,6 +178,9 @@ preprocessDataframe <- function(gpsdata) {
 	 gpsdata$utm.zone <- utm
       }
 
+      #### Generate list of UTM zones found in data file
+      found.zones <- unique(gpsdata$utm.zone)
+
       #### Delete the column names that we don't need
 
       # This isn't strictly necessary and we may decide to revisit
@@ -207,5 +210,5 @@ preprocessDataframe <- function(gpsdata) {
       	 names(gpsdata)[names(gpsdata) == 'y'] <- 'ydata'
       }
 
-      return(list(gpsdata, NULL))
+      return(list(gpsdata, NULL, found.zones))
 }
