@@ -68,7 +68,6 @@ callback <- c(
 )
 
 # Define UI for app
-#ui <- fluidPage(
 ui <- dashboardPage(
   
   # skin = "black",
@@ -98,7 +97,6 @@ ui <- dashboardPage(
   dashboardBody(
     tags$head(tags$link(rel = "stylesheet", type = "text/css",
                         href = "custom.css")),
-    
   
   # tags$head(
   #   tags$style(HTML("
@@ -177,7 +175,9 @@ ui <- dashboardPage(
                           selected = 1),
             conditionalPanel (
               condition = "input.coordinates === '2'",
-              numericInput ("zone", label = "Zone", value = 30, min = 1, max = 60, step = 1, width = "50%")),
+              # zone 30 is CA & AZ
+              numericInput ("zone", label = "Zone", value = 11, min = 1,
+                            max = 60, step = 1, width = "50%")),
             radioButtons("datum", label = "Datum:",
                          choices = list("NAD 27" = 1, "NAD 83" = 2, "WGS 84" = 3),
                          selected = 3),
@@ -211,14 +211,14 @@ ui <- dashboardPage(
           tags$strong(id = "bufferlabel", "Buffer (meters):"),
           bsTooltip(id = "bufferlabel", placement = "right",
                     title = "Brownian Bridge buffer"),
-          numericInput ("buffer", label = NULL, value = 100.0, width = "50%"),
+          numericInput ("buffer", label = NULL, value = 1000.0, width = "50%"),
           tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
           bsTooltip(id = "probabilitylabel", placement = "right",
                     title = "Used to plot probability range; should be comma separated values"),
           textInput ("probability", label = NULL,
                      value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"),
           hr(style = "border-top: 2px solid #000000;"),
-          actionButton("runx", label = "Run"),
+          actionButton("plot_button", label = "Plot"),
           actionButton("reset_parameters", "Reset parameters"),
         )),
       
@@ -256,15 +256,31 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function ( input, output, session ) {
 
+  clear_plot <- reactiveVal(FALSE)
   gps <- reactiveValues()
-  clear_plot <- reactiveVal (FALSE)
-  
+  recalculate_raster <- reactiveVal(TRUE)
+  replot_mkde <- TRUE
+
   shinyjs::hide ("tables")
   shinyjs::disable (selector = "[type=radio][value=25D]")
   shinyjs::disable (selector = "[type=radio][value=3D]")
   
-  # Check parameters, if invalid will turn border to red, otherwise no color
+  # The following observe serves 2 purposes:
+  # 1. any of the inputs involved with raster calculation changes, set flag to
+  # clear rasters
+  # 2. check parameters, if invalid will turn border to red, otherwise no color
   observe ({
+    recalculate_raster(TRUE)
+    replot_mkde <- TRUE
+    
+    if (!is.numeric (input$zone) || input$zone < 1 || input$zone > 60) {
+      color <- "solid #FF0000"
+    } else {
+      color <- ""
+    }
+    runjs (paste0 ("document.getElementById('zone').style.border ='", color,
+                   "'"))
+    
     if (!is.numeric (input$sig2obs) || input$sig2obs <= 0) {
       color <- "solid #FF0000"
     } else {
@@ -296,15 +312,32 @@ server <- function ( input, output, session ) {
     }
     runjs (paste0 ("document.getElementById('buffer').style.border ='", color,
                    "'"))
+  })
+  
+  # The following observe serves 2 purposes:
+  # 1. if probability changes, set flag to replot using MKDE
+  # 2. check probability parameter, if invalid will turn border to red,
+  # otherwise no color
+  observeEvent(input$probability, {
+    replot_mkde <- TRUE
     
-    # if (isEmpty (input$probability) ||
-    #     regexpr ("([0-9].[0-9][0-9],?\s?)+", input$probability, ignore.case = TRUE) == -1) {
-    #   color <- "solid #FF0000"
-    # } else {
-    #   color <- ""
-    # }
-    # runjs (paste0 ("document.getElementById('probability').style.border ='", color,
-    #                "'"))
+    if(isEmpty(input$probability) ||
+       regexpr("[:alpha:]", input$probability) != -1) {
+      color <- "solid #FF0000"
+    } else {
+      parts <- strsplit(input$probability, ",| |, ")
+      color <- ""
+      for(part in parts) {
+        part_num <- as.double(part)
+        if(part_num >= 1.0 || isZero(part_num)) {
+          color <- "solid #FF0000"
+          break
+        }
+      }
+    }
+    
+    runjs (paste0 ("document.getElementById('probability').style.border ='",
+                   color, "'"))
   })
   
   # setup & display the gateway browser & selected file
@@ -346,21 +379,20 @@ server <- function ( input, output, session ) {
   })
   
   # If there is data and cell size is valid and a table row is selected, enable
-  # Run button
+  # Plot button
   observe ({
-    # input$table_summary_rows_selected
     if (! isEmpty (gps$original)  &&
        is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
        is.numeric(input$tmax)     && input$tmax >= 0 &&
        is.numeric(input$cellsize) && input$cellsize >= 1 &&
        is.numeric(input$buffer)   && input$buffer >= 0)
-      shinyjs::enable ("runx")
+      shinyjs::enable ("plot_button")
     else
-      shinyjs::disable ("runx")
+      shinyjs::disable ("plot_button")
   })
   
+  # Handles user "Load data" button click...
   observeEvent (input$load_data, {
-    print("** load data!")
     
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
@@ -400,8 +432,8 @@ server <- function ( input, output, session ) {
     }
     
     rm(results)
-    printf(paste("loaded data # rows =", nrow(data), "; columns :"))
-    print(names(data))
+    # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
+    # print(names(data))
 
     printf("Preprocessing data...")
     results <- preprocessDataframe(data)
@@ -409,10 +441,7 @@ server <- function ( input, output, session ) {
     shiny::validate(need(is.null(results[[2]]), results[[2]]))
     
     data <- results[[1]]
-    printf(paste("preprocessed dataframe # rows =", nrow(data), "; columns :"))
-    print(names(data))
-    
-    #print(paste("preprocessed dataframe = ", data))
+
     gps$data <- results[[1]]
     gps$original <- results[[1]]
     
@@ -427,11 +456,9 @@ server <- function ( input, output, session ) {
     }
     
     printf("Calculating spatial attributes...")
-    data <- animalAttributes(data, input$cellsize)
+    data <- animalAttributes(data)
     printf ("done\n")
-    printf(paste("attributes # rows =", nrow(data), "; columns :"))
-    print(names(data))
-    
+
     gps$summary <- data
     updateTabsetPanel ( session, "tables", selected = "2" )
     
@@ -441,7 +468,7 @@ server <- function ( input, output, session ) {
         tags$ol (
           tags$li("Set parameters (left)"),
           tags$li("Choose an animal from Summary table (below)"),
-          tags$li("Run (left below)")
+          tags$li("Plot (left below)")
         ))})
   
     updateTabsetPanel ( session, "controls", selected = "2" )
@@ -449,19 +476,18 @@ server <- function ( input, output, session ) {
   })
   
   table_all.data <- eventReactive (gps$original, {
-    print("** calculating all table!")
     DT::datatable (
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list (
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
+        #paging = FALSE, scrollX = TRUE, scrollY = TRUE, 
         stateSave = TRUE),
       selection = list(mode = 'single', target = 'row'))
     })
   
   table_summary.data <- eventReactive (gps$summary, {
-    print("** calculating summary table!")
     shinyjs::show ("tables")
 
     DT::datatable (
@@ -477,22 +503,21 @@ server <- function ( input, output, session ) {
   output$table_all <- DT::renderDataTable(table_all.data())
   output$table_summary <- DT::renderDataTable(table_summary.data())
   
-  mkde.plot <- eventReactive (input$runx, {
-    print("** mkde.plot!")
+  mkde.plot <- eventReactive (input$plot_button, {
     shinyjs::hide ( "plot.instructions" )
-    shinyjs::disable("runx")
+    shinyjs::disable("plot_button")
 
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
 
     # "all" is no longer a row in the table...
     if (id == "all") {
-      shinyjs::enable("runx")
+      shinyjs::enable("plot_button")
       shiny::validate (need (id != "all",
                              "Sorry cannot plot multiple animals currently..."))
     } else {
       data <- gps$data
-
+      
       # Spatial extent can be calculated in different ways, for example from
       # data set itself, from digital elevation model or manually set. For
       # now, just using min/max values for the GPS readings.
@@ -503,50 +528,48 @@ server <- function ( input, output, session ) {
 
       rasters <- gps$rasters
       raster <- NULL
+      if(recalculate_raster())
+        rasters <- NULL
       
       if (! is.null (rasters) && ! is.null (rasters[[id]])) {
         raster <- rasters[[id]]
       } else {
         raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
                                      input$cellsize, xmin, xmax, ymin, ymax)
+        recalculate_raster(FALSE)
         #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
         rasters[[id]] <- raster
         gps$rasters <- rasters
       }
       
-      tryCatch({
-        probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
-                  xlab='', ylab='')
-        #raster
-      },
-      error = function(error_message) {
-        print(paste("error_message =", error_message))
-        shiny::validate(need(error_message == "",
-                             "Unable to plot; please try adjusting the parameter(s) and try again..."))
-      },
-      finally = {shinyjs::enable("runx")})
+      if(replot_mkde) {
+        tryCatch({
+          probs = as.numeric ( unlist (strsplit (input$probability, ",")))
+          plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+                    xlab='', ylab='')
+        },
+        error = function(error_message) {
+          shiny::validate(need(error_message == "",
+                               "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+        },
+        finally = {shinyjs::enable("plot_button")})
+      }
     }
   })
 
   output$plot <- renderPlot ({
-    #print("in output plot...")
     if (clear_plot()) {
       clear_plot (FALSE)
       return()
     }
     else {
       mkde.plot()
-      #renderPlot(mkde.plot())
     }
   })
-
+  
   observeEvent ( input$reset_data, {
-    #data_source = input$data_source
-    #updateRadioButtons ( session, "data_source", selected = data_source )
     shinyjs::reset("data_source")
     shinyjs::reset ( "local_file" )
-    #shinyjs::reset ("gateway_file_display")
     shinyjs::reset ( "movebank_username" )
     shinyjs::reset ( "movebank_password" )
     shinyjs::reset ( "movebank_studyid" )
@@ -554,10 +577,13 @@ server <- function ( input, output, session ) {
     shinyjs::reset("coordinates")
     shinyjs::reset("zone")
     shinyjs::reset("datum")
+    # following 3 lines don't work to clear the tables...
+    # shinyjs::reset("table_all")
+    # shinyjs::reset("table_summary")
+    # table_all.data <- DT::datatable(NULL)
     shinyjs::disable ( "load_data" )
     shinyjs::disable ( "reset_data" )
-    printf(paste("reset gps # rows =", nrow(gps), "; columns :"))
-    print(names(gps))
+    gps <- reactiveValues()
   } )
   
   observeEvent(input$reset_parameters, {
@@ -570,4 +596,3 @@ server <- function ( input, output, session ) {
 }
 
 shinyApp ( ui = ui, server = server )
-
