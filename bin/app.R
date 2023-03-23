@@ -321,18 +321,18 @@ server <- function ( input, output, session ) {
   observeEvent(input$probability, {
     replot_mkde <- TRUE
     
+    # following test doesn't seem to work for the entire probability string
+    # regexpr("[:alpha:]", input$probability) != -1)
     if(isEmpty(input$probability) ||
-       regexpr("[:alpha:]", input$probability) != -1) {
+       regexpr("[a-zA-Z]", input$probability) != -1) {
       color <- "solid #FF0000"
     } else {
       parts <- strsplit(input$probability, ",| |, ")
       color <- ""
       for(part in parts) {
         part_num <- as.double(part)
-        if(part_num >= 1.0 || isZero(part_num)) {
-          color <- "solid #FF0000"
-          break
-        }
+        #if(is.na(part_num) || part_num >= 1.0 || isZero(part_num)) {
+        ifelse(part_num >= 1.0, color <- "solid #FF0000", "")
       }
     }
     
