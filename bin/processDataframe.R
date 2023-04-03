@@ -124,7 +124,7 @@ preprocessDataframe <- function(gpsdata) {
 	 # All is good
       } else {
       	 return(list(NULL,
-      	             "Missing required columns; must have time and lat-long, x-y or UTM"))
+      	             "Missing required columns; must have time and lat-long, x-y or UTM"), NULL)
       }
 
       #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
@@ -133,11 +133,14 @@ preprocessDataframe <- function(gpsdata) {
       	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
       }
 
-      #### Add an 'id' column if it doesn't already exist
+      #### Add an 'id' column if it doesn't already exist and convert to string
+      #### Handing as string adds flexibility since not all data sets will use
+      #### integers to label animals
 
       if (!"id" %in% colnames(gpsdata)) {
       	 gpsdata['id'] <- 1
       }
+      gpsdata$id <- as.character(gpsdata$id)
 
       #### Generate UTM coordinates from lat-long
 
@@ -175,6 +178,9 @@ preprocessDataframe <- function(gpsdata) {
 	 gpsdata$utm.zone <- utm
       }
 
+      #### Generate list of UTM zones found in data file
+      found.zones <- unique(gpsdata$utm.zone)
+
       #### Delete the column names that we don't need
 
       # This isn't strictly necessary and we may decide to revisit
@@ -204,5 +210,5 @@ preprocessDataframe <- function(gpsdata) {
       	 names(gpsdata)[names(gpsdata) == 'y'] <- 'ydata'
       }
 
-      return(list(gpsdata, NULL))
+      return(list(gpsdata, NULL, found.zones))
 }

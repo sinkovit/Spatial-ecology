@@ -53,9 +53,7 @@
 
 # --------------------------------------------------------------------
 
-animalAttributes <- function(data_df, cell.sz) {
-  printf("Calculating spatial attributes...")
-
+animalAttributes <- function(data_df) {
   # Replicate C printf functionality
   printf <- function(...) cat(sprintf(...))
   
@@ -94,7 +92,7 @@ animalAttributes <- function(data_df, cell.sz) {
       	ny <- as.integer(y_range/max_pix)
         dims <- sprintf("%dx%d", nx, ny)
         if(row.index == 1) {
-          label <- sprintf("Grid \n (%d m)", max_pix)
+          label <- sprintf("Grid \n (%dm)", max_pix)
           result[ , label] <- character()
         }
         value <- paste(dims)
@@ -106,7 +104,6 @@ animalAttributes <- function(data_df, cell.sz) {
       row.index <- row.index + 1
       
     }
-    printf ("done\n")
     return(result)
   },
   error = function(error_message) {
@@ -118,7 +115,6 @@ animalAttributes <- function(data_df, cell.sz) {
 
 # Create home range using mkde
 getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
-  printf("Generating plot...\n")
   ids <- unique(data_df$local_identifier)
   id <- ids[index]
 
@@ -137,11 +133,9 @@ getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
   if (xrange >= yrange) {
     nx <- 50
     ny <- as.integer(nx * (yrange/xrange))
-    #cell.sz <- xrange/nx
   } else {
     ny <- 50
     nx <- as.integer(ny * (xrange/yrange))
-    #cell.sz <- yrange/ny
   }  
 
   mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = tmax)
