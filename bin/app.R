@@ -220,6 +220,16 @@ ui <- dashboardPage(
           hr(style = "border-top: 2px solid #000000;"),
           actionButton("plot_button", label = "Plot"),
           actionButton("reset_parameters", "Reset parameters"),
+
+	  # Choose/update units for animal areas
+          hr(style = "border-top: 2px solid #000000;"),
+          tags$strong (id = "areaUnitsLabel", "Area units:"),
+          bsTooltip (id = "areaUnitsLabel", placement = "right",
+                     title = "Sets units for area calculations"),
+          radioButtons ("areaUnits", label = NULL,
+                        choices = list ("m2" = 'm2', "ha" = 'ha', "km2" = 'km2'),
+			selected = "ha", inline = TRUE),
+	  actionButton("updateUnits", label = "Update area units"),
         )),
       
 	    textOutput ( "debug" ),
@@ -456,8 +466,7 @@ server <- function ( input, output, session ) {
     }
     
     printf("Calculating spatial attributes...")
-    data <- animalAttributes(data)
-    printf ("done\n")
+    data <- animalAttributes(data, input$areaUnits)
 
     gps$summary <- data
     updateTabsetPanel ( session, "tables", selected = "2" )
@@ -593,6 +602,12 @@ server <- function ( input, output, session ) {
     shinyjs::reset("buffer")
     shinyjs::reset("probability")
   })
+
+  observeEvent ( input$updateUnits, {
+    print("Units updated")
+    data <- animalAttributes(gps$original, input$areaUnits)
+    gps$summary <- data
+  } )
 }
 
 shinyApp ( ui = ui, server = server )

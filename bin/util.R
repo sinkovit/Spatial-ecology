@@ -53,7 +53,7 @@
 
 # --------------------------------------------------------------------
 
-animalAttributes <- function(data_df) {
+animalAttributes <- function(data_df, areaUnits) {
   printf <- function(...) cat(sprintf(...))
 
   library(sp)
@@ -62,17 +62,18 @@ animalAttributes <- function(data_df) {
 
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
-  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout="ha", percent=100)
+  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
   
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
+  areaString <- paste("Area (", areaUnits, ")", sep="")
 
   result <- data.frame(id = numeric())
   result[ , 'Easting (min)'] <- numeric()
   result[ , 'Easting (max)'] <- numeric()
   result[ , 'Northing (min)'] <- character()
   result[ , 'Northing (max)'] <- character()
-  result[ , 'Area (ha)'] <- numeric()
+  result[ , areaString] <- character()
   row.index <- 1
 
   tryCatch({
@@ -82,7 +83,15 @@ animalAttributes <- function(data_df) {
       t_minmax = range(data_df[which(data_df$id == local_id), "time"])
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
-      area <- as.integer(area_mcp[1, as.character(local_id)])
+
+      area_raw <- area_mcp[1, as.character(local_id)]
+      if (area_raw < 100) {
+      	 area <- sprintf("%.3f", area_raw)
+      } else if (area_raw < 1000000) {
+      	 area <- as.integer(area_raw)
+      } else {
+      	 area <- sprintf("%.3e", area_raw)      	
+      }
 
       row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area)
       row.tail = c()
