@@ -54,10 +54,17 @@
 # --------------------------------------------------------------------
 
 animalAttributes <- function(data_df) {
-  # Replicate C printf functionality
   printf <- function(...) cat(sprintf(...))
+
+  library(sp)
+  library(adehabitatHR)
+  library(scales)
+
+  gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
+  coordinates(gpsdata.sp) <- c("xdata", "ydata")
+  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout="ha", percent=100)
   
-  animals <- append(as.list(sort(unique(data_df$id))), "all")
+  animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
 
   result <- data.frame(id = numeric())
@@ -65,25 +72,19 @@ animalAttributes <- function(data_df) {
   result[ , 'Easting (max)'] <- numeric()
   result[ , 'Northing (min)'] <- character()
   result[ , 'Northing (max)'] <- character()
-  result[ , 'Area (m2)'] <- numeric()
+  result[ , 'Area (ha)'] <- numeric()
   row.index <- 1
 
   tryCatch({
     for (local_id in animals) {
-      if(local_id == "all") {
-        x_minmax = range(data_df$xdata)
-        y_minmax = range(data_df$ydata)
-        t_minmax = range(data_df$time)
-      } else {
-        x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
-        y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
-        t_minmax = range(data_df[which(data_df$id == local_id), "time"])
-      }
+      x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
+      y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
+      t_minmax = range(data_df[which(data_df$id == local_id), "time"])
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
-      area <- sprintf("%10.2e", x_range * y_range)
+      area <- as.integer(area_mcp[1, as.character(local_id)])
+
       row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area)
-  
       row.tail = c()
 
       # Loop over pixel sizes
