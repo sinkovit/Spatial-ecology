@@ -123,39 +123,6 @@ animalAttributes <- function(data_df, areaUnits) {
 }
 
 
-# Create home range using mkde
-getMKDEData <- function(data_df, index, sig2obs, tmax, cell.size) {
-  ids <- unique(data_df$local_identifier)
-  id <- ids[index]
-
-  x <- data_df[which(data_df$local_identifier == id), "location_long.1"]
-  y <- data_df[which(data_df$local_identifier == id), "location_lat.1"]
-  t <- data_df[which(data_df$local_identifier == id), "time"]
-  
-  # Get data range; set grid size and cell size
-  xmin <- min(x)
-  ymin <- min(y)
-  xmax <- max(x)
-  ymax <- max(y)
-  xrange <- xmax-xmin
-  yrange <- ymax-ymin
-
-  if (xrange >= yrange) {
-    nx <- 50
-    ny <- as.integer(nx * (yrange/xrange))
-  } else {
-    ny <- 50
-    nx <- as.integer(ny * (xrange/yrange))
-  }  
-
-  mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = tmax)
-  mkde.obj <- initializeMKDE2D(xmin, cell.size, nx, ymin, cell.size, ny)
-  #dens.res <- initializeDensity(mkde.obj, mv.dat)
-  mkde.obj <- dens.res$mkde.obj
-  mv.dat <- dens.res$move.dat
-  return(mkde.obj)
-}
-
 # Returns TRUE of the parameter is NULL, a string with no non-space characters,
 # or length < 1; otherwise returns FALSE
 isEmpty <- function(x) {
