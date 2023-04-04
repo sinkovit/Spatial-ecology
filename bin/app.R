@@ -519,50 +519,44 @@ server <- function ( input, output, session ) {
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
 
-    # "all" is no longer a row in the table...
-    if (id == "all") {
-      shinyjs::enable("plot_button")
-      shiny::validate (need (id != "all",
-                             "Sorry cannot plot multiple animals currently..."))
-    } else {
-      data <- gps$data
+    # RSSRSS
+    data <- gps$data
       
-      # Spatial extent can be calculated in different ways, for example from
-      # data set itself, from digital elevation model or manually set. For
-      # now, just using min/max values for the GPS readings.
-      xmin <- min(data$xdata) - input$buffer
-      xmax <- max(data$xdata) + input$buffer
-      ymin <- min(data$ydata) - input$buffer
-      ymax <- max(data$ydata) + input$buffer
+    # Spatial extent can be calculated in different ways, for example from
+    # data set itself, from digital elevation model or manually set. For
+    # now, just using min/max values for the GPS readings.
+    xmin <- min(data$xdata) - input$buffer
+    xmax <- max(data$xdata) + input$buffer
+    ymin <- min(data$ydata) - input$buffer
+    ymax <- max(data$ydata) + input$buffer
 
-      rasters <- gps$rasters
-      raster <- NULL
-      if(recalculate_raster())
-        rasters <- NULL
+    rasters <- gps$rasters
+    raster <- NULL
+    if(recalculate_raster())
+      rasters <- NULL
       
-      if (! is.null (rasters) && ! is.null (rasters[[id]])) {
-        raster <- rasters[[id]]
-      } else {
-        raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
-                                     input$cellsize, xmin, xmax, ymin, ymax)
-        recalculate_raster(FALSE)
-        #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
-        rasters[[id]] <- raster
-        gps$rasters <- rasters
-      }
+    if (! is.null (rasters) && ! is.null (rasters[[id]])) {
+      raster <- rasters[[id]]
+    } else {
+      raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
+                                   input$cellsize, xmin, xmax, ymin, ymax)
+      recalculate_raster(FALSE)
+      #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
+      rasters[[id]] <- raster
+      gps$rasters <- rasters
+    }
       
-      if(replot_mkde) {
-        tryCatch({
-          probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-          plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
-                    xlab='', ylab='')
-        },
-        error = function(error_message) {
-          shiny::validate(need(error_message == "",
-                               "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
-        },
-        finally = {shinyjs::enable("plot_button")})
-      }
+    if(replot_mkde) {
+      tryCatch({
+        probs = as.numeric ( unlist (strsplit (input$probability, ",")))
+        plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+                  xlab='', ylab='')
+      },
+      error = function(error_message) {
+      shiny::validate(need(error_message == "",
+                             "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+      },
+      finally = {shinyjs::enable("plot_button")})
     }
   })
 
