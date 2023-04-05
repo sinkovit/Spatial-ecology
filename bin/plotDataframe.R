@@ -65,7 +65,7 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
   print(paste("cell size =", cell.sz))
   print("---------------------------------------")
 
-  mv.dat <- initializeMovementData(t, x, y, sig2obs=25.0, t.max=185.0)
+  mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = t.max)
   mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
   dens.res <- initializeDensity(mkde.obj, mv.dat)
   mkde.obj <- dens.res$mkde.obj
