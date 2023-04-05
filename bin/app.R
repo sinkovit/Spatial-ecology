@@ -122,7 +122,7 @@ ui <- dashboardPage(
 
     # Sidebar panel for inputs ----
     sidebarPanel(
-      id = "myapp",
+      id = "inputs",
       tabsetPanel(
         id = "controls",
         type = "pills",
@@ -179,8 +179,9 @@ ui <- dashboardPage(
               numericInput ("zone", label = "Zone", value = 11, min = 1,
                             max = 60, step = 1, width = "50%")),
             radioButtons("datum", label = "Datum:",
-                         choices = list("NAD 27" = 1, "NAD 83" = 2, "WGS 84" = 3),
-                         selected = 3),
+                         choices = list("NAD 27" = "NAD27", "NAD 83" = "NAD83",
+                                        "WGS 84" = "WGS84"),
+                         selected = "WGS84"),
           ),
           
           hr(style = "border-top: 2px solid #000000;"),
@@ -467,6 +468,7 @@ server <- function ( input, output, session ) {
     
     printf("Calculating spatial attributes...")
     data <- animalAttributes(data, input$areaUnits)
+    printf("done\n")
 
     gps$summary <- data
     updateTabsetPanel ( session, "tables", selected = "2" )
@@ -513,51 +515,60 @@ server <- function ( input, output, session ) {
   output$table_summary <- DT::renderDataTable(table_summary.data())
   
   mkde.plot <- eventReactive (input$plot_button, {
-    shinyjs::hide ( "plot.instructions" )
-    shinyjs::disable("plot_button")
+    shinyjs::hide("plot.instructions")
+    shinyjs::disable("inputs")
 
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
-
-    # RSSRSS
-    data <- gps$data
-      
-    # Spatial extent can be calculated in different ways, for example from
-    # data set itself, from digital elevation model or manually set. For
-    # now, just using min/max values for the GPS readings.
-    xmin <- min(data$xdata) - input$buffer
-    xmax <- max(data$xdata) + input$buffer
-    ymin <- min(data$ydata) - input$buffer
-    ymax <- max(data$ydata) + input$buffer
-
-    rasters <- gps$rasters
     raster <- NULL
+    rasters <- gps$rasters
     if(recalculate_raster())
       rasters <- NULL
-      
+    
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
       raster <- rasters[[id]]
     } else {
+      data <- gps$data
+      
+      # Spatial extent can be calculated in different ways, for example from
+      # data set itself, from digital elevation model or manually set. For
+      # now, just using min/max values for the GPS readings.
+      xmin <- min(data$xdata) - input$buffer
+      xmax <- max(data$xdata) + input$buffer
+      ymin <- min(data$ydata) - input$buffer
+      ymax <- max(data$ydata) + input$buffer
+      
+      print(paste("input$zone =", input$zone))
+      print(paste("input$datum =", input$datum))
+      print(paste("id =", id))
       raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
                                    input$cellsize, xmin, xmax, ymin, ymax)
       recalculate_raster(FALSE)
       #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
+      #raster <- minConvexPolygon(data, input$zone, input$datum, id, TRUE)
+      print(paste("raster class =", class(raster)))
+      print(paste("nrow =", raster::nrow(raster), "; ncol =",
+                  raster::ncol(raster), "; ncell =", raster::ncell(raster),
+                  "dim =", dim(raster)))
+      print(paste("columns :", names(raster)))
       rasters[[id]] <- raster
       gps$rasters <- rasters
     }
-      
+    
     if(replot_mkde) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
-                  xlab='', ylab='')
+        # plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
+        plotMKDE(raster, probs = probs, asp = raster$ny/raster$nx, xlab='',
+                 ylab='')
       },
       error = function(error_message) {
-      shiny::validate(need(error_message == "",
+        print(paste("error message =", error_message))
+        shiny::validate(need(error_message == "",
                              "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
-      },
-      finally = {shinyjs::enable("plot_button")})
+      })
     }
+    shinyjs::enable("inputs")
   })
 
   output$plot <- renderPlot ({
@@ -580,6 +591,9 @@ server <- function ( input, output, session ) {
     shinyjs::reset("coordinates")
     shinyjs::reset("zone")
     shinyjs::reset("datum")
+    #shinyjs::reset("table_all")
+    # output$table_all <- DT::renderDataTable(NULL)
+    # output$table_summary <- DT::renderDataTable(NULL)
     # following 3 lines don't work to clear the tables...
     # shinyjs::reset("table_all")
     # shinyjs::reset("table_summary")
@@ -598,7 +612,7 @@ server <- function ( input, output, session ) {
   })
 
   observeEvent ( input$updateUnits, {
-    print("Units updated")
+    printf(paste("Units updated to", input$areaUnits, "\n"))
     data <- animalAttributes(gps$original, input$areaUnits)
     gps$summary <- data
   } )
