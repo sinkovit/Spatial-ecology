@@ -33,14 +33,19 @@
 # MODIFICATIONS.
 */
 
+/*
 #gateway_browse_button {
   padding:0px;
 }
+*/
 
+/*
 #gateway_browse_file {
   padding:0px;
 }
+*/
 
+/*
 #gateway_browse_row {
   margin-bottom: 40px;
   position: relative;
@@ -49,29 +54,25 @@
   /*
   box-sizing: border-box;
   */
-}
+/*}*/
 
-#gateway_file_display {
+#gateway_file {
   background-color: #eee;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  /*border-radius: 4px;*/
   color: #999;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
-  margin: 0 0 0 0;
+  /*margin: 0 0 0 0;*/
   /*padding: 6px 12px 6px 12px;*/
-  /*padding: 6px 12px;*/
-  position: absolute;
-  text-align: start;
-  text-indent: 0px;
-  /*
-  position: relative;
-  float: left;
-  */
-  width: 100%;
-  /*
-  box-sizing: border-box;
-  */
+  padding: 6px 12px;
+  /*position: absolute;*/
+  /*text-align: start;*/
+  /*text-indent: 0px;*/
+  /*position: relative;*/
+  /*float: left;*/
+  /*width: 100%;*/
+  /*box-sizing: border-box;*/
 }
 
 .progress-bar {

@@ -110,7 +110,7 @@ ui <- dashboardPage(
   
   # CSS to hide fileInput "Upload Complete"
   # original idea from https://stackoverflow.com/a/49631736
-  includeCSS("app.css"),
+  #includeCSS("app.css"),
   
   useShinyjs(), # include shinyjs
 
@@ -136,14 +136,11 @@ ui <- dashboardPage(
 
           conditionalPanel (
             condition = "input.data_source === 'Gateway'",
-            fluidRow (id = "gateway_browse_row",
-                      column (id = "gateway_browse_button", width = 4, offset = 0,
-                              #style='padding:0px', 
-                              shinyFilesButton ('gateway_file', label='Browse',
-                                                title='Select your GPS data file',
-                                                multiple=FALSE, viewtype = "detail")),
-                      column (id = "gateway_browse_file", width = 8, offset = 0,
-                              htmlOutput ("gateway_file_display"))),
+            fluidRow(column(width = 4, offset = 0,
+                            shinyFilesButton('gateway_browse', label='Browse',
+                                             title='Select your GPS data file',
+                                             multiple=FALSE, viewtype = "detail")),
+                     column(width = 8, offset = 0, htmlOutput ("gateway_file"))),
             tags$p()),
 
           conditionalPanel(
@@ -355,14 +352,14 @@ server <- function ( input, output, session ) {
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
   #               getVolumes()())
   gateway_volumes <- c (Home = fs::path_home())
-  shinyFileChoose (input, "gateway_file", roots = gateway_volumes,
+  shinyFileChoose (input, "gateway_browse", roots = gateway_volumes,
                    session = session)
-  output$gateway_file_display <-
+  output$gateway_file <-
     renderUI ({
-      if (is.integer (input$gateway_file)) {
+      if (is.integer (input$gateway_browse)) {
         HTML ("No file selected")
       } else {
-        tmp <- parseFilePaths (gateway_volumes, input$gateway_file)
+        tmp <- parseFilePaths (gateway_volumes, input$gateway_browse)
         HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
 
@@ -376,7 +373,7 @@ server <- function ( input, output, session ) {
   # If the required load data input is missing, disable buttons; otherwise enable...
   observe({
     if ((input$data_source == 'Gateway') &&
-        isEmpty (parseFilePaths (gateway_volumes, input$gateway_file)$name) ||
+        isEmpty (parseFilePaths (gateway_volumes, input$gateway_browse)$name) ||
         (input$data_source == 'Your computer' && isEmpty(input$local_file)) ||
         (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
                                              isEmpty(input$movebank_password) ||
@@ -416,7 +413,7 @@ server <- function ( input, output, session ) {
     }
 
     if(input$data_source == 'Gateway') {
-      file <- parseFilePaths (gateway_volumes, input$gateway_file)
+      file <- parseFilePaths (gateway_volumes, input$gateway_browse)
       printf ("Loading gateway file %s...", file$name)
       results = loadDataframeFromFile (file$datapath)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
