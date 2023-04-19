@@ -33,6 +33,11 @@
 # MODIFICATIONS.
 */
 
+.content-wrapper,
+.right-side {
+  background-color: #ffffff;
+}
+
 /*
 #gateway_browse_button {
   padding:0px;
@@ -75,16 +80,24 @@
   /*box-sizing: border-box;*/
 }
 
-.progress-bar {
-  display: none;
-  color: transparent!important;
-  background-color: transparent;
-}
-
 /* shinydashboard customization
    (see https://rstudio.github.io/shinydashboard/appearance.html#css) */
 .main-header {
   background-color: #1d1e20;
+}
+
+.nav-tabs {
+  border-bottom: 3px solid black;
+}
+
+.nav-tabs > li.active > a {
+  font-weight: bold,
+}
+
+.progress-bar {
+  display: none;
+  color: transparent!important;
+  background-color: transparent;
 }
 
 .shiny-output-error-validation {
@@ -103,4 +116,8 @@
 
 .skin-blue .main-header .navbar {
   background-color: #1d1e20;
+}
+
+.well {
+  background-color: #ebd9c8;
 }
