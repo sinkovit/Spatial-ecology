@@ -126,7 +126,7 @@ ui <- dashboardPage(
       # Sidebar panel for inputs ----
       sidebarPanel(id = "inputs",
         tabsetPanel(id = "controls", type = "tabs",
-          tabPanel(title = "Data", value = "Data",
+          tabPanel(title = "Data", value = "Data", tags$br(),
             radioButtons("data_source", "Load data from :",
               choices = c ("Gateway", "Movebank", "Your computer")
             ),
@@ -187,18 +187,18 @@ ui <- dashboardPage(
             actionButton("data_load_btn", label = "Load data"),
             actionButton("reset_data", "Reset data"),
           ),
-          tabPanel(title = "MCP", value = "MCP",
+          tabPanel(title = "MCP", value = "MCP", tags$br(),
             tags$strong(id = "mcp_buffer_label", "Buffer (meters):"),
             bsTooltip(id = "mcp_buffer_label", placement = "right",
               title = "Brownian Bridge buffer"
             ),
-            numericInput("mcp_buffer", label = NULL, value = 1000.0,
+            numericInput("mcp_buffer", label = NULL, value = 0.005,
               width = "50%"
             ),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("mcp_plot_btn", label = "Plot"),
           ),
-          tabPanel(title = "MKDE", value = "MKDE",
+          tabPanel(title = "MKDE", value = "MKDE", tags$br(),
             tags$strong(id = "modelabel", "Mode:"),
             bsTooltip(id = "modelabel", placement = "right",
               title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"
@@ -599,7 +599,7 @@ server <- function(input, output, session) {
     # print(paste("id =", id))
     # print(paste("input$zone =", input$zone))
     # print(paste("input$datum =", input$datum))
-    map <- minConvexPolygon(data, input$zone, input$datum, id, TRUE)
+    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id, TRUE)
     #ggplot(map)
     map
   })

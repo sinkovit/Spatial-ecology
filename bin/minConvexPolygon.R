@@ -1,9 +1,10 @@
-minConvexPolygon <- function(gpsdata, utm.zone, datum, ids, include_mcp) {
+minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp) {
 
    # Input
    # gpsdata:     data frame containing animal GPS data
    # utm.zone:    zone for UTM coordinates (with or without N/S designation)
    # datum:       data projection (e.g. WGS84 or NAD83)
+   # buffer:      buffer space around the plot
    # ids:         identifiers of animals to be plotted
    # include_mcp: if true, show min convex polygon; otherwise only show data on map
    #
@@ -30,10 +31,10 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, ids, include_mcp) {
    crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
    proj4string(gpsdata.sp) <- CRS(crsstr)
    gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-   mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1])-0.005, 
-                                    bottom = min(gpsdata.spgeo@coords[,2])-0.005, 
-                                    right = max(gpsdata.spgeo@coords[,1])+0.005, 
-                                    top = max(gpsdata.spgeo@coords[,2])+0.005), 
+   mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1])-buffer, 
+                                    bottom = min(gpsdata.spgeo@coords[,2])-buffer, 
+                                    right = max(gpsdata.spgeo@coords[,1])+buffer, 
+                                    top = max(gpsdata.spgeo@coords[,2])+buffer), 
                                     zoom = 8)
 
    # Filter data based on selected animal IDs
