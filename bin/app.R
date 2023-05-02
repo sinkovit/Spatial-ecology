@@ -188,11 +188,11 @@ ui <- dashboardPage(
             actionButton("reset_data", "Reset data"),
           ),
           tabPanel(title = "MCP", value = "MCP",
-            tags$strong(id = "mcp.buffer_label", "Buffer (meters):"),
-            bsTooltip(id = "mcp.buffer_label", placement = "right",
+            tags$strong(id = "mcp_buffer_label", "Buffer (meters):"),
+            bsTooltip(id = "mcp_buffer_label", placement = "right",
               title = "Brownian Bridge buffer"
             ),
-            numericInput("mcp.buffer", label = NULL, value = 1000.0,
+            numericInput("mcp_buffer", label = NULL, value = 1000.0,
               width = "50%"
             ),
             hr(style = "border-top: 2px solid #000000;"),
@@ -257,8 +257,9 @@ ui <- dashboardPage(
       mainPanel(
         htmlOutput("instructions"),
         # https://github.com/daattali/shinycssloaders/
-        #shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 5),
+        shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 5),
         shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 5),
+        #plotOutput("mkde_plot" ),
         #hr(style = "border-top: 2px solid #000000;"),
         
         tabsetPanel(id = "tables", type = "pills",
@@ -282,20 +283,20 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
-  clear_plot <- reactiveVal(FALSE)
+  # clear_plot <- reactiveVal(FALSE)
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- TRUE
   
   # Hide the plotting control tabs until data is loaded
-  hideTab(inputId = "controls", target = "MKDE")
   hideTab(inputId = "controls", target = "MCP")
+  hideTab(inputId = "controls", target = "MKDE")
 
   output$instructions <- renderUI({
-    tagList(h4("First, load your data..." ))}
+    tagList(h4("First, load your data and verify coordinate parameters..." ))}
   )
   
-  # shinyjs::hide("mcp_plot")
+  shinyjs::hide("mcp_plot")
   # shinyjs::hide("mkde_plot")
   shinyjs::hide("tables")
   shinyjs::disable(selector = "[type=radio][value=25D]")
@@ -303,34 +304,50 @@ server <- function(input, output, session) {
   
   # When left side panel tab changes...
   observeEvent(input$controls, {
-    print(paste("input$controls = ", input$controls))
-    if (input$controls == "MCP") {
+    print(paste("** input$controls =", input$controls))
+    if (input$controls == "Data" && ! isEmpty (gps$original)) {
+      output$instructions <- renderUI({
+        tagList(h4("Load new data or change current data parameters..."),
+                tags$hr(style = "border-top: 2px solid #000000;")
+        )
+      })
+    } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
         tagList(h4("To plot:"),
                 tags$ol(tags$li("Set parameter (left)"),
                         tags$li("Choose animal(s) from Summary table (below)"),
                         tags$li("Plot (left bottom)")
                 ),
-                tags$br(),
-                tags$br(),
-                tags$br(),
+                # tags$br(),
+                # tags$br(),
+                # tags$br(),
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
+      # shinyjs::hide("mkde_plot")
+      shinyjs::show("mcp_plot")
+      # shinyjs::disable("mkde_plot")
+      # shinyjs::enable("mcp_p")
     } else if (input$controls == "MKDE") {
+      printf("here 4\n")
       output$instructions <- renderUI({
         tagList(h4("To plot:"),
                 tags$ol(tags$li("Set parameters (left)"),
                         tags$li("Choose an animal from Summary table (below)"),
                         tags$li("Plot (left bottom)")
                 ),
-                tags$br(),
-                tags$br(),
-                tags$br(),
+                # tags$br(),
+                # tags$br(),
+                # tags$br(),
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
-      printf("here 3\n")
+      #plotOutput("mkde_plot" )
+      # shinyjs::hide("mcp_plot")
+      # shinyjs::show("mkde_plot")
+      # shinyjs::disable("mcp_plot")
+      # shinyjs::enable("mkde_plot")
+      #printf("here 3\n")
     }
   })
   
@@ -465,7 +482,7 @@ server <- function(input, output, session) {
     
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
-      clear_plot (TRUE)
+      # clear_plot (TRUE)
       gps$data <- NULL
       gps$original <- NULL
       gps$rasters <- NULL
@@ -534,9 +551,9 @@ server <- function(input, output, session) {
               tags$ul(tags$li("MCP = Minimum Convex Polygon"),
                       tags$li("MKDE = Movement-based Kernel Density Estimator")
               ),
-              tags$br(),
-              tags$br(),
-              tags$br(),
+              # tags$br(),
+              # tags$br(),
+              # tags$br(),
               tags$hr(style = "border-top: 2px solid #000000;")
       )
     )
@@ -572,8 +589,24 @@ server <- function(input, output, session) {
   output$table_all <- DT::renderDataTable(table_all.data())
   output$table_summary <- DT::renderDataTable(table_summary.data())
   
+  # MCP plot
+  plot_mcp <- eventReactive(input$mcp_plot_btn, {
+    printf("mcp plot button event!\n")
+    data <- gps$data
+    #print(paste("data class =", class(data)))
+    summary <- gps$summary
+    id <- summary$id[input$table_summary_rows_selected]
+    # print(paste("id =", id))
+    # print(paste("input$zone =", input$zone))
+    # print(paste("input$datum =", input$datum))
+    map <- minConvexPolygon(data, input$zone, input$datum, id, TRUE)
+    #ggplot(map)
+    map
+  })
+  
+  # MKDE plot
   mkde.plot <- eventReactive(input$mkde_plot_btn, {
-    printf("mkde plot button event!")
+    printf("mkde plot button event!\n")
     shinyjs::hide("instructions")
     shinyjs::disable("inputs")
 
@@ -605,11 +638,11 @@ server <- function(input, output, session) {
       recalculate_raster(FALSE)
       #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
       #raster <- minConvexPolygon(data, input$zone, input$datum, id, TRUE)
-      print(paste("raster class =", class(raster)))
-      print(paste("nrow =", raster::nrow(raster), "; ncol =",
-                  raster::ncol(raster), "; ncell =", raster::ncell(raster),
-                  "dim =", dim(raster)))
-      print(paste("columns :", names(raster)))
+      # print(paste("raster class =", class(raster)))
+      # print(paste("nrow =", raster::nrow(raster), "; ncol =",
+      #             raster::ncol(raster), "; ncell =", raster::ncell(raster),
+      #             "dim =", dim(raster)))
+      # print(paste("columns :", names(raster)))
       rasters[[id]] <- raster
       gps$rasters <- rasters
     }
@@ -630,32 +663,31 @@ server <- function(input, output, session) {
     shinyjs::enable("inputs")
   })
 
-  # output$mcp_plot <- renderPlot({
-  #   printf("render mcp_plot\n")
-  #   if (clear_plot()) {
-  #     clear_plot(FALSE)
-  #     return()
-  #   } else {
-  #     print(paste("controls =", input$controls))
-  #     
-  #     if (input$controls == "MCP") {
-  #       
-  #     }
-  #   }
-  # })
+  output$mcp_plot <- renderPlot({
+    printf("render mcp_plot\n")
+    if (input$controls == "MCP") {
+      plot_mcp()
+    } else {
+      return(NULL)
+    }
+  })
   
   output$mkde_plot <- renderPlot({
     printf("render mkde_plot\n")
-    if (clear_plot()) {
-      printf("clear plot\n")
-      clear_plot(FALSE)
-      return()
-    } else {
+    # print(paste("clear_plot =", clear_plot()))
+    # if (clear_plot()) {
+    #   printf("clear plot\n")
+    #   clear_plot(FALSE)
+    #   return()
+    # } else {
+    if (input$controls == "MKDE") {
       printf("here 1\n")
-      if (input$controls == "MKDE") {
-        printf("here 2\n")
-        mkde.plot()
-      }
+      # shinyjs::hide("mcp_plot")
+      # shinyjs::show("mkde_plot")
+      mkde.plot()
+      plotOutput("mkde_plot" )
+    } else {
+      return(NULL)
     }
   })
   
