@@ -188,13 +188,13 @@ ui <- dashboardPage(
             actionButton("reset_data", "Reset data"),
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
+            radioButtons("display", label = "Display",
+                         choices = list("Polygon", "Points")),
             tags$strong(id = "mcp_buffer_label", "Buffer (meters):"),
             bsTooltip(id = "mcp_buffer_label", placement = "right",
-              title = "Brownian Bridge buffer"
-            ),
+                      title = "Brownian Bridge buffer"),
             numericInput("mcp_buffer", label = NULL, value = 0.005,
-              width = "50%"
-            ),
+                         width = "50%"),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("mcp_plot_btn", label = "Plot"),
           ),
@@ -259,9 +259,7 @@ ui <- dashboardPage(
         # https://github.com/daattali/shinycssloaders/
         shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 5),
         shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 5),
-        #plotOutput("mkde_plot" ),
-        #hr(style = "border-top: 2px solid #000000;"),
-        
+
         tabsetPanel(id = "tables", type = "pills",
           tabPanel("All", value = 1,
             shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
@@ -600,7 +598,10 @@ server <- function(input, output, session) {
     data <- gps$data
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
-    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id, TRUE)
+    mode <- TRUE
+    if (input$display == "Points")
+      mode <- FALSE
+    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id, mode)
     map
   })
   
