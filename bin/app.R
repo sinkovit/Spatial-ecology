@@ -284,6 +284,7 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
   
   # clear_plot <- reactiveVal(FALSE)
+  current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- TRUE
@@ -305,7 +306,8 @@ server <- function(input, output, session) {
   # When left side panel tab changes...
   observeEvent(input$controls, {
     print(paste("** input$controls =", input$controls))
-    if (input$controls == "Data" && ! isEmpty (gps$original)) {
+    #if (input$controls == "Data" && ! isEmpty (gps$original)) {
+    if (input$controls == "Data") {
       output$instructions <- renderUI({
         tagList(h4("Load new data or change current data parameters..."),
                 tags$hr(style = "border-top: 2px solid #000000;")
@@ -313,41 +315,36 @@ server <- function(input, output, session) {
       })
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
-        tagList(h4("To plot:"),
+        tagList(h4("To plot minimum convex polygon(s):"),
                 tags$ol(tags$li("Set parameter (left)"),
                         tags$li("Choose animal(s) from Summary table (below)"),
-                        tags$li("Plot (left bottom)")
+                        tags$li("Plot")
                 ),
-                # tags$br(),
-                # tags$br(),
-                # tags$br(),
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
-      # shinyjs::hide("mkde_plot")
+      shinyjs::hide("mkde_plot")
       shinyjs::show("mcp_plot")
       # shinyjs::disable("mkde_plot")
       # shinyjs::enable("mcp_p")
+      current_table_selection("multiple")
     } else if (input$controls == "MKDE") {
       printf("here 4\n")
       output$instructions <- renderUI({
-        tagList(h4("To plot:"),
+        tagList(h4("To plot movement-based kernel density estimator:"),
                 tags$ol(tags$li("Set parameters (left)"),
                         tags$li("Choose an animal from Summary table (below)"),
                         tags$li("Plot (left bottom)")
                 ),
-                # tags$br(),
-                # tags$br(),
-                # tags$br(),
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
       #plotOutput("mkde_plot" )
-      # shinyjs::hide("mcp_plot")
-      # shinyjs::show("mkde_plot")
+      shinyjs::hide("mcp_plot")
+      shinyjs::show("mkde_plot")
       # shinyjs::disable("mcp_plot")
       # shinyjs::enable("mkde_plot")
-      #printf("here 3\n")
+      current_table_selection("single")
     }
   })
   
@@ -561,19 +558,28 @@ server <- function(input, output, session) {
     shinyjs::show("tables")
   })
   
-  table_all.data <- eventReactive (gps$original, {
-    DT::datatable (
+  # table_all <- reactive({
+  #   
+  # })
+  
+  # Change table_all_data when input$control changes between MCP and MKDE
+  # code from https://stackoverflow.com/a/34590704/1769758
+  # table_all_data <- eventReactive (gps$original, {
+  # table_all_data <- eventReactive(list(gps$original, input$controls), {
+  table_all_data <- reactive({
+    DT::datatable(
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-      options = list (
+      options = list(
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
         #paging = FALSE, scrollX = TRUE, scrollY = TRUE, 
-        stateSave = TRUE),
-      selection = list(mode = 'single', target = 'row'))
-    })
+        stateSave = TRUE), 
+      selection = list(mode = current_table_selection(), target = 'row'))
+  })
   
-  table_summary.data <- eventReactive (gps$summary, {
+  # table_summary_data <- eventReactive (gps$summary, {
+  table_summary_data <- reactive({
     shinyjs::show ("tables")
 
     DT::datatable (
@@ -583,29 +589,22 @@ server <- function(input, output, session) {
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
         stateSave = TRUE),
-      selection = list(mode = 'single', selected = 1, target = 'row'))
+      selection = list(mode = current_table_selection(), selected = 1, target = 'row'))
   })
   
-  output$table_all <- DT::renderDataTable(table_all.data())
-  output$table_summary <- DT::renderDataTable(table_summary.data())
+  output$table_all <- DT::renderDataTable(table_all_data())
+  output$table_summary <- DT::renderDataTable(table_summary_data())
   
-  # MCP plot
   plot_mcp <- eventReactive(input$mcp_plot_btn, {
-    printf("mcp plot button event!\n")
+    printf("plot_mcp!\n")
     data <- gps$data
-    #print(paste("data class =", class(data)))
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
-    # print(paste("id =", id))
-    # print(paste("input$zone =", input$zone))
-    # print(paste("input$datum =", input$datum))
     map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id, TRUE)
-    #ggplot(map)
     map
   })
   
-  # MKDE plot
-  mkde.plot <- eventReactive(input$mkde_plot_btn, {
+  plot_mkde <- eventReactive(input$mkde_plot_btn, {
     printf("mkde plot button event!\n")
     shinyjs::hide("instructions")
     shinyjs::disable("inputs")
@@ -647,6 +646,7 @@ server <- function(input, output, session) {
       gps$rasters <- rasters
     }
     
+    print(paste("replot_mkde =", replot_mkde))
     if(replot_mkde) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
@@ -667,8 +667,8 @@ server <- function(input, output, session) {
     printf("render mcp_plot\n")
     if (input$controls == "MCP") {
       plot_mcp()
-    } else {
-      return(NULL)
+    # } else {
+    #   return(NULL)
     }
   })
   
@@ -684,10 +684,9 @@ server <- function(input, output, session) {
       printf("here 1\n")
       # shinyjs::hide("mcp_plot")
       # shinyjs::show("mkde_plot")
-      mkde.plot()
-      plotOutput("mkde_plot" )
-    } else {
-      return(NULL)
+      plot_mkde()
+    # } else {
+    #   return(NULL)
     }
   })
   
@@ -707,7 +706,7 @@ server <- function(input, output, session) {
     # following 3 lines don't work to clear the tables...
     # shinyjs::reset("table_all")
     # shinyjs::reset("table_summary")
-    # table_all.data <- DT::datatable(NULL)
+    # table_all_data <- DT::datatable(NULL)
     shinyjs::disable("data_load_btn")
     shinyjs::disable("reset_data")
     gps <- reactiveValues()
