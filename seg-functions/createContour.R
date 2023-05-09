@@ -13,6 +13,7 @@ createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE
    # Usage examples
    # createContours(rasters[[1]], probs, "condor", 11, "WGS84", all=TRUE)
    # createContours(mkde2d.obj, probs, "tejon-pig", 11, "NAD83", all=FALSE)
+   # createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
    #
    # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 
