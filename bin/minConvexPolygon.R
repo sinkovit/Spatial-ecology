@@ -4,7 +4,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
    # gpsdata:     data frame containing animal GPS data
    # utm.zone:    zone for UTM coordinates (with or without N/S designation)
    # datum:       data projection (e.g. WGS84 or NAD83)
-   # buffer:      buffer space around the plot
+   # buffer:      buffer space around the plot (m)
    # ids:         identifiers of animals to be plotted
    # include_mcp: if true, show min convex polygon; otherwise only show data on map
    #
@@ -27,14 +27,25 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
 
    # Generate the basemap using all data
    gpsdata.sp <- gpsdata[, c("id", "xdata", "ydata")]
+
+   # Add rows with buffering
+   xmin <- min(gpsdata.sp$xdata) - buffer
+   xmax <- max(gpsdata.sp$xdata) + buffer
+   ymin <- min(gpsdata.sp$ydata) - buffer
+   ymax <- max(gpsdata.sp$ydata) + buffer
+   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymin)
+   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymax)
+   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymin)
+   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymax)
+
    coordinates(gpsdata.sp) <- c("xdata", "ydata")
    crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
    proj4string(gpsdata.sp) <- CRS(crsstr)
    gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-   mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1])-buffer, 
-                                    bottom = min(gpsdata.spgeo@coords[,2])-buffer, 
-                                    right = max(gpsdata.spgeo@coords[,1])+buffer, 
-                                    top = max(gpsdata.spgeo@coords[,2])+buffer), 
+   mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
+                                    bottom = min(gpsdata.spgeo@coords[,2]),
+                                    right = max(gpsdata.spgeo@coords[,1]),
+                                    top = max(gpsdata.spgeo@coords[,2])),
                                     zoom = 8)
 
    # Filter data based on selected animal IDs
