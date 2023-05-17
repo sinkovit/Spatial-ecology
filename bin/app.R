@@ -193,7 +193,7 @@ ui <- dashboardPage(
             tags$strong(id = "mcp_buffer_label", "Buffer (meters):"),
             bsTooltip(id = "mcp_buffer_label", placement = "right",
                       title = "Brownian Bridge buffer"),
-            numericInput("mcp_buffer", label = NULL, value = 0.005,
+            numericInput("mcp_buffer", label = NULL, value = 100, min = 0,
                          width = "50%"),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("mcp_plot_btn", label = "Plot"),
@@ -307,7 +307,7 @@ server <- function(input, output, session) {
     #if (input$controls == "Data" && ! isEmpty (gps$original)) {
     if (input$controls == "Data") {
       output$instructions <- renderUI({
-        tagList(h4("Load new data or change current data parameters..."),
+        tagList(h4("Load new data and/or change current data parameters..."),
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
@@ -360,6 +360,16 @@ server <- function(input, output, session) {
       color <- ""
     }
     runjs (paste0 ("document.getElementById('zone').style.border ='", color,
+                   "'"))
+    
+    if (!is.numeric (input$mcp_buffer) || input$mcp_buffer < 0) {
+      color <- "solid #FF0000"
+      shinyjs::disable("mcp_plot_btn")
+    } else {
+      color <- ""
+      shinyjs::enable("mcp_plot_btn")
+    }
+    runjs (paste0 ("document.getElementById('mcp_buffer').style.border ='", color,
                    "'"))
     
     if (!is.numeric (input$sig2obs) || input$sig2obs <= 0) {
