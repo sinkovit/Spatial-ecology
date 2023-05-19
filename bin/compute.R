@@ -1,0 +1,223 @@
+# This software is Copyright © 2022 The Regents of the University of California.
+# All Rights Reserved. Permission to copy, modify, and distribute this software
+# and its documentation for educational, research and non-profit purposes,
+# without fee, and without a written agreement is hereby granted, provided that
+# this entire copyright appear in all copies. Permission to make commercial use
+# of this software may be obtained by contacting:
+# 
+# Office of Innovation and Commercialization
+# 9500 Gilman Drive, Mail Code 0910
+# University of California
+# La Jolla, CA 92093-0910
+# (858) 534-5815
+# invent@ucsd.edu
+#
+# This software program and documentation are copyrighted by The Regents of the
+# University of California. The software program and documentation are supplied
+# “as is”, without any accompanying services from The Regents. The Regents does
+# not warrant that the operation of the program will be uninterrupted or
+# error-free. The end-user understands that the program was developed for
+# research purposes and is advised not to rely exclusively on the program for
+# any reason.
+# 
+# IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR
+# DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+# LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+# EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE. THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED
+# HEREUNDER IS ON AN “AS IS” BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO
+# OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+# MODIFICATIONS.
+
+
+library(sp)
+library(adehabitatHR)
+library(scales)
+library(ggmap) 
+
+
+# Calculate rasters for each indivdual in a dataframe using mkde
+# package and return the results as a list of rasters
+#
+# gpsdata - data frame containing animal movement data
+# sig2obs - location error variance
+# t.max - maximum time between locations
+# cell.sz - cell size
+# xmin, xmax - min/max x coordinate
+# ymin, ymax - min/max y coordinate
+calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
+                               ymin, ymax) {
+
+  # library(mkde)
+  # library(raster)
+  
+  x <- gpsdata[which(gpsdata$id == id), "xdata"]
+  y <- gpsdata[which(gpsdata$id == id), "ydata"]
+  t <- gpsdata[which(gpsdata$id == id), "time"]
+  
+  xrange <- xmax - xmin
+  yrange <- ymax - ymin
+  
+  nx <- as.integer(xrange/cell.sz)
+  ny <- as.integer(yrange/cell.sz)
+  
+  print(paste("identifier =", id))
+  print("Home range dimensions (pixels/voxels)")
+  print(paste("nx =", nx, "ny =", ny))
+  print("Home range dimensions (meters)")
+  print(paste("xrange =", xrange, "yrange =", yrange))
+  print(paste("cell size =", cell.sz))
+  print("---------------------------------------")
+  
+  mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = t.max)
+  mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
+  dens.res <- initializeDensity(mkde.obj, mv.dat)
+  mkde.obj <- dens.res$mkde.obj
+  
+  return (mkde.obj)
+}
+
+
+# Input
+# mkde2d.obj: MKDE object
+# probs: list of probabilities for image contours
+# basename: base file name for raster and shape files
+#           basename_[all|outer]contour.[asc|dbf|shp|shx]
+# all: if true, use all probability contours, if false use only outer contour
+#
+# Output
+# Completion code (0 for success)
+#
+# Usage examples
+# createContours(rasters[[1]], probs, "condor", 11, "WGS84", all=TRUE)
+# createContours(mkde2d.obj, probs, "tejon-pig", 11, "NAD83", all=FALSE)
+# createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
+#
+# Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
+createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE) {
+  
+  # library(raster)
+  # library(mkde)
+  # library(sp)
+  
+  # Create raster from MKDE object
+  rst.mkde = mkdeToRaster(mkde2d.obj) 
+  
+  # Sort prob contours into ascending order and remove values <= 0
+  probs <- sort(probs[probs > 0])
+  probs_max <- tail(probs, n=1)
+  
+  # Set filenames and contour probabilites based on whether all
+  # contours or outer contour are used
+  if (all) {
+    filename <- paste(basename, "_allcontour", sep="")
+    contour_probs <- probs
+  } else {
+    filename <- paste(basename, "_outercontour", sep="")
+    contour_probs <- tail(probs, n=1)
+  }
+  
+  # Create CRS string
+  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
+  
+  # Plot contours
+  cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
+  rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
+  plot(rst.cont)
+  contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 2.0)
+  
+  # # Create raster of contours
+  # raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
+  # proj4string(raster.contour) = CRS(crsstr)
+  # writeRaster(rst.cont, filename, format = "ascii", overwrite = T)
+  # 
+  # # Create shapefiles of contours
+  # raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+  # proj4string(raster.contour) = CRS(crsstr)
+  # shapefile(x = raster.contour, file = filename, overwrite = T)
+  
+  # return(0)
+}
+
+
+# Input
+# gpsdata:     data frame containing animal GPS data
+# utm.zone:    zone for UTM coordinates (with or without N/S designation)
+# datum:       data projection (e.g. WGS84 or NAD83)
+# buffer:      buffer space around the plot (m)
+# ids:         identifiers of animals to be plotted
+# include_mcp: if true, show min convex polygon; otherwise only show data on map
+#
+# Output
+# mymap:       animal data, with or without min convex polygon, superimposed on map
+#
+# Usage example
+# minConvexPolygon(gpsdata, 11, "WGS84", c(269, 284), TRUE)
+# minConvexPolygon(gpsdata, 12, "NAD83, c(123, 234, 456), FALSE)
+#
+# Note - to get MCP/map to display in shiny app, call function without saving results to variable
+minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp) {
+  
+  # library(sp)
+  # library(adehabitatHR)
+  # library(scales)
+  # library(ggmap) 
+  
+  # convert animal id to string as needed by geom_polygon
+  gpsdata$id <- as.character(gpsdata$id)
+  
+  # Generate the basemap using all data
+  gpsdata.sp <- gpsdata[, c("id", "xdata", "ydata")]
+  
+  # Add rows with buffering
+  xmin <- min(gpsdata.sp$xdata) - buffer
+  xmax <- max(gpsdata.sp$xdata) + buffer
+  ymin <- min(gpsdata.sp$ydata) - buffer
+  ymax <- max(gpsdata.sp$ydata) + buffer
+  printf(paste("x:", xmin, ",", xmax, "\n"))
+  printf(paste("y:", ymin, ",", ymax, "\n"))
+  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymin)
+  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymax)
+  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymin)
+  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymax)
+  
+  coordinates(gpsdata.sp) <- c("xdata", "ydata")
+  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
+  proj4string(gpsdata.sp) <- CRS(crsstr)
+  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
+  mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
+                                      bottom = min(gpsdata.spgeo@coords[,2]),
+                                      right = max(gpsdata.spgeo@coords[,1]),
+                                      top = max(gpsdata.spgeo@coords[,2])),
+                             zoom = 8)
+  
+  # Filter data based on selected animal IDs
+  ids <- as.character(ids)
+  gpsdata.sp <- gpsdata.sp[gpsdata.sp$id %in% ids, ]
+  
+  # Prepare data and minimum convex polygon
+  gpsdata.mcp <- mcp(gpsdata.sp, percent = 100)
+  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
+  gpsdata.mcpgeo <- spTransform(gpsdata.mcp, CRS("+proj=longlat"))
+  gpsdata.geo <- data.frame(gpsdata.spgeo@coords, id = gpsdata.spgeo@data$id)
+  
+  # Plot data points on basemap
+  mymap <- ggmap(mybasemap) +
+    geom_point(data = gpsdata.geo, 
+               aes(x = xdata, y = ydata, colour = id), size = 0.8, alpha = 0.5)  +
+    theme(legend.position = c(-0.2, 0.90)) +
+    labs(x = "Longitude", y = "Latitude")
+  
+  # Add minimum convex polygon
+  if (include_mcp) {
+    mymap <- mymap +
+      geom_polygon(data = fortify(gpsdata.mcpgeo),
+                   aes(long, lat, colour = id, fill = id),
+                   alpha = 0.3) # alpha sets the transparency
+  }
+  
+  return(mymap)
+}
+

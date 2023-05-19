@@ -46,9 +46,10 @@ library(shinyBS)
 library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
 
+source("compute.R")
 source("loadDataframe.R")
-source("minConvexPolygon.R")
-source("plotDataframe.R")
+# source("minConvexPolygon.R")
+# source("plotDataframe.R")
 source("processDataframe.R")
 source("util.R")
 
@@ -257,8 +258,10 @@ ui <- dashboardPage(
       mainPanel(
         htmlOutput("instructions"),
         # https://github.com/daattali/shinycssloaders/
-        shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 5),
-        shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 5),
+        # shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 1),
+        shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 4),
+        plotOutput("mcp_plot" ),
+        # plotOutput("mkde_plot"),
 
         tabsetPanel(id = "tables", type = "pills",
           tabPanel("All", value = 1,
@@ -268,7 +271,7 @@ ui <- dashboardPage(
           ),
           tabPanel("Summary", value = 2,
             shinycssloaders::withSpinner(DT::dataTableOutput('table_summary'),
-              type = 5
+              type = 6
             )
           )
         )
@@ -285,7 +288,7 @@ server <- function(input, output, session) {
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
-  replot_mkde <- TRUE
+  replot_mkde <- reactiveVal(TRUE)
   
   # Hide the plotting control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -310,6 +313,8 @@ server <- function(input, output, session) {
         tagList(h4("Load new data and/or change current data parameters..."),
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
+        # shinyjs::hide("mcp_plot")
+        # shinyjs::hide("mkde_plot")
       })
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
@@ -352,7 +357,7 @@ server <- function(input, output, session) {
   # 2. check parameters, if invalid will turn border to red, otherwise no color
   observe ({
     recalculate_raster(TRUE)
-    replot_mkde <- TRUE
+    replot_mkde(TRUE)
     
     if (!is.numeric (input$zone) || input$zone < 1 || input$zone > 60) {
       color <- "solid #FF0000"
@@ -410,7 +415,7 @@ server <- function(input, output, session) {
   # 2. check probability parameter, if invalid will turn border to red,
   # otherwise no color
   observeEvent(input$probability, {
-    replot_mkde <- TRUE
+    replot_mkde(TRUE)
     
     # following test doesn't seem to work for the entire probability string
     # regexpr("[:alpha:]", input$probability) != -1)
@@ -657,13 +662,13 @@ server <- function(input, output, session) {
       gps$rasters <- rasters
     }
     
-    print(paste("replot_mkde =", replot_mkde))
-    if(replot_mkde) {
+    print(paste("replot_mkde =", replot_mkde()))
+    if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        # plotMKDE (raster, probs = probs, asp = rasters[[1]]$ny/rasters[[1]]$nx,
-        plotMKDE(raster, probs = probs, asp = raster$ny/raster$nx, xlab = '',
-                 ylab = '')
+        # plotMKDE(raster, probs = probs, asp = raster$ny/raster$nx, xlab = '',
+        #          ylab = '')
+        createContour(raster, probs, "tmp", input$zone, input$datum)
       },
       error = function(error_message) {
         print(paste("error message =", error_message))
@@ -685,6 +690,7 @@ server <- function(input, output, session) {
   
   output$mkde_plot <- renderPlot({
     printf("render mkde_plot\n")
+    printf(paste("input$controls =", input$controls, "\n"))
     # print(paste("clear_plot =", clear_plot()))
     # if (clear_plot()) {
     #   printf("clear plot\n")
@@ -699,6 +705,7 @@ server <- function(input, output, session) {
     # } else {
     #   return(NULL)
     }
+    printf("leaving mkde_plot\n")
   })
   
   observeEvent ( input$reset_data, {
