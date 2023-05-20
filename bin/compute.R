@@ -38,6 +38,95 @@ library(scales)
 library(ggmap) 
 
 
+# From Bob's code
+# @ https://github.com/sinkovit/Spatial-ecology/blob/Bob/code-snippets/animal_stats.R
+# The following code snippet shows how to list the stats for each
+# animal and for the data set as a whole. It also provides advice on
+# choosing pixel size.
+
+# data_df is the data frame containg data that has already been
+# transformed so that location_[lat|long].1 contain the azimuthal
+# equidistance projection and t is time in minutes relative to the
+# first observation in the entire data set
+
+# Note 1 - I'm using the R range() function for both performance and
+# to maintain more compact code. It returns a vector of min and max
+# values
+
+# Note 2 - code is written assuming that data has already been
+# loaded. The animalAttributes() function is first defined and call to
+# function is made at bottom of file
+# --------------------------------------------------------------------
+animalAttributes <- function(data_df, areaUnits) {
+  printf <- function(...) cat(sprintf(...))
+  
+  # library(sp)
+  # library(adehabitatHR)
+  # library(scales)
+  
+  gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
+  coordinates(gpsdata.sp) <- c("xdata", "ydata")
+  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
+  
+  animals <- as.list(sort(unique(data_df$id)))
+  max_pixels <- c(30, 60, 100, 300)
+  areaString <- paste("Area (", areaUnits, ")", sep="")
+  
+  result <- data.frame(id = numeric())
+  result[ , 'Easting (min)'] <- numeric()
+  result[ , 'Easting (max)'] <- numeric()
+  result[ , 'Northing (min)'] <- character()
+  result[ , 'Northing (max)'] <- character()
+  result[ , areaString] <- character()
+  row.index <- 1
+  
+  tryCatch({
+    for (local_id in animals) {
+      x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
+      y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
+      t_minmax = range(data_df[which(data_df$id == local_id), "time"])
+      x_range <- x_minmax[2] - x_minmax[1]
+      y_range <- y_minmax[2] - y_minmax[1]
+      
+      area_raw <- area_mcp[1, as.character(local_id)]
+      if (area_raw < 100) {
+        area <- sprintf("%.3f", area_raw)
+      } else if (area_raw < 1000000) {
+        area <- as.integer(area_raw)
+      } else {
+        area <- sprintf("%.3e", area_raw)      	
+      }
+      
+      row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area)
+      row.tail = c()
+      
+      # Loop over pixel sizes
+      for (max_pix in max_pixels) {
+        nx <- as.integer(x_range/max_pix)
+        ny <- as.integer(y_range/max_pix)
+        dims <- sprintf("%dx%d", nx, ny)
+        if(row.index == 1) {
+          label <- sprintf("Grid \n (%dm)", max_pix)
+          result[ , label] <- character()
+        }
+        value <- paste(dims)
+        row.tail <- append(row.tail, c(value))
+      }
+      
+      row <- append(row,row.tail)
+      result[row.index, ] <- row
+      row.index <- row.index + 1
+      
+    }
+    return(result)
+  },
+  error = function(error_message) {
+    #print(paste("error_message 2 =", error_message))
+    return(NULL)
+  })
+}
+
+
 # Calculate rasters for each indivdual in a dataframe using mkde
 # package and return the results as a list of rasters
 #
