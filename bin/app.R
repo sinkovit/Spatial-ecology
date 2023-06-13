@@ -128,7 +128,7 @@ ui <- dashboardPage(
       sidebarPanel(id = "inputs",
         tabsetPanel(id = "controls", type = "tabs",
           tabPanel(title = "Data", value = "Data", tags$br(),
-            radioButtons("data_source", "Load data from :",
+            radioButtons("data_source", "Load data from:",
               choices = c ("Gateway", "Movebank", "Your computer")
             ),
             conditionalPanel(condition = "input.data_source === 'Gateway'",
@@ -183,6 +183,17 @@ ui <- dashboardPage(
                 ),
                 selected = "WGS84"
               ),
+              # Choose/update units for animal areas
+              # hr(style = "border-top: 1px solid #000000;"),
+              # tags$strong(id = "areaUnitsLabel", "Area units:"),
+              # bsTooltip(id = "areaUnitsLabel", placement = "right",
+              #           title = "Sets units for area calculations"
+              # ),
+              # radioButtons("areaUnits", label = "Area units:",
+              #              choices = list("m2     " = 'm2', "ha" = 'ha', "km2" = 'km2'),
+              #              selected = "ha", inline = TRUE
+              # ),
+              #actionButton("updateUnits", label = "Update area units")
             ),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("data_load_btn", label = "Load data"),
@@ -204,7 +215,7 @@ ui <- dashboardPage(
             bsTooltip(id = "modelabel", placement = "right",
               title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"
             ),
-            radioButtons("mode", label = NULL,
+            radioButtons("mode", label = NULL, inline = TRUE,
               choices = list("2D" = '2D', "2.5D" = '25D', "3D" = '3D')
             ),
             tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
@@ -238,18 +249,6 @@ ui <- dashboardPage(
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
-            
-            # Choose/update units for animal areas
-            hr(style = "border-top: 2px solid #000000;"),
-            tags$strong(id = "areaUnitsLabel", "Area units:"),
-            bsTooltip(id = "areaUnitsLabel", placement = "right",
-              title = "Sets units for area calculations"
-            ),
-            radioButtons("areaUnits", label = NULL,
-              choices = list ("m2" = 'm2', "ha" = 'ha', "km2" = 'km2'),
-              selected = "ha", inline = TRUE
-            ),
-            actionButton("updateUnits", label = "Update area units")
           )
         ),
       ),
@@ -259,17 +258,33 @@ ui <- dashboardPage(
         htmlOutput("instructions"),
         # https://github.com/daattali/shinycssloaders/
         # shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 1),
-        shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 4),
+        # shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 4),
         plotOutput("mcp_plot" ),
-        # plotOutput("mkde_plot"),
+        plotOutput("mkde_plot"),
 
-        tabsetPanel(id = "tables", type = "pills",
+        tabsetPanel(
+          id = "tables",
+          type = "tabs", 
+          # header = tagList(h1("HEADER")),
           tabPanel("All", value = 1,
             shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
               type = 5
             )
           ),
           tabPanel("Summary", value = 2,
+                   # Choose/update units for animal areas
+                   # hr(style = "border-top: 1px solid #000000;"),
+                   tags$div(id = "areaUnitsDiv",
+                   tags$strong(id = "areaUnitsLabel", "Area units:"),
+                   bsTooltip(id = "areaUnitsLabel", placement = "right",
+                             title = "Sets units for area calculations"
+                   ),
+                   #tags$style(HTML("label{float:left;}")),
+                   radioButtons("areaUnits", label = "",
+                                choices = list("m2" = 'm2', "ha" = 'ha', "km2" = 'km2'),
+                                selected = "ha", inline = TRUE
+                   ),
+                   ),
             shinycssloaders::withSpinner(DT::dataTableOutput('table_summary'),
               type = 6
             )
@@ -309,13 +324,23 @@ server <- function(input, output, session) {
     print(paste("** input$controls =", input$controls))
     #if (input$controls == "Data" && ! isEmpty (gps$original)) {
     if (input$controls == "Data") {
-      output$instructions <- renderUI({
-        tagList(h4("Load new data and/or change current data parameters..."),
-                tags$hr(style = "border-top: 2px solid #000000;")
-        )
-        # shinyjs::hide("mcp_plot")
-        # shinyjs::hide("mkde_plot")
-      })
+      if (isEmpty (gps$original)) {
+        printf ("Data if...\n")
+        output$instructions <- renderUI({
+          tagList(h4("Welcome, first step is to load your data..."),
+                  tags$hr(style = "border-top: 2px solid #000000;")
+          )
+        })
+      } else {
+        printf ("Data else...\n")
+        output$instructions <- renderUI({
+          tagList(h4("Load new data and/or change current data parameters..."),
+                  tags$hr(style = "border-top: 2px solid #000000;")
+          )
+          # shinyjs::hide("mcp_plot")
+          # shinyjs::hide("mkde_plot")
+        })
+      }
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
         tagList(h4("To plot minimum convex polygon(s):"),
@@ -345,8 +370,7 @@ server <- function(input, output, session) {
       #plotOutput("mkde_plot" )
       shinyjs::hide("mcp_plot")
       shinyjs::show("mkde_plot")
-      # shinyjs::disable("mcp_plot")
-      # shinyjs::enable("mkde_plot")
+      #shinyjs::show ("instructions")
       current_table_selection("single")
     }
   })
@@ -598,6 +622,7 @@ server <- function(input, output, session) {
     DT::datatable (
       gps$summary[], extension = "Buttons",
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      #caption = tagList(h1("Caption")),
       options = list(
         autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
         pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
@@ -608,8 +633,16 @@ server <- function(input, output, session) {
   output$table_all <- DT::renderDataTable(table_all_data())
   output$table_summary <- DT::renderDataTable(table_summary_data())
   
+  observeEvent(input$areaUnits, {
+    printf(paste("input$areaunits =", input$areaUnits, "\n"))
+    printf(paste("gps$original =", gps$original, "\n"))
+    # data <- animalAttributes(gps$original, input$areaUnits)
+    # gps$summary <- data
+  })
+  
   plot_mcp <- eventReactive(input$mcp_plot_btn, {
     printf("plot_mcp!\n")
+    shinyjs::hide("instructions")
     data <- gps$data
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
@@ -621,7 +654,7 @@ server <- function(input, output, session) {
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    printf("mkde plot button event!\n")
+    printf("plot_mkde!\n")
     shinyjs::hide("instructions")
     shinyjs::disable("inputs")
 
@@ -681,11 +714,11 @@ server <- function(input, output, session) {
 
   output$mcp_plot <- renderPlot({
     printf("render mcp_plot\n")
-    if (input$controls == "MCP") {
+    # if (input$controls == "MCP") {
       plot_mcp()
     # } else {
     #   return(NULL)
-    }
+    # }
   })
   
   output$mkde_plot <- renderPlot({
@@ -697,14 +730,15 @@ server <- function(input, output, session) {
     #   clear_plot(FALSE)
     #   return()
     # } else {
-    if (input$controls == "MKDE") {
-      printf("here 1\n")
+    # if (input$controls == "MKDE") {
+    #   printf("here 1\n")
+      replot_mkde(TRUE)
       # shinyjs::hide("mcp_plot")
       # shinyjs::show("mkde_plot")
       plot_mkde()
     # } else {
     #   return(NULL)
-    }
+    # }
     printf("leaving mkde_plot\n")
   })
   
@@ -738,11 +772,11 @@ server <- function(input, output, session) {
     shinyjs::reset("probability")
   })
 
-  observeEvent ( input$updateUnits, {
-    printf(paste("Units updated to", input$areaUnits, "\n"))
-    data <- animalAttributes(gps$original, input$areaUnits)
-    gps$summary <- data
-  } )
+  # observeEvent ( input$updateUnits, {
+  #   printf(paste("Units updated to", input$areaUnits, "\n"))
+  #   data <- animalAttributes(gps$original, input$areaUnits)
+  #   gps$summary <- data
+  # } )
 }
 
 shinyApp ( ui = ui, server = server )
