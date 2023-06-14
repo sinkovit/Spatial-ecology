@@ -299,7 +299,6 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
-  # clear_plot <- reactiveVal(FALSE)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
@@ -314,32 +313,27 @@ server <- function(input, output, session) {
   )
   
   shinyjs::hide("mcp_plot")
-  # shinyjs::hide("mkde_plot")
   shinyjs::hide("tables")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
   
   # When left side panel tab changes...
   observeEvent(input$controls, {
-    print(paste("** input$controls =", input$controls))
-    #if (input$controls == "Data" && ! isEmpty (gps$original)) {
+    #print(paste("** input$controls =", input$controls))
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
-        printf ("Data if...\n")
         output$instructions <- renderUI({
           tagList(h4("Welcome, first step is to load your data..."),
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
         })
       } else {
-        printf ("Data else...\n")
         output$instructions <- renderUI({
           tagList(h4("Load new data and/or change current data parameters..."),
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
-          # shinyjs::hide("mcp_plot")
-          # shinyjs::hide("mkde_plot")
         })
+        shinyjs::click ("mkde_plot_btn")
       }
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
@@ -353,11 +347,9 @@ server <- function(input, output, session) {
       })
       shinyjs::hide("mkde_plot")
       shinyjs::show("mcp_plot")
-      # shinyjs::disable("mkde_plot")
-      # shinyjs::enable("mcp_p")
       current_table_selection("multiple")
     } else if (input$controls == "MKDE") {
-      printf("here 4\n")
+      shinyjs::click ("mkde_plot_btn")
       output$instructions <- renderUI({
         tagList(h4("To plot movement-based kernel density estimator:"),
                 tags$ol(tags$li("Set parameters (left)"),
@@ -367,10 +359,8 @@ server <- function(input, output, session) {
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
-      #plotOutput("mkde_plot" )
       shinyjs::hide("mcp_plot")
       shinyjs::show("mkde_plot")
-      #shinyjs::show ("instructions")
       current_table_selection("single")
     }
   })
@@ -516,7 +506,6 @@ server <- function(input, output, session) {
     
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
-      # clear_plot (TRUE)
       gps$data <- NULL
       gps$original <- NULL
       gps$rasters <- NULL
@@ -595,10 +584,6 @@ server <- function(input, output, session) {
     shinyjs::show("tables")
   })
   
-  # table_all <- reactive({
-  #   
-  # })
-  
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
   # table_all_data <- eventReactive (gps$original, {
@@ -633,15 +618,15 @@ server <- function(input, output, session) {
   output$table_all <- DT::renderDataTable(table_all_data())
   output$table_summary <- DT::renderDataTable(table_summary_data())
   
-  observeEvent(input$areaUnits, {
-    printf(paste("input$areaunits =", input$areaUnits, "\n"))
-    printf(paste("gps$original =", gps$original, "\n"))
-    # data <- animalAttributes(gps$original, input$areaUnits)
-    # gps$summary <- data
-  })
+  # observeEvent(input$areaUnits, {
+  #   printf(paste("input$areaunits =", input$areaUnits, "\n"))
+  #   printf(paste("gps$original =", gps$original, "\n"))
+  #   # data <- animalAttributes(gps$original, input$areaUnits)
+  #   # gps$summary <- data
+  # })
   
   plot_mcp <- eventReactive(input$mcp_plot_btn, {
-    printf("plot_mcp!\n")
+    #printf("plot_mcp!\n")
     shinyjs::hide("instructions")
     data <- gps$data
     summary <- gps$summary
@@ -654,7 +639,7 @@ server <- function(input, output, session) {
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    printf("plot_mkde!\n")
+    #printf("plot_mkde!\n")
     shinyjs::hide("instructions")
     shinyjs::disable("inputs")
 
@@ -695,12 +680,10 @@ server <- function(input, output, session) {
       gps$rasters <- rasters
     }
     
-    print(paste("replot_mkde =", replot_mkde()))
+    #print(paste("replot_mkde =", replot_mkde()))
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        # plotMKDE(raster, probs = probs, asp = raster$ny/raster$nx, xlab = '',
-        #          ylab = '')
         createContour(raster, probs, "tmp", input$zone, input$datum)
       },
       error = function(error_message) {
@@ -713,33 +696,15 @@ server <- function(input, output, session) {
   })
 
   output$mcp_plot <- renderPlot({
-    printf("render mcp_plot\n")
-    # if (input$controls == "MCP") {
-      plot_mcp()
-    # } else {
-    #   return(NULL)
-    # }
+    #printf("render mcp_plot\n")
+    plot_mcp()
   })
   
   output$mkde_plot <- renderPlot({
-    printf("render mkde_plot\n")
-    printf(paste("input$controls =", input$controls, "\n"))
-    # print(paste("clear_plot =", clear_plot()))
-    # if (clear_plot()) {
-    #   printf("clear plot\n")
-    #   clear_plot(FALSE)
-    #   return()
-    # } else {
-    # if (input$controls == "MKDE") {
-    #   printf("here 1\n")
-      replot_mkde(TRUE)
-      # shinyjs::hide("mcp_plot")
-      # shinyjs::show("mkde_plot")
-      plot_mkde()
-    # } else {
-    #   return(NULL)
-    # }
-    printf("leaving mkde_plot\n")
+    #printf("render mkde_plot\n")
+    replot_mkde(TRUE)
+    plot_mkde()
+    #printf("leaving mkde_plot\n")
   })
   
   observeEvent ( input$reset_data, {
