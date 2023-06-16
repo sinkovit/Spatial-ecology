@@ -33,14 +33,36 @@
 # MODIFICATIONS.
 */
 
+.content-wrapper,
+.right-side {
+  background-color: #ffffff;
+}
+
+#areaUnitsDiv {
+  display: flex;
+}
+
+#areaUnitsDiv .radio-inline {
+  padding-left: 30px;
+}
+
+#areaUnits-label {
+  float: left;
+}
+
+/*
 #gateway_browse_button {
   padding:0px;
 }
+*/
 
+/*
 #gateway_browse_file {
   padding:0px;
 }
+*/
 
+/*
 #gateway_browse_row {
   margin-bottom: 40px;
   position: relative;
@@ -49,41 +71,45 @@
   /*
   box-sizing: border-box;
   */
-}
+/*}*/
 
-#gateway_file_display {
+#gateway_file {
   background-color: #eee;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  /*border-radius: 4px;*/
   color: #999;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
-  margin: 0 0 0 0;
+  /*margin: 0 0 0 0;*/
   /*padding: 6px 12px 6px 12px;*/
-  /*padding: 6px 12px;*/
-  position: absolute;
-  text-align: start;
-  text-indent: 0px;
-  /*
-  position: relative;
-  float: left;
-  */
-  width: 100%;
-  /*
-  box-sizing: border-box;
-  */
-}
-
-.progress-bar {
-  display: none;
-  color: transparent!important;
-  background-color: transparent;
+  padding: 6px 12px;
+  /*position: absolute;*/
+  /*text-align: start;*/
+  /*text-indent: 0px;*/
+  /*position: relative;*/
+  /*float: left;*/
+  /*width: 100%;*/
+  /*box-sizing: border-box;*/
 }
 
 /* shinydashboard customization
    (see https://rstudio.github.io/shinydashboard/appearance.html#css) */
 .main-header {
   background-color: #1d1e20;
+}
+
+.nav-tabs {
+  border-bottom: 3px solid black;
+}
+
+.nav-tabs > li.active > a {
+  font-weight: bold,
+}
+
+.progress-bar {
+  display: none;
+  color: transparent!important;
+  background-color: transparent;
 }
 
 .shiny-output-error-validation {
@@ -102,4 +128,8 @@
 
 .skin-blue .main-header .navbar {
   background-color: #1d1e20;
+}
+
+.well {
+  background-color: #ebd9c8;
 }
