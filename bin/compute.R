@@ -173,7 +173,7 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
 # mkde2d.obj: MKDE object
 # probs: list of probabilities for image contours
 # basename: base file name for raster and shape files
-#           basename_[all|outer]contour.[asc|dbf|shp|shx]
+#           basename_[all|outer]contour.[asc|cpg|dbf|prj|shp|shx]
 # all: if true, use all probability contours, if false use only outer contour
 #
 # Output
@@ -220,7 +220,7 @@ createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE
   # # Create raster of contours
   # raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
   # proj4string(raster.contour) = CRS(crsstr)
-  # writeRaster(rst.cont, filename, format = "ascii", overwrite = T)
+  # writeRaster(rst.cont, basename, format = "ascii", overwrite = T)
   # 
   # # Create shapefiles of contours
   # raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
