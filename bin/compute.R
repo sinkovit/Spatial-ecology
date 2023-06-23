@@ -59,18 +59,17 @@ library(ggmap)
 # --------------------------------------------------------------------
 animalAttributes <- function(data_df, areaUnits) {
   printf <- function(...) cat(sprintf(...))
-  
-  # library(sp)
-  # library(adehabitatHR)
-  # library(scales)
+  print(paste("animalAttributes: areaUnits =", areaUnits))
   
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
   area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
+  print(paste("animalAttributes: area_mcp =", area_mcp))
   
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
   areaString <- paste("Area (", areaUnits, ")", sep="")
+  print(paste("animalAttributes: areaString =", areaString))
   
   result <- data.frame(id = numeric())
   result[ , 'Easting (min)'] <- numeric()
@@ -118,6 +117,7 @@ animalAttributes <- function(data_df, areaUnits) {
       row.index <- row.index + 1
       
     }
+    print(paste("animalAttributes: result =", result))
     return(result)
   },
   error = function(error_message) {
@@ -139,9 +139,6 @@ animalAttributes <- function(data_df, areaUnits) {
 calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
                                ymin, ymax) {
 
-  # library(mkde)
-  # library(raster)
-  
   x <- gpsdata[which(gpsdata$id == id), "xdata"]
   y <- gpsdata[which(gpsdata$id == id), "ydata"]
   t <- gpsdata[which(gpsdata$id == id), "time"]

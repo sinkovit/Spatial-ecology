@@ -299,10 +299,14 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
+  # Global variables
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
+  
+  
+  # Initialize UI
   
   # Hide the plotting control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -584,6 +588,9 @@ server <- function(input, output, session) {
     shinyjs::show("tables")
   })
   
+  
+  # Tables
+  
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
   # table_all_data <- eventReactive (gps$original, {
@@ -618,12 +625,18 @@ server <- function(input, output, session) {
   output$table_all <- DT::renderDataTable(table_all_data())
   output$table_summary <- DT::renderDataTable(table_summary_data())
   
-  # observeEvent(input$areaUnits, {
-  #   printf(paste("input$areaunits =", input$areaUnits, "\n"))
-  #   printf(paste("gps$original =", gps$original, "\n"))
-  #   # data <- animalAttributes(gps$original, input$areaUnits)
-  #   # gps$summary <- data
-  # })
+  observeEvent(input$areaUnits, {
+    printf(paste("input$areaunits =", input$areaUnits, "\n"))
+    #printf(paste("gps$original =", gps$original, "\n"))
+    if (!is.null(gps$original)) {
+      printf("Re-calculating spatial attributes...")
+      data <- animalAttributes(gps$original, input$areaUnits)
+      printf(paste("data =", data, "\n"))
+      printf("done\n")
+      gps$summary <- data
+    }
+  })
+  
   
   plot_mcp <- eventReactive(input$mcp_plot_btn, {
     #printf("plot_mcp!\n")
