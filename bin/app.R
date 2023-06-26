@@ -183,17 +183,6 @@ ui <- dashboardPage(
                 ),
                 selected = "WGS84"
               ),
-              # Choose/update units for animal areas
-              # hr(style = "border-top: 1px solid #000000;"),
-              # tags$strong(id = "areaUnitsLabel", "Area units:"),
-              # bsTooltip(id = "areaUnitsLabel", placement = "right",
-              #           title = "Sets units for area calculations"
-              # ),
-              # radioButtons("areaUnits", label = "Area units:",
-              #              choices = list("m2     " = 'm2', "ha" = 'ha', "km2" = 'km2'),
-              #              selected = "ha", inline = TRUE
-              # ),
-              #actionButton("updateUnits", label = "Update area units")
             ),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("data_load_btn", label = "Load data"),
@@ -246,6 +235,13 @@ ui <- dashboardPage(
             textInput("probability", label = NULL,
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
+            
+            checkboxInput("save_raster", "Save raster file"),
+            checkboxInput("save_shape", "Save shape files"),
+            conditionalPanel(condition = "input.save_raster == 1 || input.save_shape == 1",
+                             textInput("basename", "Basename"),
+            ),
+
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
@@ -320,6 +316,8 @@ server <- function(input, output, session) {
   shinyjs::hide("tables")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
+  
+  
   
   # When left side panel tab changes...
   observeEvent(input$controls, {
@@ -507,7 +505,7 @@ server <- function(input, output, session) {
   
   # Handles user "Load data" button click...
   observeEvent(input$data_load_btn, {
-    
+
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
       gps$data <- NULL
@@ -524,21 +522,26 @@ server <- function(input, output, session) {
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
+      basename <- strsplit(file$name, "\\.")[[1]]
+      basename <- basename[1]
     } else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
-
       data = results[[1]]
+      basename <- input$movebank_studyid
     } else if(input$data_source == 'Your computer') {
       printf("Loading local file %s...", input$local_file$name)
       results = loadDataframeFromFile(input$local_file$datapath)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
+      basename <- strsplit(input$local_file$name, "\\.")[[1]]
+      basename <- basename[1]
     }
+    updateTextInput(session, "basename", value = basename)
     
     rm(results)
     # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
@@ -647,7 +650,8 @@ server <- function(input, output, session) {
     mode <- TRUE
     if (input$display == "Points")
       mode <- FALSE
-    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id, mode)
+    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id,
+                            mode)
     map
   })
   
@@ -676,14 +680,9 @@ server <- function(input, output, session) {
       ymin <- min(data$ydata) - input$mkde_buffer
       ymax <- max(data$ydata) + input$mkde_buffer
       
-      print(paste("input$zone =", input$zone))
-      print(paste("input$datum =", input$datum))
-      print(paste("id =", id))
-      raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
-                                   input$cellsize, xmin, xmax, ymin, ymax)
+      raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
+                                  input$cellsize, xmin, xmax, ymin, ymax)
       recalculate_raster(FALSE)
-      #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
-      #raster <- minConvexPolygon(data, input$zone, input$datum, id, TRUE)
       # print(paste("raster class =", class(raster)))
       # print(paste("nrow =", raster::nrow(raster), "; ncol =",
       #             raster::ncol(raster), "; ncell =", raster::ncell(raster),
@@ -697,15 +696,19 @@ server <- function(input, output, session) {
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        createContour(raster, probs, "tmp", input$zone, input$datum)
+        createContour(raster, probs, input$zone, input$datum, input$save_raster,
+                      input$save_shape, input$basename)
       },
       error = function(error_message) {
         print(paste("error message =", error_message))
         shiny::validate(need(error_message == "",
                              "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+      },
+      finally = {
+        shinyjs::enable("inputs")
       })
     }
-    shinyjs::enable("inputs")
+    # shinyjs::enable("inputs")
   })
 
   output$mcp_plot <- renderPlot({

@@ -182,19 +182,16 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
 # createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
-createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE) {
-  
-  # library(raster)
-  # library(mkde)
-  # library(sp)
-  
+createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
+                          shape = FALSE, basename = NULL, all = TRUE) {
+
   # Create raster from MKDE object
-  rst.mkde = mkdeToRaster(mkde2d.obj) 
-  
+  rst.mkde = mkdeToRaster(mkde2d.obj)
+
   # Sort prob contours into ascending order and remove values <= 0
   probs <- sort(probs[probs > 0])
   probs_max <- tail(probs, n=1)
-  
+
   # Set filenames and contour probabilites based on whether all
   # contours or outer contour are used
   if (all) {
@@ -204,7 +201,7 @@ createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE
     filename <- paste(basename, "_outercontour", sep="")
     contour_probs <- tail(probs, n=1)
   }
-  
+
   # Create CRS string
   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
   
@@ -213,17 +210,28 @@ createContour <- function(mkde2d.obj, probs, basename, utm.zone, datum, all=TRUE
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
   plot(rst.cont)
   contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 2.0)
-  
-  # # Create raster of contours
-  # raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-  # proj4string(raster.contour) = CRS(crsstr)
-  # writeRaster(rst.cont, basename, format = "ascii", overwrite = T)
-  # 
-  # # Create shapefiles of contours
-  # raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
-  # proj4string(raster.contour) = CRS(crsstr)
-  # shapefile(x = raster.contour, file = filename, overwrite = T)
-  
+
+  if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
+    raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
+    proj4string(raster.contour) = CRS(crsstr)
+    
+    # Create raster of contours
+    if(raster == TRUE) {
+      printf("Writing raster to file %s.asc...", basename)
+      writeRaster(rst.cont, basename, format = "ascii", overwrite = T)
+      printf("done\n")
+    }
+
+    # Create shapefiles of contours
+    if(shape == TRUE && !is.null(basename)) {
+      raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+      proj4string(raster.contour) = CRS(crsstr)
+      printf("Writing shape to 5 files %s.*...", filename)
+      shapefile(x = raster.contour, file = filename, overwrite = T)
+      printf("done\n")
+    }
+  }
+
   # return(0)
 }
 
