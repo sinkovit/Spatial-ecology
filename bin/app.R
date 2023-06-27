@@ -132,15 +132,11 @@ ui <- dashboardPage(
               choices = c ("Gateway", "Movebank", "Your computer")
             ),
             conditionalPanel(condition = "input.data_source === 'Gateway'",
-              fluidRow(
-                column(width = 4, offset = 0,
-                  shinyFilesButton('gateway_browse', label='Browse',
-                    title = 'Select your GPS data file', multiple = FALSE,
-                    viewtype = "detail"
-                  )
-                ),
-                column(width = 8, offset = 0, htmlOutput ("gateway_file"))
+              shinyFilesButton('gateway_browse', label='Browse',
+                               title = 'Select your GPS data file',
+                               multiple = FALSE, viewtype = "detail"
               ),
+              htmlOutput("gateway_file", TRUE),
               tags$p()
             ),
             conditionalPanel(condition = "input.data_source === 'Movebank'",
@@ -160,8 +156,8 @@ ui <- dashboardPage(
             conditionalPanel(condition = "input.data_source === 'Your computer'",
               fileInput("local_file", label = NULL, multiple = FALSE,
                 buttonLabel = "Browse",
-                accept = c("text/csv", "text/comma-separated-values,text/plain",
-                  ".csv"
+                accept = c("text/csv","text/comma-separated-values,text/plain",
+                           ".csv"
                 )
               )
             ),
