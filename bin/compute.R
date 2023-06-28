@@ -300,7 +300,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   # Plot data points on basemap
   mymap <- ggmap(mybasemap) +
     geom_point(data = gpsdata.geo, 
-               aes(x = xdata, y = ydata, colour = id), size = 0.8, alpha = 0.5)  +
+               aes(x = coords.x1, y = coords.x2, colour = id), size = 0.8, alpha = 0.5)  +
     theme(legend.position = c(-0.2, 0.90)) +
     labs(x = "Longitude", y = "Latitude")
   
