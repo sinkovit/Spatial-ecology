@@ -35,7 +35,8 @@
 library(sp)
 library(adehabitatHR)
 library(scales)
-library(ggmap) 
+library(ggmap)
+library(fs)
 
 
 # From Bob's code
@@ -59,18 +60,15 @@ library(ggmap)
 # --------------------------------------------------------------------
 animalAttributes <- function(data_df, areaUnits) {
   printf <- function(...) cat(sprintf(...))
-  print(paste("animalAttributes: areaUnits =", areaUnits))
-  
+
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
   area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
-  print(paste("animalAttributes: area_mcp =", area_mcp))
-  
+
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
   areaString <- paste("Area (", areaUnits, ")", sep="")
-  print(paste("animalAttributes: areaString =", areaString))
-  
+
   result <- data.frame(id = numeric())
   result[ , 'Easting (min)'] <- numeric()
   result[ , 'Easting (max)'] <- numeric()
@@ -117,11 +115,9 @@ animalAttributes <- function(data_df, areaUnits) {
       row.index <- row.index + 1
       
     }
-    print(paste("animalAttributes: result =", result))
     return(result)
   },
   error = function(error_message) {
-    #print(paste("error_message 2 =", error_message))
     return(NULL)
   })
 }
@@ -212,13 +208,15 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
   contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 2.0)
 
   if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
+    output_file <- paste(path_home(), "/", basename, sep = "")
+    print(paste("output_file =", output_file))
     raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
     proj4string(raster.contour) = CRS(crsstr)
     
     # Create raster of contours
     if(raster == TRUE) {
-      printf("Writing raster to file %s.asc...", basename)
-      writeRaster(rst.cont, basename, format = "ascii", overwrite = T)
+      printf("Writing raster to file %s.asc...", output_file)
+      writeRaster(rst.cont, output_file, format = "ascii", overwrite = T)
       printf("done\n")
     }
 
@@ -226,8 +224,8 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
     if(shape == TRUE && !is.null(basename)) {
       raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
       proj4string(raster.contour) = CRS(crsstr)
-      printf("Writing shape to 5 files %s.*...", filename)
-      shapefile(x = raster.contour, file = filename, overwrite = T)
+      printf("Writing shape to 5 files %s.*...", output_file)
+      shapefile(x = raster.contour, file = output_file, overwrite = T)
       printf("done\n")
     }
   }

@@ -186,7 +186,7 @@ ui <- dashboardPage(
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
-                         choices = list("Polygon", "Points")),
+                         choices = list("Polygons & Points", "Points only")),
             tags$strong(id = "mcp_buffer_label", "Buffer (meters):"),
             bsTooltip(id = "mcp_buffer_label", placement = "right",
                       title = "Brownian Bridge buffer"),
@@ -234,8 +234,14 @@ ui <- dashboardPage(
             
             checkboxInput("save_raster", "Save raster file"),
             checkboxInput("save_shape", "Save shape files"),
-            conditionalPanel(condition = "input.save_raster == 1 || input.save_shape == 1",
-                             textInput("basename", "Basename"),
+            conditionalPanel(
+              condition = "input.save_raster == 1 || input.save_shape == 1",
+              textInput("basename", "Basename"),
+              HTML(paste(tags$strong("Note:"),
+                         "Files will be saved to your gateway home directory", 
+                         tags$span(style="color:red",
+                                   "and existing file(s) will be overwritten!"))),
+                             # p("<b>Note:</b> Files will be saved to your gateway home directory"),
             ),
 
             hr(style = "border-top: 2px solid #000000;"),
@@ -625,8 +631,6 @@ server <- function(input, output, session) {
   output$table_summary <- DT::renderDataTable(table_summary_data())
   
   observeEvent(input$areaUnits, {
-    printf(paste("input$areaunits =", input$areaUnits, "\n"))
-    #printf(paste("gps$original =", gps$original, "\n"))
     if (!is.null(gps$original)) {
       printf("Re-calculating spatial attributes...")
       data <- animalAttributes(gps$original, input$areaUnits)
