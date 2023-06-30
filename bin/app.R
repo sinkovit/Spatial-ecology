@@ -297,6 +297,13 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
+  print(paste("session$user:", session$user))
+  #print(paste("session$userData:", session$userData))
+  print(paste("session$clientData:", session$clientData))
+  printf("calling pdf...")
+  pdf(file = NULL)
+  printf("done\n")
+  
   # Global variables
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
