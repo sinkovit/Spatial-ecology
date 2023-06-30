@@ -8,18 +8,22 @@ https://github.com/nanohub-apps/hubtooljupytertemplate).
 
 ### The following R packages are required for this app
 1. adehabitatHR
-2. DT
-3. ggmap
-4. ggplot2
-5. mkde
-6. move
-7. R.utils
-8. raster
-9. rgdal
-10. shinycssloaders
-11. shinydashboard
-12. shinyFiles
-13. shinyjs
-14. shinyBS
-15. sp
-16. stringr
+2. fs
+3. DT
+4. ggmap
+5. ggplot2
+6. mkde
+7. move
+8. R.utils
+9. raster
+10. rgdal
+11. scales
+12. shiny
+13. shinyBS
+14. shinycssloaders
+15. shinydashboard
+16. shinyFiles
+17. shinyjs
+18. sp
+19. stringr
+20. tools

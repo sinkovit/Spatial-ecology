@@ -132,15 +132,11 @@ ui <- dashboardPage(
               choices = c ("Gateway", "Movebank", "Your computer")
             ),
             conditionalPanel(condition = "input.data_source === 'Gateway'",
-              fluidRow(
-                column(width = 4, offset = 0,
-                  shinyFilesButton('gateway_browse', label='Browse',
-                    title = 'Select your GPS data file', multiple = FALSE,
-                    viewtype = "detail"
-                  )
-                ),
-                column(width = 8, offset = 0, htmlOutput ("gateway_file"))
+              shinyFilesButton('gateway_browse', label='Browse',
+                               title = 'Select your GPS data file',
+                               multiple = FALSE, viewtype = "detail"
               ),
+              htmlOutput("gateway_file", TRUE),
               tags$p()
             ),
             conditionalPanel(condition = "input.data_source === 'Movebank'",
@@ -160,8 +156,8 @@ ui <- dashboardPage(
             conditionalPanel(condition = "input.data_source === 'Your computer'",
               fileInput("local_file", label = NULL, multiple = FALSE,
                 buttonLabel = "Browse",
-                accept = c("text/csv", "text/comma-separated-values,text/plain",
-                  ".csv"
+                accept = c("text/csv","text/comma-separated-values,text/plain",
+                           ".csv"
                 )
               )
             ),
@@ -183,17 +179,6 @@ ui <- dashboardPage(
                 ),
                 selected = "WGS84"
               ),
-              # Choose/update units for animal areas
-              # hr(style = "border-top: 1px solid #000000;"),
-              # tags$strong(id = "areaUnitsLabel", "Area units:"),
-              # bsTooltip(id = "areaUnitsLabel", placement = "right",
-              #           title = "Sets units for area calculations"
-              # ),
-              # radioButtons("areaUnits", label = "Area units:",
-              #              choices = list("m2     " = 'm2', "ha" = 'ha', "km2" = 'km2'),
-              #              selected = "ha", inline = TRUE
-              # ),
-              #actionButton("updateUnits", label = "Update area units")
             ),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("data_load_btn", label = "Load data"),
@@ -201,7 +186,7 @@ ui <- dashboardPage(
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
-                         choices = list("Polygon", "Points")),
+                         choices = list("Polygons & Points", "Points only")),
             tags$strong(id = "mcp_buffer_label", "Buffer (meters):"),
             bsTooltip(id = "mcp_buffer_label", placement = "right",
                       title = "Brownian Bridge buffer"),
@@ -246,6 +231,19 @@ ui <- dashboardPage(
             textInput("probability", label = NULL,
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
+            
+            checkboxInput("save_raster", "Save raster file"),
+            checkboxInput("save_shape", "Save shape files"),
+            conditionalPanel(
+              condition = "input.save_raster == 1 || input.save_shape == 1",
+              textInput("basename", "Basename"),
+              HTML(paste(tags$strong("Note:"),
+                         "Files will be saved to your gateway home directory", 
+                         tags$span(style="color:red",
+                                   "and existing file(s) will be overwritten!"))),
+                             # p("<b>Note:</b> Files will be saved to your gateway home directory"),
+            ),
+
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
@@ -299,10 +297,14 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
+  # Global variables
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
+  
+  
+  # Initialize UI
   
   # Hide the plotting control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -316,6 +318,8 @@ server <- function(input, output, session) {
   shinyjs::hide("tables")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
+  
+  
   
   # When left side panel tab changes...
   observeEvent(input$controls, {
@@ -503,7 +507,7 @@ server <- function(input, output, session) {
   
   # Handles user "Load data" button click...
   observeEvent(input$data_load_btn, {
-    
+
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
       gps$data <- NULL
@@ -520,21 +524,26 @@ server <- function(input, output, session) {
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
+      basename <- strsplit(file$name, "\\.")[[1]]
+      basename <- basename[1]
     } else if(input$data_source == 'Movebank') {
       printf("Accessing Movebank...\n")
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
-
       data = results[[1]]
+      basename <- input$movebank_studyid
     } else if(input$data_source == 'Your computer') {
       printf("Loading local file %s...", input$local_file$name)
       results = loadDataframeFromFile(input$local_file$datapath)
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       printf("done\n")
       data = results[[1]]
+      basename <- strsplit(input$local_file$name, "\\.")[[1]]
+      basename <- basename[1]
     }
+    updateTextInput(session, "basename", value = basename)
     
     rm(results)
     # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
@@ -584,6 +593,9 @@ server <- function(input, output, session) {
     shinyjs::show("tables")
   })
   
+  
+  # Tables
+  
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
   # table_all_data <- eventReactive (gps$original, {
@@ -618,12 +630,16 @@ server <- function(input, output, session) {
   output$table_all <- DT::renderDataTable(table_all_data())
   output$table_summary <- DT::renderDataTable(table_summary_data())
   
-  # observeEvent(input$areaUnits, {
-  #   printf(paste("input$areaunits =", input$areaUnits, "\n"))
-  #   printf(paste("gps$original =", gps$original, "\n"))
-  #   # data <- animalAttributes(gps$original, input$areaUnits)
-  #   # gps$summary <- data
-  # })
+  observeEvent(input$areaUnits, {
+    if (!is.null(gps$original)) {
+      printf("Re-calculating spatial attributes...")
+      data <- animalAttributes(gps$original, input$areaUnits)
+      printf(paste("data =", data, "\n"))
+      printf("done\n")
+      gps$summary <- data
+    }
+  })
+  
   
   plot_mcp <- eventReactive(input$mcp_plot_btn, {
     #printf("plot_mcp!\n")
@@ -634,7 +650,8 @@ server <- function(input, output, session) {
     mode <- TRUE
     if (input$display == "Points")
       mode <- FALSE
-    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id, mode)
+    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id,
+                            mode)
     map
   })
   
@@ -663,14 +680,9 @@ server <- function(input, output, session) {
       ymin <- min(data$ydata) - input$mkde_buffer
       ymax <- max(data$ydata) + input$mkde_buffer
       
-      print(paste("input$zone =", input$zone))
-      print(paste("input$datum =", input$datum))
-      print(paste("id =", id))
-      raster <- calculateRaster2D (data, id, input$sig2obs, input$tmax,
-                                   input$cellsize, xmin, xmax, ymin, ymax)
+      raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
+                                  input$cellsize, xmin, xmax, ymin, ymax)
       recalculate_raster(FALSE)
-      #raster <- minConvexPolygon(data, 11, "WGS84", id, TRUE)
-      #raster <- minConvexPolygon(data, input$zone, input$datum, id, TRUE)
       # print(paste("raster class =", class(raster)))
       # print(paste("nrow =", raster::nrow(raster), "; ncol =",
       #             raster::ncol(raster), "; ncell =", raster::ncell(raster),
@@ -684,15 +696,19 @@ server <- function(input, output, session) {
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        createContour(raster, probs, "tmp", input$zone, input$datum)
+        createContour(raster, probs, input$zone, input$datum, input$save_raster,
+                      input$save_shape, input$basename)
       },
       error = function(error_message) {
         print(paste("error message =", error_message))
         shiny::validate(need(error_message == "",
                              "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+      },
+      finally = {
+        shinyjs::enable("inputs")
       })
     }
-    shinyjs::enable("inputs")
+    # shinyjs::enable("inputs")
   })
 
   output$mcp_plot <- renderPlot({
@@ -717,13 +733,8 @@ server <- function(input, output, session) {
     shinyjs::reset("coordinates")
     shinyjs::reset("zone")
     shinyjs::reset("datum")
-    #shinyjs::reset("table_all")
-    # output$table_all <- DT::renderDataTable(NULL)
-    # output$table_summary <- DT::renderDataTable(NULL)
-    # following 3 lines don't work to clear the tables...
-    # shinyjs::reset("table_all")
-    # shinyjs::reset("table_summary")
-    # table_all_data <- DT::datatable(NULL)
+    output$table_all <- DT::renderDataTable(NULL)
+    output$table_summary <- DT::renderDataTable(NULL)
     shinyjs::disable("data_load_btn")
     shinyjs::disable("reset_data")
     gps <- reactiveValues()
