@@ -232,8 +232,12 @@ ui <- dashboardPage(
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
             
+            # tags$strong(id = "save_raster_label", "Save raster file:"),
+            # bsTooltip(id = "save_raster_label", placement = "right",
+            #           title = "filename extension"
+            # ),
             checkboxInput("save_raster", "Save raster file"),
-            checkboxInput("save_shape", "Save shape files"),
+            checkboxInput("save_shape", "Save 4 shape files"),
             conditionalPanel(
               condition = "input.save_raster == 1 || input.save_shape == 1",
               textInput("basename", "Basename"),
@@ -664,7 +668,7 @@ server <- function(input, output, session) {
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     mode <- TRUE
-    if (input$display == "Points")
+    if (input$display == "Points only")
       mode <- FALSE
     map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_buffer, id,
                             mode)
