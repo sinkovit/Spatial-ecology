@@ -507,15 +507,20 @@ server <- function(input, output, session) {
   
   # Handles user "Load data" button click...
   observeEvent(input$data_load_btn, {
+    print("caught load data button event!")
+    print(paste("gps =", gps))
+    print(paste("gps$rasters =", gps$rasters))
 
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
+      print("here 1")
       gps$data <- NULL
       gps$original <- NULL
       gps$rasters <- NULL
       gps$summary <- NULL
       shinyjs::show("instructions")
     }
+    print(paste("data_source =", input$data_source))
 
     if(input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_browse)
@@ -527,13 +532,16 @@ server <- function(input, output, session) {
       basename <- strsplit(file$name, "\\.")[[1]]
       basename <- basename[1]
     } else if(input$data_source == 'Movebank') {
+      print("here 2")
       printf("Accessing Movebank...\n")
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
+      print("here 3")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
       data = results[[1]]
       basename <- input$movebank_studyid
+      print(paste("basename =", basename))
     } else if(input$data_source == 'Your computer') {
       printf("Loading local file %s...", input$local_file$name)
       results = loadDataframeFromFile(input$local_file$datapath)
@@ -543,6 +551,7 @@ server <- function(input, output, session) {
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
     }
+    print("here 4")
     updateTextInput(session, "basename", value = basename)
     
     rm(results)
