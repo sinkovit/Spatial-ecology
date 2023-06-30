@@ -59,18 +59,15 @@ library(ggmap)
 # --------------------------------------------------------------------
 animalAttributes <- function(data_df, areaUnits) {
   printf <- function(...) cat(sprintf(...))
-  print(paste("animalAttributes: areaUnits =", areaUnits))
-  
+
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
   area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
-  print(paste("animalAttributes: area_mcp =", area_mcp))
-  
+
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
   areaString <- paste("Area (", areaUnits, ")", sep="")
-  print(paste("animalAttributes: areaString =", areaString))
-  
+
   result <- data.frame(id = numeric())
   result[ , 'Easting (min)'] <- numeric()
   result[ , 'Easting (max)'] <- numeric()
@@ -117,11 +114,9 @@ animalAttributes <- function(data_df, areaUnits) {
       row.index <- row.index + 1
       
     }
-    print(paste("animalAttributes: result =", result))
     return(result)
   },
   error = function(error_message) {
-    #print(paste("error_message 2 =", error_message))
     return(NULL)
   })
 }
