@@ -205,7 +205,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
   plot(rst.cont)
-  contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 2.0)
+  contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 1.0, drawlabels = FALSE)
 
   if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
     output_file <- paste(path_home(), "/", basename, sep = "")
