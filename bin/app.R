@@ -305,6 +305,11 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
+  # print(paste("options :", options()))
+  # increase file uplaod size to 30 MB
+  # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
+  options(shiny.maxRequestSize=30*1024^2)
+  
   # print(paste("session$user:", session$user))
   #print(paste("session$userData:", session$userData))
   # print(paste("session$clientData:", session$clientData))
@@ -543,10 +548,10 @@ server <- function(input, output, session) {
 
     # if there are rasters, then we need to clear the data and plot
     if (! is.null (gps$rasters)) {
-      gps$data <- NULL
-      gps$original <- NULL
-      gps$rasters <- NULL
-      gps$summary <- NULL
+      gps$data <<- NULL
+      gps$original <<- NULL
+      gps$rasters <<- NULL
+      gps$summary <<- NULL
       shinyjs::show("instructions")
     }
 
@@ -570,6 +575,10 @@ server <- function(input, output, session) {
                                      study = input$movebank_studyid)
       basename <- input$movebank_studyid
     } else if(input$data_source == 'Your computer') {
+      # print(paste("input$local_file$name =", input$local_file$name))
+      # print(paste("input$local_file$size =", input$local_file$size))
+      # print(paste("input$local_file$type =", input$local_file$type))
+      # print(paste("input$local_file$datapath =", input$local_file$datapath))
       filename <- input$local_file$name
       id <- "load_your_computer"
       message <- paste("Loading local file", filename, "...")
@@ -602,7 +611,7 @@ server <- function(input, output, session) {
       results <- preprocessDataframe(data)
       # display_log("done")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
-      
+
       data <- results[[1]]
   
       gps$data <- results[[1]]
@@ -618,30 +627,43 @@ server <- function(input, output, session) {
           printf("error: %s\n", result)
       }
       
+      continue <- TRUE
+      
       # printf("Calculating spatial attributes...")
       # display_log("* Calculating spatial attributes...", FALSE)
-      data <- animalAttributes(data, input$areaUnits)
-      # printf("done\n")
-      # display_log("done")
-  
-      gps$summary <- data
-      
-      # Upate UI elements
-      showTab(inputId = "controls", target = "MCP", session = session)
-      showTab(inputId = "controls", target = "MKDE", session = session)
-      output$instructions <- renderUI(
-        tagList(h4("Next, select the plot type you want..."),
-                tags$ul(tags$li("MCP = Minimum Convex Polygon"),
-                        tags$li("MKDE = Movement-based Kernel Density Estimator")
-                ),
-                # tags$br(),
-                # tags$br(),
-                # tags$br(),
-                tags$hr(style = "border-top: 2px solid #000000;")
-        )
+      tryCatch({
+          data <- animalAttributes(data, input$areaUnits)
+          # printf("done\n")
+          # display_log("done")
+        },
+        error = function(e) {
+          # print(paste("error = ", e$message))
+          showNotification(paste("Error :", e$message),
+                           duration = NULL, type = "error", session = session)
+          continue <<- FALSE
+        }
       )
-      updateTabsetPanel(session, "tables", selected = "2")
+      gps$summary <- data
       shinyjs::show("tables")
+
+      if (continue) {
+        # Upate UI elements
+        showTab(inputId = "controls", target = "MCP", session = session)
+        showTab(inputId = "controls", target = "MKDE", session = session)
+        output$instructions <- renderUI(
+          tagList(h4("Next, select the plot type you want..."),
+                  tags$ul(tags$li("MCP = Minimum Convex Polygon"),
+                          tags$li("MKDE = Movement-based Kernel Density Estimator")
+                  ),
+                  # tags$br(),
+                  # tags$br(),
+                  # tags$br(),
+                  tags$hr(style = "border-top: 2px solid #000000;")
+          )
+        )
+        updateTabsetPanel(session, "tables", selected = "2")
+        # shinyjs::show("tables")
+      }
     }
   })
   
@@ -684,10 +706,13 @@ server <- function(input, output, session) {
   
   observeEvent(input$areaUnits, {
     if (!is.null(gps$original)) {
-      printf("Re-calculating spatial attributes...")
+      id <- "recalc"
+      message <- "Re-calculating spatial attributes..."
+      showNotification(message, id = id, type = "message", session = session)
       data <- animalAttributes(gps$original, input$areaUnits)
-      printf(paste("data =", data, "\n"))
-      printf("done\n")
+      # printf(paste("data =", data, "\n"))
+      showNotification(paste(message, "done"), duration = 2, id = id,
+                       type = "message", session = session)
       gps$summary <- data
     }
   })
