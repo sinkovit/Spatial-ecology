@@ -608,7 +608,11 @@ server <- function(input, output, session) {
       # print(names(data))
   
       # display_log("* Preprocessing data...", FALSE)
+      id <- "preprocessing"
+      message <- "Preprocessing data..."
+      showNotification(message, id = id, type = "message", session = session)
       results <- preprocessDataframe(data)
+      showNotification(paste(message, "done"), id = id, type = "message", session = session)
       # display_log("done")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
@@ -631,18 +635,22 @@ server <- function(input, output, session) {
       
       # printf("Calculating spatial attributes...")
       # display_log("* Calculating spatial attributes...", FALSE)
+      id <- "attributes"
+      message <- "Calculating spatial attributes..."
       tryCatch({
-          data <- animalAttributes(data, input$areaUnits)
-          # printf("done\n")
-          # display_log("done")
-        },
-        error = function(e) {
-          # print(paste("error = ", e$message))
-          showNotification(paste("Error :", e$message),
-                           duration = NULL, type = "error", session = session)
-          continue <<- FALSE
-        }
-      )
+        showNotification(message, id = id, type = "message", session = session)
+        data <- animalAttributes(data, input$areaUnits)
+        showNotification(paste(message, "done"), id = id, type = "message",
+                         session = session)
+        # printf("done\n")
+        # display_log("done")
+      },
+      error = function(e) {
+        # print(paste("error = ", e$message))
+        showNotification(paste("Error :", e$message), id = id,
+                         duration = NULL, type = "error", session = session)
+        continue <<- FALSE
+      })
       gps$summary <- data
       shinyjs::show("tables")
 
