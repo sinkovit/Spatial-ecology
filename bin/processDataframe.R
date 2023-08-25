@@ -128,11 +128,11 @@ preprocessDataframe <- function(gpsdata) {
       }
 
       #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
+      #### Set timezone to UTC to avoid daylight savings time ambiguities
 
       if (!is.numeric(gpsdata$time)) {
-        # gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
-        gpsdata$time <- as.numeric(as.POSIXlt(gpsdata$time,
-                                              format = "%m/%e/%y %H:%M")) / 60
+        gpsdata$time <- unclass(as.POSIXct(gpsdata$time,
+		     tryFormats = c("%m/%e/%y %H:%M", "%Y-%m-%d %H:%M:%S"), tz="UTC")) / 60
       }
 
       #### Add an 'id' column if it doesn't already exist and convert to string
@@ -165,8 +165,21 @@ preprocessDataframe <- function(gpsdata) {
 	 sp::proj4string(gpsdata.latlong) <- CRS("+proj=longlat")
 	 crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
 	 gpsdata.latlong <- sp::spTransform(gpsdata.latlong, CRSobj=crs.str)
-	 gpsdata$utm.easting <- gpsdata.latlong$long
-	 gpsdata$utm.northing <- gpsdata.latlong$lat
+
+         # Note that kludge below needed so that code works everywhere
+
+	 if ('long' %in% colnames(coordinates(gpsdata.latlong))) {
+	    gpsdata$utm.easting <- gpsdata.latlong$long
+	 } else {
+	    gpsdata$utm.easting <- gpsdata.latlong$coords.x1
+	 }
+
+	 if ('lat' %in% colnames(coordinates(gpsdata.latlong))) {
+	    gpsdata$utm.northing <- gpsdata.latlong$lat
+	 } else {
+	    gpsdata$utm.northing <- gpsdata.latlong$coords.x2
+	 }
+
 	 rm(gpsdata.latlong)
 
 	 # Add N/S to UTM zone. This has to be done after conversion
