@@ -560,7 +560,8 @@ server <- function(input, output, session) {
       filename <- file$name
       id <- "load_gateway"
       message <- paste("Loading gateway file", filename, "...")
-      showNotification(message, id = id, type = "message", session = session)
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
       results = loadDataframeFromFile (file$datapath)
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
@@ -582,7 +583,8 @@ server <- function(input, output, session) {
       filename <- input$local_file$name
       id <- "load_your_computer"
       message <- paste("Loading local file", filename, "...")
-      showNotification(message, id = id, type = "message", session = session)
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
       results = loadDataframeFromFile(input$local_file$datapath)
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
@@ -610,9 +612,11 @@ server <- function(input, output, session) {
       # display_log("* Preprocessing data...", FALSE)
       id <- "preprocessing"
       message <- "Preprocessing data..."
-      showNotification(message, id = id, type = "message", session = session)
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
       results <- preprocessDataframe(data)
-      showNotification(paste(message, "done"), id = id, type = "message", session = session)
+      showNotification(paste(message, "done"), id = id, type = "message", 
+                       duration = 2, session = session)
       # display_log("done")
       shiny::validate(need(is.null(results[[2]]), results[[2]]))
 
@@ -638,10 +642,11 @@ server <- function(input, output, session) {
       id <- "attributes"
       message <- "Calculating spatial attributes..."
       tryCatch({
-        showNotification(message, id = id, type = "message", session = session)
+        showNotification(message, id = id, type = "message", duration = NULL,
+                         session = session)
         data <- animalAttributes(data, input$areaUnits)
         showNotification(paste(message, "done"), id = id, type = "message",
-                         session = session)
+                         duration = 2, session = session)
         # printf("done\n")
         # display_log("done")
       },
@@ -716,7 +721,8 @@ server <- function(input, output, session) {
     if (!is.null(gps$original)) {
       id <- "recalc"
       message <- "Re-calculating spatial attributes..."
-      showNotification(message, id = id, type = "message", session = session)
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
       data <- animalAttributes(gps$original, input$areaUnits)
       # printf(paste("data =", data, "\n"))
       showNotification(paste(message, "done"), duration = 2, id = id,
