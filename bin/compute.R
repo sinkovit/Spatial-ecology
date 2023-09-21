@@ -59,14 +59,20 @@ library(fs)
 # function is made at bottom of file
 # --------------------------------------------------------------------
 animalAttributes <- function(data_df, areaUnits) {
+  print("entered animalAttributes()")
   printf <- function(...) cat(sprintf(...))
 
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
+  print("here 1")
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
+  print("here 2")
   area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
-
+  print("here 3")
+  
   animals <- as.list(sort(unique(data_df$id)))
+  print("here 4")
   max_pixels <- c(30, 60, 100, 300)
+  print("here 5")
   areaString <- paste("Area (", areaUnits, ")", sep="")
 
   result <- data.frame(id = numeric())
@@ -79,6 +85,7 @@ animalAttributes <- function(data_df, areaUnits) {
   
   tryCatch({
     for (local_id in animals) {
+      # print(paste("local_id =", local_id))
       x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
       y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
       t_minmax = range(data_df[which(data_df$id == local_id), "time"])
@@ -115,11 +122,14 @@ animalAttributes <- function(data_df, areaUnits) {
       row.index <- row.index + 1
       
     }
+    # print(paste("result =", result))
     return(result)
   },
   error = function(error_message) {
+    print(paste("error_message =", error_message))
     return(NULL)
   })
+  print("leaving animalAttributes()")
 }
 
 
@@ -178,9 +188,12 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
 # createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
-createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
-                          shape = FALSE, basename = NULL, all = TRUE) {
-
+# createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
+#                           shape = FALSE, basename = NULL, all = TRUE) {
+# createContour <- function(mkde2d.obj, probs, utm.zone, datum, type, basename,
+#                           session, all = TRUE) {
+createContour <- function(mkde2d.obj, probs, all = TRUE) {
+  # print(paste("createContour() type =", type))
   # Create raster from MKDE object
   rst.mkde = mkdeToRaster(mkde2d.obj)
 
@@ -191,46 +204,66 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
   # Set filenames and contour probabilites based on whether all
   # contours or outer contour are used
   if (all) {
-    filename <- paste(basename, "_allcontour", sep="")
+    # filename <- paste(basename, "_allcontour", sep="")
     contour_probs <- probs
   } else {
-    filename <- paste(basename, "_outercontour", sep="")
+    # filename <- paste(basename, "_outercontour", sep="")
     contour_probs <- tail(probs, n=1)
   }
 
   # Create CRS string
-  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
+  # crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
   
   # Plot contours
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
-  rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde), na.rm = T)))
+  rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
+                                                          na.rm = TRUE)))
   plot(rst.cont)
-  contour_display <- contour(rst.mkde, add = T, levels = cont$threshold, lwd = 1.0, drawlabels = FALSE)
+  contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
+                             lwd = 1.0, drawlabels = FALSE)
+  
+  results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
+                  probabilities = contour_probs)
 
-  if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
-    output_file <- paste(path_home(), "/", basename, sep = "")
-    print(paste("output_file =", output_file))
-    raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-    proj4string(raster.contour) = CRS(crsstr)
-    
-    # Create raster of contours
-    if(raster == TRUE) {
-      printf("Writing raster to file %s.asc...", output_file)
-      writeRaster(rst.cont, output_file, format = "ascii", overwrite = T)
-      printf("done\n")
-    }
+  # if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
+  #   output_file <- paste(path_home(), "/", basename, sep = "")
+  #   print(paste("output_file =", output_file))
+  #   raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
+  #   proj4string(raster.contour) = CRS(crsstr)
+  # 
+  #   # Create raster of contours
+  #   if(raster == TRUE) {
+  #     printf("Writing raster to file %s.asc...", output_file)
+  #     # id <- "output_raster"
+  #     # message <- paste("Writing raster to file ", output_file, ".asc ... ", sep = "")
+  #     # showNotification(message, id = id, type = "message", duration = NULL,
+  #     #                  session = session)
+  #     writeRaster(rst.cont, output_file, format = "ascii", overwrite = T)
+  #     # showNotification(paste(message, "done"), id = id, type = "message",
+  #     #                  duration = NULL, session = session)
+  #     printf("done\n")
+  #   }
+  # 
+  #   # Create shapefiles of contours
+  #   if(shape == TRUE && !is.null(basename)) {
+  #     raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+  #     proj4string(raster.contour) = CRS(crsstr)
+  #     printf("Writing shape to 5 files %s.*...", output_file)
+  #     # id <- "output_shape"
+  #     # message <- paste("Writing shape files", output_file, "...")
+  #     # showNotification(message, id = id, type = "message", duration = NULL,
+  #     #                  session = session)
+  #     shapefile(x = raster.contour, file = output_file, overwrite = T)
+  #     # showNotification(paste(message, "done"), id = id, type = "message",
+  #     #                  duration = NULL, session = session)
+  #     printf("done\n")
+  #   }
+  # }
 
-    # Create shapefiles of contours
-    if(shape == TRUE && !is.null(basename)) {
-      raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
-      proj4string(raster.contour) = CRS(crsstr)
-      printf("Writing shape to 5 files %s.*...", output_file)
-      shapefile(x = raster.contour, file = output_file, overwrite = T)
-      printf("done\n")
-    }
-  }
-
-  # return(0)
+  # for shape output: raster.contour, contour_probs
+  # for raster output: rst.cont
+  
+  return(results)
 }
 
 
@@ -251,11 +284,6 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
 #
 # Note - to get MCP/map to display in shiny app, call function without saving results to variable
 minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp) {
-  
-  # library(sp)
-  # library(adehabitatHR)
-  # library(scales)
-  # library(ggmap) 
   
   # convert animal id to string as needed by geom_polygon
   gpsdata$id <- as.character(gpsdata$id)
@@ -311,8 +339,6 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
               theme(legend.position = c(-0.2, 0.90)) +
               labs(x = "Longitude", y = "Latitude")
   }
-
-
   
   # Add minimum convex polygon
   if (include_mcp) {

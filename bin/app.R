@@ -48,8 +48,6 @@ library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFi
 
 source("compute.R")
 source("loadDataframe.R")
-# source("minConvexPolygon.R")
-# source("plotDataframe.R")
 source("processDataframe.R")
 source("util.R")
 
@@ -374,9 +372,9 @@ server <- function(input, output, session) {
   # shinyjs::hide("status_log")
   shinyjs::hide("mcp_plot")
   shinyjs::hide("tables")
+  shinyjs::hide("save_files")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
-  
   
   
   # When left side panel tab changes...
@@ -484,6 +482,20 @@ server <- function(input, output, session) {
     }
     runjs (paste0 ("document.getElementById('mkde_buffer').style.border ='", color,
                    "'"))
+    
+    if (isEmpty(input$basename)) {
+      color <- "solid #FF0000"
+    } else {
+      color <- ""
+    }
+    runjs (paste0 ("document.getElementById('basename').style.border ='", color,
+                   "'"))
+    
+    if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
+      shinyjs::disable("save_mkde_btn")
+    } else {
+      shinyjs::enable("save_mkde_btn")
+    }
   })
   
   # The following observe serves 2 purposes:
@@ -774,7 +786,7 @@ server <- function(input, output, session) {
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    #printf("plot_mkde!\n")
+    printf("plot_mkde!\n")
     shinyjs::hide("instructions")
     # shinyjs::disable("inputs")
     shinyjs::disable("controls")
@@ -787,7 +799,7 @@ server <- function(input, output, session) {
       rasters <- NULL
     
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
-      raster <- rasters[[id]]
+      raster <- rasters[[id]]$raster
     } else {
       data <- gps$data
       
@@ -800,6 +812,7 @@ server <- function(input, output, session) {
       ymax <- max(data$ydata) + input$mkde_buffer
       
       # display_log("* Calculating raster...", FALSE)
+      print("calculateRaster2D()...")
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, xmin, xmax, ymin, ymax)
       # display_log("done")
@@ -809,16 +822,32 @@ server <- function(input, output, session) {
       #             raster::ncol(raster), "; ncell =", raster::ncell(raster),
       #             "dim =", dim(raster)))
       # print(paste("columns :", names(raster)))
-      rasters[[id]] <- raster
+      # print(paste("rasters id =", id))
+      rasters[[id]]$raster <- raster
+      rasters[[id]]$id <- id
+      # print(paste("rasters length =", length(rasters)))
       gps$rasters <- rasters
+      # print(paste("gps$rasters length =", length(gps$rasters)))
+
+      # Now show the save output UI
+      shinyjs::show("save_files")
     }
     
-    #print(paste("replot_mkde =", replot_mkde()))
+    # print(paste("replot_mkde =", replot_mkde()))
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        createContour(raster, probs, input$zone, input$datum, input$save_raster,
-                      input$save_shape, input$basename)
+        print(paste("save_mkde_type:", input$save_mkde_type))
+        # createContour(raster, probs, input$zone, input$datum, raster, shape,
+        #               input$basename)
+        # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
+        #               input$basename)
+        results <- createContour(raster, probs)
+        
+        # can't assign to gps$rasters directly
+        rasters <- gps$rasters
+        rasters[[id]]$contours <- results
+        gps$rasters <- rasters
       },
       error = function(error_message) {
         print(paste("error message =", error_message))
@@ -868,6 +897,26 @@ server <- function(input, output, session) {
     shinyjs::reset("cellsize")
     shinyjs::reset("mkde_buffer")
     shinyjs::reset("probability")
+  })
+  
+  observeEvent(input$save_mkde_btn, {
+    # print("save mkde output button!")
+    # print(paste("save_mkde_data =", input$save_mkde_data))
+    id <- NULL
+    if (input$save_mkde_data == "current") {
+      summary <- gps$summary
+      id <- summary$id[input$table_summary_rows_selected]
+    }
+    # print(paste("idx =", id))
+    
+    mid <- "save_output"
+    message <- paste("Saving output files...")
+    showNotification(message, id = mid, type = "message", duration = NULL,
+                     session = session)
+    save_output(input$save_mkde_type, gps$rasters, id, input$zone, input$datum,
+                input$basename)
+    showNotification(paste(message, "done"), id = mid, type = "message",
+                     duration = 2, session = session)
   })
 }
 
