@@ -66,7 +66,7 @@ animalAttributes <- function(data_df, areaUnits) {
   print("here 1")
   coordinates(gpsdata.sp) <- c("xdata", "ydata")
   print("here 2")
-  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100)
+  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100, plotit=FALSE)
   print("here 3")
   
   animals <- as.list(sort(unique(data_df$id)))
