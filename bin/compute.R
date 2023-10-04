@@ -284,13 +284,24 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   gpsdata$id <- as.character(gpsdata$id)
   
   # Generate the basemap using all data
-  gpsdata.sp <- gpsdata[, c("id", "xdata", "ydata")]
+  gpsdata.sp <- gpsdata[gpsdata$id %in% ids, c("id", "xdata", "ydata")]
   
   # Add rows with buffering
   xmin <- min(gpsdata.sp$xdata) - buffer
   xmax <- max(gpsdata.sp$xdata) + buffer
   ymin <- min(gpsdata.sp$ydata) - buffer
   ymax <- max(gpsdata.sp$ydata) + buffer
+  area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
+
+# Choose the map zoom based on area
+  if (area < 1.0) {
+    zoom = 10
+  } else if (area < 20.0) {
+    zoom = 9
+  } else {
+    zoom = 8
+  }
+
   printf(paste("x:", xmin, ",", xmax, "\n"))
   printf(paste("y:", ymin, ",", ymax, "\n"))
   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymin)
@@ -306,7 +317,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
                                       bottom = min(gpsdata.spgeo@coords[,2]),
                                       right = max(gpsdata.spgeo@coords[,1]),
                                       top = max(gpsdata.spgeo@coords[,2])),
-                             zoom = 8)
+                             zoom = zoom)
   
   # Filter data based on selected animal IDs
   ids <- as.character(ids)
