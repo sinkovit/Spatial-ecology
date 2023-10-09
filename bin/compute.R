@@ -137,16 +137,20 @@ animalAttributes <- function(data_df, areaUnits) {
 # cell.sz - cell size
 # xmin, xmax - min/max x coordinate
 # ymin, ymax - min/max y coordinate
-calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, xmin, xmax,
-                               ymin, ymax) {
+calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 
   x <- gpsdata[which(gpsdata$id == id), "xdata"]
   y <- gpsdata[which(gpsdata$id == id), "ydata"]
   t <- gpsdata[which(gpsdata$id == id), "time"]
-  
+
+  xmin = min(x) - buffer
+  xmax = max(x) + buffer 
+  ymin = min(y) - buffer
+  ymax = max(y) + buffer
+
   xrange <- xmax - xmin
   yrange <- ymax - ymin
-  
+
   nx <- as.integer(xrange/cell.sz)
   ny <- as.integer(yrange/cell.sz)
   
@@ -304,6 +308,8 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
 
   printf(paste("x:", xmin, ",", xmax, "\n"))
   printf(paste("y:", ymin, ",", ymax, "\n"))
+  printf(paste("area:", area, "\n"))
+  printf(paste("zoom:", zoom, "\n"))
   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymin)
   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymax)
   gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymin)

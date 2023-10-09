@@ -333,7 +333,7 @@ server <- function(input, output, session) {
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
   # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
-  options(shiny.maxRequestSize=30*1024^2)
+  options(shiny.maxRequestSize=100*1024^2)
   
   # print(paste("session$user:", session$user))
   #print(paste("session$userData:", session$userData))
@@ -803,18 +803,10 @@ server <- function(input, output, session) {
     } else {
       data <- gps$data
       
-      # Spatial extent can be calculated in different ways, for example from
-      # data set itself, from digital elevation model or manually set. For
-      # now, just using min/max values for the GPS readings.
-      xmin <- min(data$xdata) - input$mkde_buffer
-      xmax <- max(data$xdata) + input$mkde_buffer
-      ymin <- min(data$ydata) - input$mkde_buffer
-      ymax <- max(data$ydata) + input$mkde_buffer
-      
       # display_log("* Calculating raster...", FALSE)
       print("calculateRaster2D()...")
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
-                                  input$cellsize, xmin, xmax, ymin, ymax)
+                                  input$cellsize, input$mkde_buffer)
       # display_log("done")
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
