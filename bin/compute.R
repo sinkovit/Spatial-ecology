@@ -319,7 +319,13 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
   proj4string(gpsdata.sp) <- CRS(crsstr)
   gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-  mybasemap <- get_stamenmap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
+
+  print(min(gpsdata.spgeo@coords[,1]))
+  print(min(gpsdata.spgeo@coords[,2]))
+  print(max(gpsdata.spgeo@coords[,1]))
+  print(max(gpsdata.spgeo@coords[,2]))
+
+  mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
                                       bottom = min(gpsdata.spgeo@coords[,2]),
                                       right = max(gpsdata.spgeo@coords[,1]),
                                       top = max(gpsdata.spgeo@coords[,2])),
