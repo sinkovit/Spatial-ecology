@@ -182,7 +182,7 @@ ui <- dashboardPage(
             ),
             hr(style = "border-top: 2px solid #000000;"),
             actionButton("data_load_btn", label = "Load data"),
-            actionButton("reset_data", "Reset data"),
+            # actionButton("reset_data", "Reset data"),
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
@@ -496,10 +496,10 @@ server <- function(input, output, session) {
                                              isEmpty(input$movebank_password) ||
                                              isEmpty(input$movebank_studyid)))) {
       shinyjs::disable("data_load_btn")
-      shinyjs::disable("reset_data")
+      # shinyjs::disable("reset_data")
     } else {
       shinyjs::enable("data_load_btn")
-      shinyjs::enable("reset_data")
+      # shinyjs::enable("reset_data")
     }
   })
   
@@ -743,22 +743,22 @@ server <- function(input, output, session) {
     #printf("leaving mkde_plot\n")
   })
   
-  observeEvent ( input$reset_data, {
-    shinyjs::reset("data_source")
-    shinyjs::reset ( "local_file" )
-    shinyjs::reset ( "movebank_username" )
-    shinyjs::reset ( "movebank_password" )
-    shinyjs::reset ( "movebank_studyid" )
-    shinyjs::reset ( "movebank_save_local" )
-    shinyjs::reset("coordinates")
-    shinyjs::reset("zone")
-    shinyjs::reset("datum")
-    output$table_all <- DT::renderDataTable(NULL)
-    output$table_summary <- DT::renderDataTable(NULL)
-    shinyjs::disable("data_load_btn")
-    shinyjs::disable("reset_data")
-    gps <- reactiveValues()
-  } )
+  # observeEvent ( input$reset_data, {
+  #   shinyjs::reset("data_source")
+  #   shinyjs::reset ( "local_file" )
+  #   shinyjs::reset ( "movebank_username" )
+  #   shinyjs::reset ( "movebank_password" )
+  #   shinyjs::reset ( "movebank_studyid" )
+  #   shinyjs::reset ( "movebank_save_local" )
+  #   shinyjs::reset("coordinates")
+  #   shinyjs::reset("zone")
+  #   shinyjs::reset("datum")
+  #   output$table_all <- DT::renderDataTable(NULL)
+  #   output$table_summary <- DT::renderDataTable(NULL)
+  #   shinyjs::disable("data_load_btn")
+  #   shinyjs::disable("reset_data")
+  #   gps <- reactiveValues()
+  # } )
   
   observeEvent(input$reset_parameters, {
     shinyjs::reset("sig2obs")
