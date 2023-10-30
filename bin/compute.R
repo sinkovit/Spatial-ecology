@@ -37,7 +37,7 @@ library(adehabitatHR)
 library(scales)
 library(ggmap)
 library(fs)
-library(broom) #RSS
+library(broom) #RSSRSS - new package
 
 
 # From Bob's code
@@ -219,24 +219,35 @@ createContour <- function(mkde2d.obj, probs, all = TRUE) {
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
                                                           na.rm = TRUE)))
 
+  #RSSRSS Moved "results <- list(..." to before plot and contour_display
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
                   probabilities = contour_probs)
 
-  type = 0
+  #RSSRSS Start code to choose between original display and mkde on map
+  type = 0 #RSSRSS This will have to passed as argument to createContour()
   if(type == 1) {
     plot(rst.cont)
     contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
                              lwd = 1.0, drawlabels = FALSE)
   } else {
-    # NOTE - these arguments will need to be passed to routine
+    #RSSRSS Hardcoded crsstr for now - pass as an argument to createContour()
     crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
-    zoom = 9
 
-    # Setting bounds for map
+    # Setting bounds for map and zoom level
     xmin <- min(mkde2d.obj$x)
     ymin <- min(mkde2d.obj$y)
     xmax <- max(mkde2d.obj$x)
     ymax <- max(mkde2d.obj$y)
+    area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
+
+    if (area < 1.0) {
+      zoom = 10
+    } else if (area < 20.0) {
+      zoom = 9
+    } else {
+      zoom = 8
+    }
+
     gpsdata.sp <- data.frame(label=character(), x=double(), y=double())
     gpsdata.sp[1,] = list("dummy", xmin, ymin)
     gpsdata.sp[2,] = list("dummy", xmin, ymax)
@@ -250,7 +261,7 @@ createContour <- function(mkde2d.obj, probs, all = TRUE) {
     raster.contour <- spTransform(raster.contour, CRS("+proj=longlat"))
     tidydta2 <- tidy(raster.contour, group=group)
 
-    # Generate basemap and add mke results
+    # Generate basemap and add mkde results
     coordinates(gpsdata.sp) <- c("x", "y")
     proj4string(gpsdata.sp) <- CRS(crsstr)
     gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
@@ -265,9 +276,10 @@ createContour <- function(mkde2d.obj, probs, all = TRUE) {
           alpha=.2, linewidth=.2)
 
     plot(mymap)
-}
+  }
+  #RSSRSS End code to choose between original display and mkde on map
 
-
+  #RSSRSS - I think we can safely remove this chunk of commented code
   # if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
   #   output_file <- paste(path_home(), "/", basename, sep = "")
   #   print(paste("output_file =", output_file))
