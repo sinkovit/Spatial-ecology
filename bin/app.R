@@ -231,10 +231,11 @@ ui <- dashboardPage(
             textInput("probability", label = NULL,
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
+            # https://stackoverflow.com/questions/36709441/how-to-display-widgets-inline-in-shiny
             div(style = "display: inline-block;vertical-align:sub;",
                 checkboxInput("map", NULL, value=TRUE)),
             div(style = "display: inline-block;",
-                tags$strong(id = "maplabel", "With background map")),
+                tags$strong(id = "maplabel", "Show map background")),
             hr(style = "border-top: 2px solid grey;"),
             
             actionButton("mkde_plot_btn", label = "Plot"),
