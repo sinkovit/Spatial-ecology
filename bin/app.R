@@ -366,16 +366,31 @@ server <- function(input, output, session) {
   #   output$status_log <- renderUI({HTML(log())})
   # }
   
-  
+  ############################################################################
   # Initialize UI
   
-  # Hide the plotting control tabs until data is loaded
+  # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
   hideTab(inputId = "controls", target = "MKDE")
-
+  
   output$instructions <- renderUI({
     tagList(h4("First, load your data and verify coordinate parameters..." ))}
   )
+  
+  # Setup & display Data tab's gateway browser & selected file
+  # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
+  #               getVolumes()())
+  gateway_volumes <- c (Home = fs::path_home())
+  shinyFileChoose (input, "gateway_browse", roots = gateway_volumes,
+                   session = session)
+  output$gateway_file <-
+    renderUI ({
+      if (is.integer (input$gateway_browse)) {
+        HTML ("No file selected")
+      } else {
+        tmp <- parseFilePaths (gateway_volumes, input$gateway_browse)
+        HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
+      }})
   
   # shinyjs::hide("status_log")
   shinyjs::hide("mcp_plot")
@@ -383,9 +398,11 @@ server <- function(input, output, session) {
   shinyjs::hide("save_files")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
+
+  ############################################################################
+  # Handle UI events
   
-  
-  # When left side panel tab changes...
+  # Handle control panel tab changes...
   observeEvent(input$controls, {
     #print(paste("** input$controls =", input$controls))
     if (input$controls == "Data") {
@@ -433,10 +450,180 @@ server <- function(input, output, session) {
     }
   })
   
+  # Update Movebank local filename based on studyid...
+  observeEvent(input$movebank_studyid, {
+    updateTextInput(session, "movebank_local_filename",
+                    value = paste("movebank-", input$movebank_studyid, ".csv",
+                                  sep = ""))
+  })
+  
+  # If the required load data input is missing, disable button; otherwise enable...
+  observe({
+    if ((input$data_source == 'Gateway') &&
+        isEmpty (parseFilePaths (gateway_volumes, input$gateway_browse)$name) ||
+        (input$data_source == 'Your computer' && isEmpty(input$local_file)) ||
+        (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
+                                             isEmpty(input$movebank_password) ||
+                                             isEmpty(input$movebank_studyid)))) {
+      shinyjs::disable("data_load_btn")
+      # shinyjs::disable("reset_data")
+    } else {
+      shinyjs::enable("data_load_btn")
+      # shinyjs::enable("reset_data")
+    }
+  })
+  
+  # Handle Data tab "Load data" button click...
+  observeEvent(input$data_load_btn, {
+    # eventReactive(input$data_load_btn, {
+    
+    # print("caught load data button event!")
+    # print(paste("gps =", gps))
+    # print(paste("gps$rasters =", gps$rasters))
+    
+    # shinyjs::show("status_log")
+    
+    # if there are rasters, then we need to clear the data and plot
+    if (! is.null (gps$rasters)) {
+      gps$data <<- NULL
+      gps$original <<- NULL
+      gps$rasters <<- NULL
+      gps$summary <<- NULL
+      shinyjs::show("instructions")
+    }
+    
+    if (input$data_source == 'Gateway') {
+      file <- parseFilePaths (gateway_volumes, input$gateway_browse)
+      filename <- file$name
+      id <- "load_gateway"
+      message <- paste("Loading gateway file", filename, "...")
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
+      results = loadDataframeFromFile (file$datapath)
+      basename <- strsplit(filename, "\\.")[[1]]
+      basename <- basename[1]
+    } else if (input$data_source == 'Movebank') {
+      filename <- input$movebank_studyid
+      id <- "load_movebank"
+      message <- "Accessing Movebank..."
+      showNotification(message, duration = NULL, id = id, type = "message",
+                       session = session)
+      results <- loadDataframeFromMB(username = input$movebank_username,
+                                     password = input$movebank_password,
+                                     study = input$movebank_studyid)
+      basename <- input$movebank_studyid
+    } else if(input$data_source == 'Your computer') {
+      # print(paste("input$local_file$name =", input$local_file$name))
+      # print(paste("input$local_file$size =", input$local_file$size))
+      # print(paste("input$local_file$type =", input$local_file$type))
+      # print(paste("input$local_file$datapath =", input$local_file$datapath))
+      filename <- input$local_file$name
+      id <- "load_your_computer"
+      message <- paste("Loading local file", filename, "...")
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
+      results = loadDataframeFromFile(input$local_file$datapath)
+      basename <- strsplit(input$local_file$name, "\\.")[[1]]
+      basename <- basename[1]
+    }
+    
+    data <- results[[1]]
+    # print(paste("filename =", filename))
+    # print(paste("id = ", id))
+    # print(paste("data nrow =", nrow(data)))
+    # print(paste("basename = ", basename))
+    # print(paste("results[2] =", results[[2]]))
+    if (length(results[[2]] > 0)) {
+      removeNotification(id = id, session = session)
+      showNotification(paste("Error", filename, ":", results[[2]]),
+                       duration = NULL, type = "error", session = session)
+    } else {
+      showNotification(paste(message, "done"), duration = 2, id = id,
+                       type = "message", session = session)
+      updateTextInput(session, "basename", value = basename)
+      
+      rm(results)
+      # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
+      # print(names(data))
+      
+      # display_log("* Preprocessing data...", FALSE)
+      id <- "preprocessing"
+      message <- "Preprocessing data..."
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
+      results <- preprocessDataframe(data)
+      showNotification(paste(message, "done"), id = id, type = "message", 
+                       duration = 2, session = session)
+      # display_log("done")
+      shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      
+      data <- results[[1]]
+      
+      gps$data <- results[[1]]
+      gps$original <- results[[1]]
+      
+      # Now save MB data locally
+      if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
+        # printf("Saving local file %s...", input$movebank_local_filename)
+        result = saveDataframeFromMB(gps$original, input$movebank_local_filename)
+        if(is.null(result))
+          printf("done\n")
+        else
+          printf("error: %s\n", result)
+      }
+      
+      continue <- TRUE
+      
+      # printf("Calculating spatial attributes...")
+      # display_log("* Calculating spatial attributes...", FALSE)
+      id <- "attributes"
+      message <- "Calculating spatial attributes..."
+      tryCatch({
+        showNotification(message, id = id, type = "message", duration = NULL,
+                         session = session)
+        data <- animalAttributes(data, input$areaUnits)
+        showNotification(paste(message, "done"), id = id, type = "message",
+                         duration = 2, session = session)
+        # printf("done\n")
+        # display_log("done")
+      },
+      error = function(e) {
+        # print(paste("error = ", e$message))
+        showNotification(paste("Error :", e$message), id = id,
+                         duration = NULL, type = "error", session = session)
+        continue <<- FALSE
+      })
+      gps$summary <- data
+      shinyjs::show("tables")
+      
+      if (continue) {
+        # Upate UI elements
+        showTab(inputId = "controls", target = "MCP", session = session)
+        showTab(inputId = "controls", target = "MKDE", session = session)
+        output$instructions <- renderUI(
+          tagList(h4("Next, select the plot type you want..."),
+                  tags$ul(tags$li("MCP = Minimum Convex Polygon"),
+                          tags$li("MKDE = Movement-based Kernel Density Estimator")
+                  ),
+                  # tags$br(),
+                  # tags$br(),
+                  # tags$br(),
+                  tags$hr(style = "border-top: 2px solid #000000;")
+          )
+        )
+        updateTabsetPanel(session, "tables", selected = "2")
+        # shinyjs::show("tables")
+      }
+    }
+  })
+  
+  # Handle MKDE tab events...
+  
   # The following observe serves 2 purposes:
-  # 1. any of the inputs involved with raster calculation changes, set flag to
-  # clear rasters
-  # 2. check parameters, if invalid will turn border to red, otherwise no color
+  # 1. any of the MKDE parameters involved with raster calculation changes, set
+  #    flag to clear rasters
+  # 2. check MKDE parameters, if invalid will turn border to red, otherwise no
+  #   color
   observe ({
     recalculate_raster(TRUE)
     replot_mkde(TRUE)
@@ -499,11 +686,11 @@ server <- function(input, output, session) {
     runjs (paste0 ("document.getElementById('basename').style.border ='", color,
                    "'"))
     
-    if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
-      shinyjs::disable("save_mkde_btn")
-    } else {
-      shinyjs::enable("save_mkde_btn")
-    }
+    # if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
+    #   shinyjs::disable("save_mkde_btn")
+    # } else {
+    #   shinyjs::enable("save_mkde_btn")
+    # }
   })
   
   # The following observe serves 2 purposes:
@@ -532,204 +719,50 @@ server <- function(input, output, session) {
                    color, "'"))
   })
   
-  # setup & display the gateway browser & selected file
-  # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
-  #               getVolumes()())
-  gateway_volumes <- c (Home = fs::path_home())
-  shinyFileChoose (input, "gateway_browse", roots = gateway_volumes,
-                   session = session)
-  output$gateway_file <-
-    renderUI ({
-      if (is.integer (input$gateway_browse)) {
-        HTML ("No file selected")
-      } else {
-        tmp <- parseFilePaths (gateway_volumes, input$gateway_browse)
-        HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
-      }})
-
-  # Update MB local filename based on studyid...
-  observeEvent(input$movebank_studyid, {
-    updateTextInput(session, "movebank_local_filename",
-                    value = paste("movebank-", input$movebank_studyid, ".csv",
-                                  sep = ""))
-  })
-  
-  # If the required load data input is missing, disable buttons; otherwise enable...
-  observe({
-    if ((input$data_source == 'Gateway') &&
-        isEmpty (parseFilePaths (gateway_volumes, input$gateway_browse)$name) ||
-        (input$data_source == 'Your computer' && isEmpty(input$local_file)) ||
-        (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
-                                             isEmpty(input$movebank_password) ||
-                                             isEmpty(input$movebank_studyid)))) {
-      shinyjs::disable("data_load_btn")
-      # shinyjs::disable("reset_data")
-    } else {
-      shinyjs::enable("data_load_btn")
-      # shinyjs::enable("reset_data")
-    }
-  })
-  
-  # If there is data and cell size is valid and a table row is selected, enable
-  # Plot button
+  # Handle events that should enable/disable MKDE plot button
   observe ({
-    if (! isEmpty (gps$original)  &&
-       is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
-       is.numeric(input$tmax)     && input$tmax >= 0 &&
-       is.numeric(input$cellsize) && input$cellsize >= 1 &&
-       is.numeric(input$mkde_buffer)   && input$mkde_buffer >= 0)
-      shinyjs::enable("mkde_plot_btn")
-    else
+    # if (! isEmpty (gps$original)  &&
+    #    is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
+    #    is.numeric(input$tmax)     && input$tmax >= 0 &&
+    #    is.numeric(input$cellsize) && input$cellsize >= 1 &&
+    #    is.numeric(input$mkde_buffer)   && input$mkde_buffer >= 0)
+    #   shinyjs::enable("mkde_plot_btn")
+    # else
+    #   shinyjs::disable("mkde_plot_btn")
+    
+    #if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected) ||
+    if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
+        (is.numeric(input$tmax) && input$tmax < 0) ||
+        (is.numeric(input$cellsize) && input$cellsize < 1) ||
+        (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0))
       shinyjs::disable("mkde_plot_btn")
+    else
+      shinyjs::enable("mkde_plot_btn")
   })
-  
-  # Handles user "Load data" button click...
-  observeEvent(input$data_load_btn, {
-  # eventReactive(input$data_load_btn, {
-    
-    # print("caught load data button event!")
-    # print(paste("gps =", gps))
-    # print(paste("gps$rasters =", gps$rasters))
-    
-    # shinyjs::show("status_log")
 
-    # if there are rasters, then we need to clear the data and plot
-    if (! is.null (gps$rasters)) {
-      gps$data <<- NULL
-      gps$original <<- NULL
-      gps$rasters <<- NULL
-      gps$summary <<- NULL
-      shinyjs::show("instructions")
-    }
-
-    if (input$data_source == 'Gateway') {
-      file <- parseFilePaths (gateway_volumes, input$gateway_browse)
-      filename <- file$name
-      id <- "load_gateway"
-      message <- paste("Loading gateway file", filename, "...")
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
-      results = loadDataframeFromFile (file$datapath)
-      basename <- strsplit(filename, "\\.")[[1]]
-      basename <- basename[1]
-    } else if (input$data_source == 'Movebank') {
-      filename <- input$movebank_studyid
-      id <- "load_movebank"
-      message <- "Accessing Movebank..."
-      showNotification(message, duration = NULL, id = id, type = "message",
-                       session = session)
-      results <- loadDataframeFromMB(username = input$movebank_username,
-                                     password = input$movebank_password,
-                                     study = input$movebank_studyid)
-      basename <- input$movebank_studyid
-    } else if(input$data_source == 'Your computer') {
-      # print(paste("input$local_file$name =", input$local_file$name))
-      # print(paste("input$local_file$size =", input$local_file$size))
-      # print(paste("input$local_file$type =", input$local_file$type))
-      # print(paste("input$local_file$datapath =", input$local_file$datapath))
-      filename <- input$local_file$name
-      id <- "load_your_computer"
-      message <- paste("Loading local file", filename, "...")
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
-      results = loadDataframeFromFile(input$local_file$datapath)
-      basename <- strsplit(input$local_file$name, "\\.")[[1]]
-      basename <- basename[1]
-    }
-    
-    data <- results[[1]]
-    # print(paste("filename =", filename))
-    # print(paste("id = ", id))
-    # print(paste("data nrow =", nrow(data)))
-    # print(paste("basename = ", basename))
-    # print(paste("results[2] =", results[[2]]))
-    if (length(results[[2]] > 0)) {
-      removeNotification(id = id, session = session)
-      showNotification(paste("Error", filename, ":", results[[2]]),
-                       duration = NULL, type = "error", session = session)
+  # If no basename nor save mkde type, then disable save mkde button
+  observe ({
+    if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
+      shinyjs::disable("save_mkde_btn")
     } else {
-      showNotification(paste(message, "done"), duration = 2, id = id,
-                       type = "message", session = session)
-      updateTextInput(session, "basename", value = basename)
-      
-      rm(results)
-      # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
-      # print(names(data))
-  
-      # display_log("* Preprocessing data...", FALSE)
-      id <- "preprocessing"
-      message <- "Preprocessing data..."
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
-      results <- preprocessDataframe(data)
-      showNotification(paste(message, "done"), id = id, type = "message", 
-                       duration = 2, session = session)
-      # display_log("done")
-      shiny::validate(need(is.null(results[[2]]), results[[2]]))
-
-      data <- results[[1]]
-  
-      gps$data <- results[[1]]
-      gps$original <- results[[1]]
-      
-      # Now save MB data locally
-      if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
-        # printf("Saving local file %s...", input$movebank_local_filename)
-        result = saveDataframeFromMB(gps$original, input$movebank_local_filename)
-        if(is.null(result))
-          printf("done\n")
-        else
-          printf("error: %s\n", result)
-      }
-      
-      continue <- TRUE
-      
-      # printf("Calculating spatial attributes...")
-      # display_log("* Calculating spatial attributes...", FALSE)
-      id <- "attributes"
-      message <- "Calculating spatial attributes..."
-      tryCatch({
-        showNotification(message, id = id, type = "message", duration = NULL,
-                         session = session)
-        data <- animalAttributes(data, input$areaUnits)
-        showNotification(paste(message, "done"), id = id, type = "message",
-                         duration = 2, session = session)
-        # printf("done\n")
-        # display_log("done")
-      },
-      error = function(e) {
-        # print(paste("error = ", e$message))
-        showNotification(paste("Error :", e$message), id = id,
-                         duration = NULL, type = "error", session = session)
-        continue <<- FALSE
-      })
-      gps$summary <- data
-      shinyjs::show("tables")
-
-      if (continue) {
-        # Upate UI elements
-        showTab(inputId = "controls", target = "MCP", session = session)
-        showTab(inputId = "controls", target = "MKDE", session = session)
-        output$instructions <- renderUI(
-          tagList(h4("Next, select the plot type you want..."),
-                  tags$ul(tags$li("MCP = Minimum Convex Polygon"),
-                          tags$li("MKDE = Movement-based Kernel Density Estimator")
-                  ),
-                  # tags$br(),
-                  # tags$br(),
-                  # tags$br(),
-                  tags$hr(style = "border-top: 2px solid #000000;")
-          )
-        )
-        updateTabsetPanel(session, "tables", selected = "2")
-        # shinyjs::show("tables")
-      }
+      shinyjs::enable("save_mkde_btn")
     }
   })
   
   
   # Tables
   
+  # Handle no data or no table row selected...
+  observe ({
+    if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
+      shinyjs::disable("mkde_plot_btn")
+      shinyjs::disable("mcp_plot_btn")
+    } else {
+      shinyjs::enable("mkde_plot_btn")
+      shinyjs::enable("mcp_plot_btn")
+    }
+  })
+
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
   # table_all_data <- eventReactive (gps$original, {
