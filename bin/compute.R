@@ -1,4 +1,4 @@
-# This software is Copyright © 2022 The Regents of the University of California.
+# This software is Copyright 2022 The Regents of the University of California.
 # All Rights Reserved. Permission to copy, modify, and distribute this software
 # and its documentation for educational, research and non-profit purposes,
 # without fee, and without a written agreement is hereby granted, provided that
@@ -37,6 +37,7 @@ library(adehabitatHR)
 library(scales)
 library(ggmap)
 library(fs)
+library(broom)
 
 
 # From Bob's code
@@ -59,7 +60,7 @@ library(fs)
 # function is made at bottom of file
 # --------------------------------------------------------------------
 animalAttributes <- function(data_df, areaUnits) {
-  print("entered animalAttributes()")
+  # print("entered animalAttributes()")
   printf <- function(...) cat(sprintf(...))
 
   gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
@@ -191,8 +192,7 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 #                           shape = FALSE, basename = NULL, all = TRUE) {
 # createContour <- function(mkde2d.obj, probs, utm.zone, datum, type, basename,
 #                           session, all = TRUE) {
-createContour <- function(mkde2d.obj, probs, all = TRUE) {
-  # print(paste("createContour() type =", type))
+createContour <- function(mkde2d.obj, probs, map, all = TRUE) {
   # Create raster from MKDE object
   rst.mkde = mkdeToRaster(mkde2d.obj)
 
@@ -217,13 +217,70 @@ createContour <- function(mkde2d.obj, probs, all = TRUE) {
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
                                                           na.rm = TRUE)))
-  plot(rst.cont)
-  contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
-                             lwd = 1.0, drawlabels = FALSE)
+  # plot(rst.cont)
+  # contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
+  #                            lwd = 1.0, drawlabels = FALSE)
   
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
                   probabilities = contour_probs)
 
+  #RSSRSS Start code to choose between original display and mkde on map
+  type = 1 #RSSRSS This will have to passed as argument to createContour()
+  #if(type == 1) {
+  if (map) {
+    #RSSRSS Hardcoded crsstr for now - pass as an argument to createContour()
+    crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
+    
+    # Setting bounds for map and zoom level
+    xmin <- min(mkde2d.obj$x)
+    ymin <- min(mkde2d.obj$y)
+    xmax <- max(mkde2d.obj$x)
+    ymax <- max(mkde2d.obj$y)
+    area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
+    
+    if (area < 1.0) {
+      zoom = 10
+    } else if (area < 20.0) {
+      zoom = 9
+    } else {
+      zoom = 8
+    }
+    
+    gpsdata.sp <- data.frame(label=character(), x=double(), y=double())
+    gpsdata.sp[1,] = list("dummy", xmin, ymin)
+    gpsdata.sp[2,] = list("dummy", xmin, ymax)
+    gpsdata.sp[3,] = list("dummy", xmax, ymin)
+    gpsdata.sp[4,] = list("dummy", xmax, ymax)
+    
+    # Convert contour data to lat-long
+    raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
+    raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+    proj4string(raster.contour) = CRS(crsstr)
+    raster.contour <- spTransform(raster.contour, CRS("+proj=longlat"))
+    tidydta2 <- tidy(raster.contour, group=group)
+    
+    # Generate basemap and add mkde results
+    coordinates(gpsdata.sp) <- c("x", "y")
+    proj4string(gpsdata.sp) <- CRS(crsstr)
+    gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
+    mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
+                                        bottom = min(gpsdata.spgeo@coords[,2]),
+                                        right = max(gpsdata.spgeo@coords[,1]),
+                                        top = max(gpsdata.spgeo@coords[,2])),
+                               zoom = zoom)
+    mymap <- ggmap(mybasemap) +
+      geom_polygon(aes(x=long, y=lat, group=group),
+                   data=tidydta2,
+                   alpha=.2, linewidth=.2)
+    
+    plot(mymap)
+  } else {
+    plot(rst.cont)
+    contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
+                               lwd = 1.0, drawlabels = FALSE)
+  }
+  #RSSRSS End code to choose between original display and mkde on map
+  
   # if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
   #   output_file <- paste(path_home(), "/", basename, sep = "")
   #   print(paste("output_file =", output_file))

@@ -1,4 +1,4 @@
-# This software is Copyright © 2022 The Regents of the University of California.
+# This software is Copyright 2022 The Regents of the University of California.
 # All Rights Reserved. Permission to copy, modify, and distribute this software
 # and its documentation for educational, research and non-profit purposes,
 # without fee, and without a written agreement is hereby granted, provided that
@@ -45,6 +45,8 @@ library(stringr)
 library(shinyBS)
 library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
+# library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
+#                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 
 source("compute.R")
 source("loadDataframe.R")
@@ -180,7 +182,7 @@ ui <- dashboardPage(
             ),
             hr(style = "border-top: 2px solid grey;"),
             actionButton("data_load_btn", label = "Load data"),
-            actionButton("reset_data", "Reset data"),
+            # actionButton("reset_data", "Reset data"),
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
@@ -229,7 +231,12 @@ ui <- dashboardPage(
             textInput("probability", label = NULL,
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
+            div(style = "display: inline-block;vertical-align:sub;",
+                checkboxInput("map", NULL, value=TRUE)),
+            div(style = "display: inline-block;",
+                tags$strong(id = "maplabel", "With background map")),
             hr(style = "border-top: 2px solid grey;"),
+            
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
             
@@ -555,10 +562,10 @@ server <- function(input, output, session) {
                                              isEmpty(input$movebank_password) ||
                                              isEmpty(input$movebank_studyid)))) {
       shinyjs::disable("data_load_btn")
-      shinyjs::disable("reset_data")
+      # shinyjs::disable("reset_data")
     } else {
       shinyjs::enable("data_load_btn")
-      shinyjs::enable("reset_data")
+      # shinyjs::enable("reset_data")
     }
   })
   
@@ -786,7 +793,7 @@ server <- function(input, output, session) {
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    printf("plot_mkde!\n")
+    # printf("plot_mkde!\n")
     shinyjs::hide("instructions")
     # shinyjs::disable("inputs")
     shinyjs::disable("controls")
@@ -804,7 +811,7 @@ server <- function(input, output, session) {
       data <- gps$data
       
       # display_log("* Calculating raster...", FALSE)
-      print("calculateRaster2D()...")
+      # print("calculateRaster2D()...")
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
       # display_log("done")
@@ -829,12 +836,12 @@ server <- function(input, output, session) {
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        print(paste("save_mkde_type:", input$save_mkde_type))
+        # print(paste("save_mkde_type:", input$save_mkde_type))
         # createContour(raster, probs, input$zone, input$datum, raster, shape,
         #               input$basename)
         # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
         #               input$basename)
-        results <- createContour(raster, probs)
+        results <- createContour(raster, probs, input$map)
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
@@ -866,22 +873,22 @@ server <- function(input, output, session) {
     #printf("leaving mkde_plot\n")
   })
   
-  observeEvent ( input$reset_data, {
-    shinyjs::reset("data_source")
-    shinyjs::reset ( "local_file" )
-    shinyjs::reset ( "movebank_username" )
-    shinyjs::reset ( "movebank_password" )
-    shinyjs::reset ( "movebank_studyid" )
-    shinyjs::reset ( "movebank_save_local" )
-    shinyjs::reset("coordinates")
-    shinyjs::reset("zone")
-    shinyjs::reset("datum")
-    output$table_all <- DT::renderDataTable(NULL)
-    output$table_summary <- DT::renderDataTable(NULL)
-    shinyjs::disable("data_load_btn")
-    shinyjs::disable("reset_data")
-    gps <- reactiveValues()
-  } )
+  # observeEvent ( input$reset_data, {
+  #   shinyjs::reset("data_source")
+  #   shinyjs::reset ( "local_file" )
+  #   shinyjs::reset ( "movebank_username" )
+  #   shinyjs::reset ( "movebank_password" )
+  #   shinyjs::reset ( "movebank_studyid" )
+  #   shinyjs::reset ( "movebank_save_local" )
+  #   shinyjs::reset("coordinates")
+  #   shinyjs::reset("zone")
+  #   shinyjs::reset("datum")
+  #   output$table_all <- DT::renderDataTable(NULL)
+  #   output$table_summary <- DT::renderDataTable(NULL)
+  #   shinyjs::disable("data_load_btn")
+  #   shinyjs::disable("reset_data")
+  #   gps <- reactiveValues()
+  # } )
   
   observeEvent(input$reset_parameters, {
     shinyjs::reset("sig2obs")
