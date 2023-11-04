@@ -40,6 +40,7 @@ library(R.utils)
 library(shinyjs)
 library(shinycssloaders)
 library(move)
+library(DT)
 library(ggplot2)
 library(stringr)
 library(shinyBS)
@@ -241,7 +242,7 @@ ui <- dashboardPage(
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
             
-            hr(style = "border-top: 4px solid black;"),
+            hr(style = "border-top: 2px solid black;"),
             
             checkboxInput("save_files", "Save output files..."),
             # radioButtons("save_files", label = "Save output files...",
@@ -305,29 +306,29 @@ ui <- dashboardPage(
           id = "tables",
           type = "tabs", 
           # header = tagList(h1("HEADER")),
-          tabPanel("All", value = 1,
-            shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
-              type = 5
-            )
-          ),
-          tabPanel("Summary", value = 2,
+          # tabPanel("All", value = 1,
+          tabPanel("All",
+            # shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
+            #                              type = 5)
+            DT::dataTableOutput('table_all')
+            ),
+            # tabPanel("Summary", value = 2,
+          tabPanel("Summary",
                    # Choose/update units for animal areas
                    # hr(style = "border-top: 1px solid #000000;"),
+                   tags$br(),
                    tags$div(id = "areaUnitsDiv",
-                   tags$strong(id = "areaUnitsLabel", "Area units:"),
-                   bsTooltip(id = "areaUnitsLabel", placement = "right",
-                             title = "Sets units for area calculations"
-                   ),
-                   #tags$style(HTML("label{float:left;}")),
-                   radioButtons("areaUnits", label = "",
-                                choices = list("m2" = 'm2', "ha" = 'ha', "km2" = 'km2'),
-                                selected = "ha", inline = TRUE
-                   ),
-                   ),
-            shinycssloaders::withSpinner(DT::dataTableOutput('table_summary'),
-              type = 6
-            )
-          )
+                            tags$strong(id = "areaUnitsLabel", "Area units:"),
+                            bsTooltip(id = "areaUnitsLabel", placement = "right",
+                                      title = "Sets units for area calculations"),
+                            #tags$style(HTML("label{float:left;}")),
+                            radioButtons("areaUnits", label = "",
+                                         choices = list("m2" = 'm2', "ha" = 'ha',
+                                                        "km2" = 'km2'),
+                                         selected = "ha", inline = TRUE)),
+                   # shinycssloaders::withSpinner(DT::dataTableOutput('table_summary'),
+                   #                              type = 6)
+                   DT::dataTableOutput('table_summary'))
         )
       )
     )
@@ -373,6 +374,14 @@ server <- function(input, output, session) {
   hideTab(inputId = "controls", target = "MCP")
   hideTab(inputId = "controls", target = "MKDE")
   
+  # Hide the table elements
+  # hideTab("tables", target = "All", session = session)
+  shinyjs::hide("areaUnitsDiv")
+  
+  # Hide the plotting widgets
+  shinyjs::hide("mcp_plot")
+  shinyjs::hide("mkde_plot")
+  
   output$instructions <- renderUI({
     tagList(h4("First, load your data and verify coordinate parameters..." ))}
   )
@@ -399,12 +408,13 @@ server <- function(input, output, session) {
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
 
+  
   ############################################################################
   # Handle UI events
   
   # Handle control panel tab changes...
   observeEvent(input$controls, {
-    #print(paste("** input$controls =", input$controls))
+    print(paste("** input$controls =", input$controls))
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
         output$instructions <- renderUI({
@@ -434,7 +444,7 @@ server <- function(input, output, session) {
       shinyjs::show("mcp_plot")
       current_table_selection("multiple")
     } else if (input$controls == "MKDE") {
-      shinyjs::click("mkde_plot_btn")
+      # shinyjs::click("mkde_plot_btn")
       output$instructions <- renderUI({
         tagList(h4("To plot movement-based kernel density estimator:"),
                 tags$ol(tags$li("Set parameters (left)"),
@@ -448,13 +458,6 @@ server <- function(input, output, session) {
       shinyjs::show("mkde_plot")
       current_table_selection("single")
     }
-  })
-  
-  # Update Movebank local filename based on studyid...
-  observeEvent(input$movebank_studyid, {
-    updateTextInput(session, "movebank_local_filename",
-                    value = paste("movebank-", input$movebank_studyid, ".csv",
-                                  sep = ""))
   })
   
   # If the required load data input is missing, disable button; otherwise enable...
@@ -473,6 +476,13 @@ server <- function(input, output, session) {
     }
   })
   
+  # Update Movebank local filename based on studyid...
+  observeEvent(input$movebank_studyid, {
+    updateTextInput(session, "movebank_local_filename",
+                    value = paste("movebank-", input$movebank_studyid, ".csv",
+                                  sep = ""))
+  })
+  
   # Handle Data tab "Load data" button click...
   observeEvent(input$data_load_btn, {
     # eventReactive(input$data_load_btn, {
@@ -483,13 +493,16 @@ server <- function(input, output, session) {
     
     # shinyjs::show("status_log")
     
-    # if there are rasters, then we need to clear the data and plot
+    # if there are rasters, then we need to clear the data and plots
     if (! is.null (gps$rasters)) {
       gps$data <<- NULL
       gps$original <<- NULL
       gps$rasters <<- NULL
       gps$summary <<- NULL
       shinyjs::show("instructions")
+      # shinyjs::hide("mcp_plot")
+      # shinyjs::hide("mkde_plot")
+      mcp_plot <- NULL
     }
     
     if (input$data_source == 'Gateway') {
@@ -500,6 +513,7 @@ server <- function(input, output, session) {
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
       results = loadDataframeFromFile (file$datapath)
+      print("here 10")
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
     } else if (input$data_source == 'Movebank') {
@@ -526,18 +540,20 @@ server <- function(input, output, session) {
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
     }
+    print("here 11")
     
     data <- results[[1]]
     # print(paste("filename =", filename))
     # print(paste("id = ", id))
     # print(paste("data nrow =", nrow(data)))
     # print(paste("basename = ", basename))
-    # print(paste("results[2] =", results[[2]]))
+    print(paste("results[2] =", results[[2]]))
     if (length(results[[2]] > 0)) {
       removeNotification(id = id, session = session)
       showNotification(paste("Error", filename, ":", results[[2]]),
                        duration = NULL, type = "error", session = session)
     } else {
+      print("here 12")
       showNotification(paste(message, "done"), duration = 2, id = id,
                        type = "message", session = session)
       updateTextInput(session, "basename", value = basename)
@@ -545,20 +561,29 @@ server <- function(input, output, session) {
       rm(results)
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
+      print("here 13")
       
       # display_log("* Preprocessing data...", FALSE)
       id <- "preprocessing"
       message <- "Preprocessing data..."
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
+      print("here 14")
       results <- preprocessDataframe(data)
+      print("here 15")
       showNotification(paste(message, "done"), id = id, type = "message", 
                        duration = 2, session = session)
       # display_log("done")
-      shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      print("here 30")
+      # shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      if (! is.null(results[[2]])) {
+        showNotification(paste("Error :", results[[2]]), duration = NULL,
+                         type = "error", session = session)
+        shiny::validate(need(is.null(results[[2]]), results[[2]]))
+      }
+      print("here 31")
       
       data <- results[[1]]
-      
       gps$data <- results[[1]]
       gps$original <- results[[1]]
       
@@ -605,13 +630,15 @@ server <- function(input, output, session) {
                   tags$ul(tags$li("MCP = Minimum Convex Polygon"),
                           tags$li("MKDE = Movement-based Kernel Density Estimator")
                   ),
-                  # tags$br(),
-                  # tags$br(),
-                  # tags$br(),
-                  tags$hr(style = "border-top: 2px solid #000000;")
+                  tags$br(),
+                  tags$br(),
+                  tags$br(),
+                  # tags$hr(style = "border-top: 2px solid #000000;")
           )
         )
-        updateTabsetPanel(session, "tables", selected = "2")
+        showTab("tables", target = "All", session = session)
+        shinyjs::show("areaUnitsDiv")
+        updateTabsetPanel(session, "tables", selected = "Summary")
         # shinyjs::show("tables")
       }
     }
@@ -771,11 +798,12 @@ server <- function(input, output, session) {
     DT::datatable(
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
-      options = list(
-        autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
-        pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
-        #paging = FALSE, scrollX = TRUE, scrollY = TRUE, 
-        stateSave = TRUE), 
+      options = list(autoWidth = TRUE, buttons = c(''), dom = 'Bfrtip',
+                     pagingType = "full_numbers", processing = TRUE,
+                     scrollX = TRUE,
+                     #buttons = c('csv', 'excel'), paging = FALSE,
+                     # scrollX = TRUE, scrollY = TRUE, 
+                     stateSave = TRUE), 
       selection = list(mode = current_table_selection(), target = 'row'))
   })
   
@@ -785,12 +813,13 @@ server <- function(input, output, session) {
 
     DT::datatable (
       gps$summary[], extension = "Buttons",
-      #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      caption="Tip: you can do multi-column sorting by shift clicking on the columns",
       #caption = tagList(h1("Caption")),
-      options = list(
-        autoWidth = TRUE, buttons = c('csv', 'excel'), dom = 'Bfrtip',
-        pagingType = "full_numbers", processing = TRUE, scrollX = TRUE,
-        stateSave = TRUE),
+      options = list(autoWidth = TRUE, buttons = c(''), dom = 'Bfrtip',
+                     pagingType = "full_numbers", processing = TRUE,
+                     scrollX = TRUE, stateSave = TRUE
+                     # buttons = c('csv', 'excel'),
+      ),
       selection = list(mode = current_table_selection(), selected = 1, target = 'row'))
   })
   
@@ -827,7 +856,7 @@ server <- function(input, output, session) {
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    # printf("plot_mkde!\n")
+    print("mkde_plot_btn event!")
     shinyjs::hide("instructions")
     # shinyjs::disable("inputs")
     shinyjs::disable("controls")
