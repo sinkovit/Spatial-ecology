@@ -124,7 +124,8 @@ preprocessDataframe <- function(gpsdata) {
 	 # All is good
       } else {
       	 return(list(NULL,
-      	             "Missing required columns; must have time and lat-long, x-y or UTM"), NULL)
+      	             "Missing required columns; must have time and lat-long, x-y or UTM",
+      	             NULL))
       }
 
       #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
