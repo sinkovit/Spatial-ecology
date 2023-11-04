@@ -106,11 +106,12 @@
 }
 
 .nav-tabs {
-  border-bottom: 3px solid black;
+  border-bottom: 2px solid black;
 }
 
 .nav-tabs > li.active > a {
-  font-weight: bold,
+  border: 1px solid black;
+  font-weight: bold;
 }
 
 .progress-bar {
