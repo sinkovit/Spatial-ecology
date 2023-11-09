@@ -574,7 +574,7 @@ server <- function(input, output, session) {
       showNotification(paste(message, "done"), id = id, type = "message", 
                        duration = 2, session = session)
       # display_log("done")
-      print("here 30")
+      print("here 100")
       # shiny::validate(need(is.null(results[[2]]), results[[2]]))
       if (! is.null(results[[2]])) {
         showNotification(paste("Error :", results[[2]]), duration = NULL,
@@ -904,7 +904,7 @@ server <- function(input, output, session) {
         #               input$basename)
         # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
         #               input$basename)
-        results <- createContour(raster, probs, input$map)
+        results <- createContour(raster, probs, input$zone, input$datum, input$map)
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
@@ -913,8 +913,10 @@ server <- function(input, output, session) {
       },
       error = function(error_message) {
         print(paste("error message =", error_message))
-        shiny::validate(need(error_message == "",
-                             "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+        # shiny::validate(need(error_message == "",
+        #                      "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+        showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
+                         duration = NULL, type = "error", session = session)
       },
       finally = {
         # shinyjs::enable("inputs")

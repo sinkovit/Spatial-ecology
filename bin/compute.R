@@ -192,7 +192,7 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 #                           shape = FALSE, basename = NULL, all = TRUE) {
 # createContour <- function(mkde2d.obj, probs, utm.zone, datum, type, basename,
 #                           session, all = TRUE) {
-createContour <- function(mkde2d.obj, probs, map, all = TRUE) {
+createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   # Create raster from MKDE object
   rst.mkde = mkdeToRaster(mkde2d.obj)
 
@@ -229,7 +229,9 @@ createContour <- function(mkde2d.obj, probs, map, all = TRUE) {
   #if(type == 1) {
   if (map) {
     #RSSRSS Hardcoded crsstr for now - pass as an argument to createContour()
-    crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
+    # crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
+    crsstr <- paste("+proj=utm +zone=", 11, " +datum=", datum,
+                    " +units=m +no_defs", sep="")
     
     # Setting bounds for map and zoom level
     xmin <- min(mkde2d.obj$x)
