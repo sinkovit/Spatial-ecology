@@ -230,7 +230,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   if (map) {
     #RSSRSS Hardcoded crsstr for now - pass as an argument to createContour()
     # crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
-    crsstr <- paste("+proj=utm +zone=", 11, " +datum=", datum,
+    crsstr <- paste("+proj=utm +zone=", 13, " +datum=", datum,
                     " +units=m +no_defs", sep="")
     
     # Setting bounds for map and zoom level
@@ -273,7 +273,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
     mymap <- ggmap(mybasemap) +
       geom_polygon(aes(x=long, y=lat, group=group),
                    data=tidydta2,
-                   alpha=.2, linewidth=.2)
+                   alpha=.25, linewidth=0.1, color="black", fill="blue")
     
     plot(mymap)
   } else {
@@ -406,13 +406,13 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   if ('xdata' %in% colnames(gpsdata.geo) && 'ydata' %in% colnames(gpsdata.geo)) {
      mymap <- ggmap(mybasemap) +
               geom_point(data = gpsdata.geo, 
-              aes(x = xdata, y = ydata, colour = id), size = 0.8, alpha = 0.5)  +
+              aes(x = xdata, y = ydata, colour = id), size = 1.5)  +
               theme(legend.position = c(-0.2, 0.90)) +
               labs(x = "Longitude", y = "Latitude")
   } else {
      mymap <- ggmap(mybasemap) +
               geom_point(data = gpsdata.geo, 
-              aes(x = coords.x1, y = coords.x2, colour = id), size = 0.8, alpha = 0.5)  +
+              aes(x = coords.x1, y = coords.x2, colour = id), size = 1.5)  +
               theme(legend.position = c(-0.2, 0.90)) +
               labs(x = "Longitude", y = "Latitude")
   }
@@ -422,7 +422,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
     mymap <- mymap +
       geom_polygon(data = fortify(gpsdata.mcpgeo),
                    aes(long, lat, colour = id, fill = id),
-                   alpha = 0.3) # alpha sets the transparency
+                   alpha = 0.5) # alpha sets the transparency
   }
   
   return(mymap)
