@@ -151,6 +151,38 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   xrange <- xmax - xmin
   yrange <- ymax - ymin
 
+  area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
+  if (area < 1.0) {
+    zoom = 10
+  } else if (area < 20.0) {
+    zoom = 9
+  } else {
+    zoom = 8
+  }
+
+  print("------------------")
+  printf(paste("x:", xmin, ",", xmax, "\n"))
+  printf(paste("y:", ymin, ",", ymax, "\n"))
+  printf(paste("area:", area, "\n"))
+  printf(paste("zoom:", zoom, "\n"))
+  print("------------------")
+
+# ----------------------------------------
+#  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymin)
+#  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymax)
+#  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymin)
+#  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymax)
+#  coordinates(gpsdata.sp) <- c("xdata", "ydata")
+#  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
+#  proj4string(gpsdata.sp) <- CRS(crsstr)
+#  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
+#  print(min(gpsdata.spgeo@coords[,1]))
+#  print(min(gpsdata.spgeo@coords[,2]))
+#  print(max(gpsdata.spgeo@coords[,1]))
+#  print(max(gpsdata.spgeo@coords[,2]))
+# ----------------------------------------
+
+
   nx <- as.integer(xrange/cell.sz)
   ny <- as.integer(yrange/cell.sz)
   
