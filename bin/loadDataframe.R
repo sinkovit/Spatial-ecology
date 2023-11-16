@@ -101,7 +101,7 @@ loadDataframeFromMB <- function(study, username, password) {
     }
     if (str_detect(error_message[1],
                   "unable to find an inherited method for function ‘getMovebankLocationData’")) {
-      return(list(NULL, "Invalid Movebank study ID."))
+      return(list(NULL, "Invalid Movebank study ID. Do you have access to this dataset?  Did you agree to the licensing term on Movebank.org?  Is it a test study?"))
     }
     if (str_detect(error_message[1], "There are no valid credentials")) {
       return(list(NULL,
