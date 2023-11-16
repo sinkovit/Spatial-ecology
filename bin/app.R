@@ -513,7 +513,6 @@ server <- function(input, output, session) {
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
       results = loadDataframeFromFile (file$datapath)
-      print("here 10")
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
     } else if (input$data_source == 'Movebank') {
@@ -540,8 +539,7 @@ server <- function(input, output, session) {
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
     }
-    print("here 11")
-    
+
     data <- results[[1]]
     # print(paste("filename =", filename))
     # print(paste("id = ", id))
@@ -553,7 +551,6 @@ server <- function(input, output, session) {
       showNotification(paste("Error", filename, ":", results[[2]]),
                        duration = NULL, type = "error", session = session)
     } else {
-      print("here 12")
       showNotification(paste(message, "done"), duration = 2, id = id,
                        type = "message", session = session)
       updateTextInput(session, "basename", value = basename)
@@ -561,28 +558,23 @@ server <- function(input, output, session) {
       rm(results)
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
-      print("here 13")
-      
+
       # display_log("* Preprocessing data...", FALSE)
       id <- "preprocessing"
       message <- "Preprocessing data..."
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
-      print("here 14")
       results <- preprocessDataframe(data)
-      print("here 15")
       showNotification(paste(message, "done"), id = id, type = "message", 
                        duration = 2, session = session)
       # display_log("done")
-      print("here 100")
       # shiny::validate(need(is.null(results[[2]]), results[[2]]))
       if (! is.null(results[[2]])) {
         showNotification(paste("Error :", results[[2]]), duration = NULL,
                          type = "error", session = session)
         shiny::validate(need(is.null(results[[2]]), results[[2]]))
       }
-      print("here 31")
-      
+
       data <- results[[1]]
       gps$data <- results[[1]]
       gps$original <- results[[1]]
@@ -905,10 +897,18 @@ server <- function(input, output, session) {
         # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
         #               input$basename)
         results <- createContour(raster, probs, input$zone, input$datum, input$map)
+
+        # print(paste("input$map =", input$map))
+        # print(paste("results[[2]] =", results[[2]]))
+        
+        if (input$map && results[[2]] == FALSE) {
+          showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
+                           duration = NULL, type = "warning", session = session)
+        }
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
-        rasters[[id]]$contours <- results
+        rasters[[id]]$contours <- results[[1]]
         gps$rasters <- rasters
       },
       error = function(error_message) {

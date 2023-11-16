@@ -214,6 +214,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
                   probabilities = contour_probs)
 
   #RSSRSS Start code to choose between original display and mkde on map
+  fits <- TRUE
   if (map) {
     crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
                     " +units=m +no_defs", sep="")
@@ -261,13 +262,22 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
                    alpha=.25, linewidth=0.1, color="black", fill="blue")
     
     plot(mymap)
+    
+    # check to see if contour fits on map
+    for (gname in unique(tidydta2$group)) {
+      x1 <-  tidydta2$lat[which(tidydta2$group == gname)]
+      y1 <-  tidydta2$long[which(tidydta2$group == gname)]
+      if (x1[1] != x1[length(x1)] && y1[1] != y1[length(y1)]) {
+        fits <- FALSE # Contour does not fit on map
+      }
+    }
   } else {
     plot(rst.cont)
     contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
                                lwd = 1.0, drawlabels = FALSE)
   }
   
-  return(results)
+  return(list(results, fits))
 }
 
 
