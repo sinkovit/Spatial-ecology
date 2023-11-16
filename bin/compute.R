@@ -188,10 +188,6 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 # createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
-# createContour <- function(mkde2d.obj, probs, utm.zone, datum, raster = FALSE,
-#                           shape = FALSE, basename = NULL, all = TRUE) {
-# createContour <- function(mkde2d.obj, probs, utm.zone, datum, type, basename,
-#                           session, all = TRUE) {
 createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   # Create raster from MKDE object
   rst.mkde = mkdeToRaster(mkde2d.obj)
@@ -210,26 +206,15 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
     contour_probs <- tail(probs, n=1)
   }
 
-  # Create CRS string
-  # crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
-  
   # Plot contours
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
                                                           na.rm = TRUE)))
-  # plot(rst.cont)
-  # contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
-  #                            lwd = 1.0, drawlabels = FALSE)
-  
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
                   probabilities = contour_probs)
 
   #RSSRSS Start code to choose between original display and mkde on map
-  type = 1 #RSSRSS This will have to passed as argument to createContour()
-  #if(type == 1) {
   if (map) {
-    #RSSRSS Hardcoded crsstr for now - pass as an argument to createContour()
-    # crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
     crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
                     " +units=m +no_defs", sep="")
     
@@ -281,45 +266,6 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
     contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
                                lwd = 1.0, drawlabels = FALSE)
   }
-  #RSSRSS End code to choose between original display and mkde on map
-  
-  # if((raster == TRUE || shape == TRUE) && !is.null(basename)) {
-  #   output_file <- paste(path_home(), "/", basename, sep = "")
-  #   print(paste("output_file =", output_file))
-  #   raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-  #   proj4string(raster.contour) = CRS(crsstr)
-  # 
-  #   # Create raster of contours
-  #   if(raster == TRUE) {
-  #     printf("Writing raster to file %s.asc...", output_file)
-  #     # id <- "output_raster"
-  #     # message <- paste("Writing raster to file ", output_file, ".asc ... ", sep = "")
-  #     # showNotification(message, id = id, type = "message", duration = NULL,
-  #     #                  session = session)
-  #     writeRaster(rst.cont, output_file, format = "ascii", overwrite = T)
-  #     # showNotification(paste(message, "done"), id = id, type = "message",
-  #     #                  duration = NULL, session = session)
-  #     printf("done\n")
-  #   }
-  # 
-  #   # Create shapefiles of contours
-  #   if(shape == TRUE && !is.null(basename)) {
-  #     raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
-  #     proj4string(raster.contour) = CRS(crsstr)
-  #     printf("Writing shape to 5 files %s.*...", output_file)
-  #     # id <- "output_shape"
-  #     # message <- paste("Writing shape files", output_file, "...")
-  #     # showNotification(message, id = id, type = "message", duration = NULL,
-  #     #                  session = session)
-  #     shapefile(x = raster.contour, file = output_file, overwrite = T)
-  #     # showNotification(paste(message, "done"), id = id, type = "message",
-  #     #                  duration = NULL, session = session)
-  #     printf("done\n")
-  #   }
-  # }
-
-  # for shape output: raster.contour, contour_probs
-  # for raster output: rst.cont
   
   return(results)
 }
@@ -356,7 +302,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   ymax <- max(gpsdata.sp$ydata) + buffer
   area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
 
-# Choose the map zoom based on area
+  # Choose the map zoom based on area
   if (area < 1.0) {
     zoom = 10
   } else if (area < 20.0) {
