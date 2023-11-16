@@ -230,7 +230,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   if (map) {
     #RSSRSS Hardcoded crsstr for now - pass as an argument to createContour()
     # crsstr <- paste("+proj=utm +zone=", 11, " +datum=", "WGS84", " +units=m +no_defs", sep="")
-    crsstr <- paste("+proj=utm +zone=", 13, " +datum=", datum,
+    crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
                     " +units=m +no_defs", sep="")
     
     # Setting bounds for map and zoom level
