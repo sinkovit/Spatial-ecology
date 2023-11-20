@@ -31,15 +31,114 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
+# function - determine if the given haystack contains the needle
+# haystack - can be a single variable or a vector
+# needle - value to look for in the haystack
+# returns - TRUE if the needle is in the haystack; FALSE otherwise
+contains <- function(haystack, needle) {
+  if (isEmpty(haystack)) {
+    if (isEmpty(needle)) {
+      return(TRUE)
+    } else {
+      return(FALSE)
+    }
+  }
+
+  if (is.vector(haystack)) {
+    for (i in 1:length(haystack)) {
+      if (haystack[i] == needle) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  } else if (haystack == needle) {
+    return(TRUE)
+  }
+
+  return(FALSE)
+}
 
 # Returns TRUE of the parameter is NULL, a string with no non-space characters,
 # or length < 1; otherwise returns FALSE
 isEmpty <- function(x) {
-  if (is.null(x))
+  # print(paste("isEmpty x =", x))
+  # print(paste("class =", class(x)))
+  # print(paste("str =", str(x)))
+  # print(paste("length =", length(x)))
+  
+  if (is.null(x)) {
     return(TRUE)
-  if (length(x) < 1)
+  }
+  
+  if (length(x) < 1) {
     return(TRUE)
-  if (is.character(x) && nchar(str_replace_all(x, " ", "")) < 1)
+  }
+  
+  if (is.vector(x)) {
+    for (i in 1:length(x)) {
+      if (is.character(x[i]) && nchar(str_replace_all(x[i], " ", "")) < 1) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+  
+  if (is.character(x) && nchar(str_replace_all(x, " ", "")) < 1) {
     return(TRUE)
+  }
+  
   return(FALSE)
+}
+
+# Write output files
+# id - can be NULL to denote all available rasters or a specific animal id
+save_output <- function(types, rasters, id, utm.zone, datum, basename) {
+  print("save_output()")
+  print(paste("types =", types))
+  print(paste("length of rasters =", length(rasters)))
+  print(paste("idy =(", id, ")", sep = ""))
+  
+  if (isEmpty(rasters)) {
+    return(NULL)
+  }
+  
+  # this shouldn't occur but just in case...
+  if (isEmpty(basename)) {
+    basename <- "noname"
+  }
+
+  for (raster in rasters) {
+    # print(paste("raster$id =(", raster$id, ")", sep = ""))
+    # print(paste("raster$id class =", class(raster$id)))
+    # print(paste("id class =", class(id)))
+    if (is.null(id) || raster$id == id) {
+      print("save!")
+      contour_info <- raster$contours
+      crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
+                      " +units=m +no_defs", sep="")
+      # print(paste("crsstr =", crsstr))
+      output_file <- paste(path_home(), "/", basename, "-", raster$id, sep = "")
+      print(paste("output_file =", output_file))
+      raster.contour <- rasterToContour(contour_info$raster,
+                                        levels = contour_info$contour$threshold)
+      proj4string(raster.contour) = CRS(crsstr)
+       
+      if (contains(types, "raster")) {
+        printf("Writing raster to file %s.asc...", output_file)
+        writeRaster(contour_info$cut, output_file, format = "ascii",
+                    overwrite = TRUE)
+        printf("done\n")
+      }
+      
+      if(contains(types, "shape")) {
+        raster.contour = spChFIDs(raster.contour,
+                                  paste(contour_info$probabilities,
+                                        "% Contour Line", sep=""))
+        proj4string(raster.contour) = CRS(crsstr)
+        printf("Writing shape to 5 files %s.*...", output_file)
+        shapefile(x = raster.contour, file = output_file, overwrite = TRUE)
+        printf("done\n")
+      }
+    }
+  }
 }

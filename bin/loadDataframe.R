@@ -37,21 +37,31 @@ library(tools)
 # Parse a plain text (whitespace separate values) or csv file containing
 # biotelemetry data
 # Returns a list where first item is the data and second item is the error
-# message; if successful, there error message = NULL and data will be
+# message; if successful, the error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
 loadDataframeFromFile <- function(file) {
   ext <- file_ext(file)
-  if (ext == "csv") { 
-    gpsdata <- read.csv(file, header=TRUE)
-  } else if (ext == "txt") {
-    gpsdata <- read.table(file, header=TRUE)
-  } else {
+  # print(paste("ext =", ext))
+  
+  if (ext != "csv" && ext != "txt") {
     return(list(NULL,
                 paste("Unknown file extension .", ext,
                       "; only files with .csv or .txt are accepted", sep = "")))
   }
+  else if (ext == "csv") { 
+    gpsdata <- read.csv(file, header=TRUE)
+  } else if (ext == "txt") {
+    gpsdata <- read.table(file, header=TRUE)
+  }
+  # print(paste("gpsdata :", gpsdata))
+  # print(paste("length =", length(gpsdata)))
+  # print(paste("nrow =", nrow(gpsdata)))
   
-  return(list(gpsdata, NULL))
+  if (nrow(gpsdata) < 1) {
+    return(list(NULL, paste("No data found in file")))
+  } else {
+    return(list(gpsdata, NULL))
+  }
 }
 
 
@@ -60,6 +70,9 @@ loadDataframeFromFile <- function(file) {
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
 loadDataframeFromMB <- function(study, username, password) {
+  # print(paste("username =", username))
+  # print(paste("password =", password))
+  # print(paste("study = ", study))
   file.local <- paste(getwd(), "/Study-", toString(study), ".RData", sep="")
   #print(paste("file.local =", file.local))
   
@@ -70,44 +83,40 @@ loadDataframeFromMB <- function(study, username, password) {
     #   printf("done\n")
     #   return(list(data, NULL))
     # } else {
-      printf("  authenticating into Movebank...")
       login <- movebankLogin(username = username, password = password )
-      printf("done\n  retrieving data from Movebank...")
       # maybe try shiny::invalidateLater()?
       # data <- getMovebankData(study=strtoi(study), login=login)
       data <- getMovebankLocationData(study=strtoi(study), login=login)
-      # printf("done\n  saving data locally...")
       # save(data, file=file.local)
-      printf("done\n")
       return(list(data, NULL))
     # }
   },
   error = function(error_message) {
-    if(str_detect(error_message[1], "you are not allowed to download")) {
+    # print(paste("error message =", error_message))
+    if (str_detect(error_message[1], "you are not allowed to download")) {
       # Movebank data license url =
       # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
       return(list(NULL,
                   "Please go to Movebank and accept the data license terms, then return here and try again..."))
     }
-    if(str_detect(error_message[1],
-                  "unable to find an inherited method for function ‘getMovebankData’")) {
-      return(list(NULL, paste("Error:", study,
-                              "appears to be an invalid Movebank study ID.")))
+    if (str_detect(error_message[1],
+                  "unable to find an inherited method for function ‘getMovebankLocationData’")) {
+      return(list(NULL, "Invalid Movebank study ID. Do you have access to this dataset?  Did you agree to the licensing term on Movebank.org?  Is it a test study?"))
     }
-    if(str_detect(error_message[1], "There are no valid credentials")) {
+    if (str_detect(error_message[1], "There are no valid credentials")) {
       return(list(NULL,
-                  "Error: invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
+                  "Invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
     }
-    if(str_detect(error_message[1], "No data are available for download")) {
-      return(list(NULL, "Error: no data available for download."))
+    if (str_detect(error_message[1], "No data are available for download")) {
+      return(list(NULL, "No data available for download."))
     }
-    if(str_detect(error_message[1], "Timeout was reached")) {
+    if (str_detect(error_message[1], "Timeout was reached")) {
       return(list(NULL,
-                  "Error: movebank.org timed out. Please wait a few minutes and try again..."))
+                  "Movebank.org timed out. Please wait a few minutes and try again..."))
     }
-    if(str_detect(error_message[1], "Empty reply from server")) {
+    if (str_detect(error_message[1], "Empty reply from server")) {
       return(list(NULL,
-                  "Error: empty reply from movebank.org server. Please wait a few minutes and try again..."))
+                  "Empty reply from movebank.org server. Please wait a few minutes and try again..."))
     }
     return(list(NULL, error_message))
   })

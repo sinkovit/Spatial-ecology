@@ -85,7 +85,7 @@
   /*line-height: 1.428;*/
   /*margin: 0 0 0 0;*/
   /*padding: 6px 12px 6px 12px;*/
-  padding: 6.5px 10px;
+  padding: 6px 10px;
   position: absolute;
   /*text-align: start;*/
   /*text-indent: 0px;*/
@@ -106,17 +106,26 @@
 }
 
 .nav-tabs {
-  border-bottom: 3px solid black;
+  border-bottom: 2px solid black;
 }
 
 .nav-tabs > li.active > a {
-  font-weight: bold,
+  border: 2px solid black;
+  font-weight: bold;
 }
 
 .progress-bar {
   display: none;
   color: transparent!important;
   background-color: transparent;
+}
+
+#shiny-notification-panel {
+  bottom: auto;
+  font-weight: bold;
+  position: absolute;
+  top: 120px;
+  width: 60%;
 }
 
 .shiny-output-error-validation {
@@ -137,6 +146,14 @@
   background-color: #1d1e20;
 }
 
+#status_log {
+  border: 1px solid;
+  margin: 15px 0px;
+  overflow-y: scroll;
+  padding: 3px;
+}
+
 .well {
-  background-color: #ebd9c8;
+  /*background-color: #ebd9c8;*/
+  background-color: #7cb7b7;
 }

@@ -67,8 +67,12 @@ preprocessDataframe <- function(gpsdata) {
       # Horizontal UTM coordinates (canonical name: utm.[easting|northing])
       names(gpsdata)[names(gpsdata) == 'utm-easting'] <- 'utm.easting'
       names(gpsdata)[names(gpsdata) == 'utm_easting'] <- 'utm.easting'
+      names(gpsdata)[names(gpsdata) == 'easting'] <- 'utm.easting'
+      names(gpsdata)[names(gpsdata) == 'Easting'] <- 'utm.easting'
       names(gpsdata)[names(gpsdata) == 'utm-northing'] <- 'utm.northing'
       names(gpsdata)[names(gpsdata) == 'utm_northing'] <- 'utm.northing'
+      names(gpsdata)[names(gpsdata) == 'northing'] <- 'utm.northing'
+      names(gpsdata)[names(gpsdata) == 'Northing'] <- 'utm.northing'
 
       # UTM zone (canonical name: utm.zone)
       options <- c('utm-zone', 'utm_zone', 'utmzone', 'zone')
@@ -100,10 +104,20 @@ preprocessDataframe <- function(gpsdata) {
       }
 
       # Time (canonical name: time)
-      options <- c('t', 'T', 'Time', 'TIME', 'timestamp', 'Timestamp',
-                   'TIMESTAMP', 'date', 'Date', 'DATE')
+      options <- c('t', 'T',
+      	      	   'Time', 'TIME',
+                   'timestamp', 'Timestamp', 'TIMESTAMP',
+		   'date', 'Date', 'DATE',
+		   'datetime', 'DateTime', 'DATETIME',
+		   'date_time', 'Date_Time', 'DATE_TIME')
       for (opt in options) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'time'
+      }
+
+      # Cummulative time (canonical name: cummultime)
+      options <- c('CummulTime', 'CUMMULTIME')
+      for (opt in options) {
+      	  names(gpsdata)[names(gpsdata) == opt] <- 'cummultime'
       }
 
       # animal identifier (canonical name: id)
@@ -115,22 +129,39 @@ preprocessDataframe <- function(gpsdata) {
       	  names(gpsdata)[names(gpsdata) == opt] <- 'id'
       }
 
+      #### If cummultime and time are both present, delete time and rename cummultime to time
+      #### If cummultime is present and time absent, just rename cummultime to time
+
+      if ("cummultime" %in% colnames(gpsdata)) {
+      	 if ("time" %in% colnames(gpsdata)) {
+	    # Not sure why "gpsdata['time'] <- NULL" doesn't work here
+	    # Therefore have to use following bit of code
+     	    gpsdata <- gpsdata[ , !(names(gpsdata) %in% c("time"))]
+	 }
+	 names(gpsdata)[names(gpsdata) == 'cummultime'] <- 'time'
+      }
+
       #### Test that data set has the required columns - time plus complete spatial coordinates
-      
+      #### No longer testing for UTM zone since it's entered from GUI
+
       if ("time" %in% colnames(gpsdata) &&
       	  ( ("x" %in% colnames(gpsdata) && "y" %in% colnames(gpsdata)) ||
-      	    ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata) && "utm.zone" %in% colnames(gpsdata)) ||
+      	    ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) ||
       	    ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
 	 # All is good
       } else {
       	 return(list(NULL,
-      	             "Missing required columns; must have time and lat-long, x-y or UTM"), NULL)
+      	             "Missing required columns; must have time and lat-long, x-y or UTM",
+      	             NULL))
       }
 
       #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
+      #### Set timezone to UTC to avoid daylight savings time ambiguities
 
       if (!is.numeric(gpsdata$time)) {
-      	 gpsdata$time <- as.numeric(as.POSIXct(gpsdata$time)) / 60
+        gpsdata$time <- unclass(as.POSIXct(gpsdata$time,
+		     tryFormats = c("%m/%e/%y %H:%M", "%Y-%m-%d %H:%M:%S"),
+		     tz="UTC")) / 60
       }
 
       #### Add an 'id' column if it doesn't already exist and convert to string
@@ -163,8 +194,21 @@ preprocessDataframe <- function(gpsdata) {
 	 sp::proj4string(gpsdata.latlong) <- CRS("+proj=longlat")
 	 crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
 	 gpsdata.latlong <- sp::spTransform(gpsdata.latlong, CRSobj=crs.str)
-	 gpsdata$utm.easting <- gpsdata.latlong$long
-	 gpsdata$utm.northing <- gpsdata.latlong$lat
+
+         # Note that kludge below needed so that code works everywhere
+
+	 if ('long' %in% colnames(coordinates(gpsdata.latlong))) {
+	    gpsdata$utm.easting <- gpsdata.latlong$long
+	 } else {
+	    gpsdata$utm.easting <- gpsdata.latlong$coords.x1
+	 }
+
+	 if ('lat' %in% colnames(coordinates(gpsdata.latlong))) {
+	    gpsdata$utm.northing <- gpsdata.latlong$lat
+	 } else {
+	    gpsdata$utm.northing <- gpsdata.latlong$coords.x2
+	 }
+
 	 rm(gpsdata.latlong)
 
 	 # Add N/S to UTM zone. This has to be done after conversion
@@ -191,7 +235,7 @@ preprocessDataframe <- function(gpsdata) {
                       'utm.easting', 'utm.northing', 'utm.zone')
       for (name in colnames(gpsdata)) {
       	  if (!name %in% canonical) {
-	     gpsdata[name] <- NULL
+	    gpsdata[name] <- NULL
      	  }
       }
 
