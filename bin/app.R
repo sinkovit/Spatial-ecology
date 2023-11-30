@@ -488,23 +488,43 @@ server <- function(input, output, session) {
   observeEvent(input$data_load_btn, {
     # eventReactive(input$data_load_btn, {
     
-    # print("caught load data button event!")
+    print("caught load data button event!")
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
+
+    # From https://www.statology.org/clear-plots-in-r/ but doesn't seem to work
+    # print(paste("dev.list =", dev.list()))
+    # print(paste("dev.list RStudioGD =", dev.list()["RStudioGD"]))
+    # try(dev.off(dev.list()["RStudioGD"]), silent = TRUE)
+    # try(dev.off(), silent = TRUE)
     
+    # From https://www.statology.org/empty-plot-in-r/, also doesn't seem to work
+    # plot.new()
+    # these didn't work either...
+    # output$mcp_plot <- plot.new()
+    # plot_mcp()
+    # dev.off()
+    # graphics.off()
+    # plot.new()
+    output$mcp_plot <- renderPlot({plot.new()})
+
     # shinyjs::show("status_log")
-    
+    # print(paste("length of gps$rasters =", length(gps$rasters)))
     # if there are rasters, then we need to clear the data and plots
-    if (! is.null (gps$rasters)) {
-      gps$data <<- NULL
-      gps$original <<- NULL
-      gps$rasters <<- NULL
-      gps$summary <<- NULL
+    # if (! is.null (gps$rasters)) {
+      print("clearing gps data")
+      gps$data <- NULL
+      print(paste("gps$data =", gps$data))
+      gps$original <- NULL
+      gps$rasters <- NULL
+      gps$summary <- NULL
       shinyjs::show("instructions")
       # shinyjs::hide("mcp_plot")
       # shinyjs::hide("mkde_plot")
-      mcp_plot <- NULL
-    }
+      # mcp_plot <<- NULL
+      # mkde_plot <<- NULL
+    # }
+      print("here 1")
     
     if (input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_browse)
@@ -546,7 +566,7 @@ server <- function(input, output, session) {
     # print(paste("id = ", id))
     # print(paste("data nrow =", nrow(data)))
     # print(paste("basename = ", basename))
-    print(paste("results[2] =", results[[2]]))
+    # print(paste("results[2] =", results[[2]]))
     if (length(results[[2]] > 0)) {
       removeNotification(id = id, session = session)
       showNotification(paste("Error", filename, ":", results[[2]]),
@@ -577,7 +597,16 @@ server <- function(input, output, session) {
       }
 
       data <- results[[1]]
+      if (is.null(gps$data))
+        print("no gps$data 1")
+      else
+        print("there is gps$data 1")
       gps$data <- results[[1]]
+      print("here 2")
+      if (is.null(gps$data))
+        print("no gps$data 2")
+      else
+        print("there is gps$data 2")
       gps$original <- results[[1]]
       
       # Now save MB data locally
@@ -834,18 +863,27 @@ server <- function(input, output, session) {
   })
   
   
-  plot_mcp <- eventReactive(input$mcp_plot_btn, {
+  # plot_mcp <- eventReactive(input$mcp_plot_btn, {
+  plot_mcp <- observeEvent(input$mcp_plot_btn, {
     printf("plot_mcp!\n")
     shinyjs::hide("instructions")
     data <- gps$data
+    if (is.null(data))
+      print("data is null!")
+    else
+      print("there is data")
+
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     mode <- TRUE
     if (input$display == "Points only")
       mode <- FALSE
-    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom, id,
-                            mode)
-    map
+    # map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom, id,
+    #                         mode)
+    # map
+    output$mcp_plot <-
+      renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
+                                   id, mode)})
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
@@ -928,8 +966,17 @@ server <- function(input, output, session) {
   })
 
   output$mcp_plot <- renderPlot({
-    # printf("render mcp_plot\n")
-    plot_mcp()
+    printf("render mcp_plot\n")
+    # print(paste("gps$data 2 =", gps$data))
+    data <- gps$data
+    # print(paste("data =", data))
+    if (is.null(data)) {
+      print("no data...clear plot!")
+      plot.new()
+    } else {
+      print("calling plot_mcp()")
+      plot_mcp()
+    }
   })
   
   output$mkde_plot <- renderPlot({
