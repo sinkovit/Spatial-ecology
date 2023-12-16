@@ -418,19 +418,22 @@ server <- function(input, output, session) {
     print(paste("** input$controls =", input$controls))
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
+        print("here 10")
         output$instructions <- renderUI({
           tagList(h4("Welcome, first step is to load your data..."),
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
         })
       } else {
+        print("here 11")
         output$instructions <- renderUI({
           tagList(h4("Load new data and/or change current data parameters..."),
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
         })
-        shinyjs::click("mkde_plot_btn")
+        # shinyjs::click("mkde_plot_btn")
       }
+      print("here 12")
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
         tagList(h4("To plot minimum convex polygon(s):"),
@@ -459,6 +462,7 @@ server <- function(input, output, session) {
       shinyjs::show("mkde_plot")
       current_table_selection("single")
     }
+    print("here 13")
   })
   
   # If the required load data input is missing, disable button; otherwise enable...
@@ -493,20 +497,12 @@ server <- function(input, output, session) {
     # print(paste("gps$rasters =", gps$rasters))
 
     # From https://www.statology.org/clear-plots-in-r/ but doesn't seem to work
-    # print(paste("dev.list =", dev.list()))
-    # print(paste("dev.list RStudioGD =", dev.list()["RStudioGD"]))
     # try(dev.off(dev.list()["RStudioGD"]), silent = TRUE)
     # try(dev.off(), silent = TRUE)
     
-    # From https://www.statology.org/empty-plot-in-r/, also doesn't seem to work
-    # plot.new()
-    # these didn't work either...
-    # output$mcp_plot <- plot.new()
-    # plot_mcp()
-    # dev.off()
-    # graphics.off()
-    # plot.new()
+    # From https://www.statology.org/empty-plot-in-r/
     output$mcp_plot <- renderPlot({plot.new()})
+    output$mkde_plot <- renderPlot({plot.new()})
 
     # shinyjs::show("status_log")
     # print(paste("length of gps$rasters =", length(gps$rasters)))
@@ -666,12 +662,12 @@ server <- function(input, output, session) {
     }
   })
   
-  # Handle MKDE tab events...
+  # Handle MCP & MKDE tabs events...
   
   # The following observe serves 2 purposes:
   # 1. any of the MKDE parameters involved with raster calculation changes, set
   #    flag to clear rasters
-  # 2. check MKDE parameters, if invalid will turn border to red, otherwise no
+  # 2. check MCP & MKDE parameters, if invalid will turn border to red, otherwise no
   #   color
   observe ({
     recalculate_raster(TRUE)
@@ -768,7 +764,7 @@ server <- function(input, output, session) {
                    color, "'"))
   })
   
-  # Handle events that should enable/disable MKDE plot button
+  # Catch & handle events that should enable/disable MCP/MKDE plot button
   observe ({
     # if (! isEmpty (gps$original)  &&
     #    is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
@@ -778,15 +774,25 @@ server <- function(input, output, session) {
     #   shinyjs::enable("mkde_plot_btn")
     # else
     #   shinyjs::disable("mkde_plot_btn")
-    
-    #if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected) ||
-    if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
+
+    if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
+      print("no gps or no row selected...displaying both plot buttons")
+      shinyjs::disable("mkde_plot_btn")
+      shinyjs::disable("mcp_plot_btn")
+    # } else {
+    #   print("yes gps and row selected")
+    #   shinyjs::enable("mkde_plot_btn")
+    #   shinyjs::enable("mcp_plot_btn")
+    } else if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
         (is.numeric(input$tmax) && input$tmax < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
-        (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0))
+        (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0)) {
+      print("cannot plot mkde")
       shinyjs::disable("mkde_plot_btn")
-    else
+    } else {
+      print("enable mkde plot button")
       shinyjs::enable("mkde_plot_btn")
+    }
   })
 
   # If no basename nor save mkde type, then disable save mkde button
@@ -802,15 +808,17 @@ server <- function(input, output, session) {
   # Tables
   
   # Handle no data or no table row selected...
-  observe ({
-    if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
-      shinyjs::disable("mkde_plot_btn")
-      shinyjs::disable("mcp_plot_btn")
-    } else {
-      shinyjs::enable("mkde_plot_btn")
-      shinyjs::enable("mcp_plot_btn")
-    }
-  })
+  # observe ({
+  #   if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
+  #     print("no gps or no row selected")
+  #     shinyjs::disable("mkde_plot_btn")
+  #     shinyjs::disable("mcp_plot_btn")
+  #   } else {
+  #     print("yes gps and row selected")
+  #     shinyjs::enable("mkde_plot_btn")
+  #     shinyjs::enable("mcp_plot_btn")
+  #   }
+  # })
 
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
@@ -862,34 +870,33 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  # plot_mcp <- eventReactive(input$mcp_plot_btn, {
+  # Catch & handle the MCP plot button event.  Note, observeEvent works better
+  # than eventReactive which didn't trigger for clearing MCP plot after loading
+  # new data
   plot_mcp <- observeEvent(input$mcp_plot_btn, {
-    printf("plot_mcp!\n")
+    # There is a slight delay in user seeing the plot but it appears the delay
+    # isn't in this event so adding showNotification was useless...
+    # print("plot_mcp")
     shinyjs::hide("instructions")
     data <- gps$data
-    if (is.null(data))
-      print("data is null!")
-    else
-      print("there is data")
-
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     mode <- TRUE
     if (input$display == "Points only")
       mode <- FALSE
-    # map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom, id,
-    #                         mode)
-    # map
+    
+    print(paste("zone =", input$zone, "datum =", input$datum, "mcp_zoom =",
+                input$mcp_zoom, "id =", id, "mode =", mode))
     output$mcp_plot <-
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
   })
   
-  plot_mkde <- eventReactive(input$mkde_plot_btn, {
+  # Catch and handle the MKDE plot button event.
+  # plot_mkde <- eventReactive(input$mkde_plot_btn, {
+  plot_mkde <- observeEvent(input$mkde_plot_btn, {
     print("mkde_plot_btn event!")
     shinyjs::hide("instructions")
-    # shinyjs::disable("inputs")
     shinyjs::disable("controls")
 
     summary <- gps$summary
@@ -903,11 +910,14 @@ server <- function(input, output, session) {
       raster <- rasters[[id]]$raster
     } else {
       data <- gps$data
+      # print(paste("data =", data))
       
       # display_log("* Calculating raster...", FALSE)
-      # print("calculateRaster2D()...")
+      print(paste("id =", id, "sig2obs =", input$sig2obs, "tmax =", input$tmax,
+                  "cellsize =", input$cellsize, "mkde_buffer =", input$mkde_buffer))
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
+      # print(paste("raster =", raster))
       # display_log("done")
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -926,29 +936,37 @@ server <- function(input, output, session) {
       shinyjs::show("save_files")
     }
     
-    # print(paste("replot_mkde =", replot_mkde()))
+    print(paste("replot_mkde =", replot_mkde()))
     if(replot_mkde()) {
       tryCatch({
-        probs = as.numeric ( unlist (strsplit (input$probability, ",")))
+        print("here 40")
+        probs = as.numeric(unlist(strsplit(input$probability, ",")))
         # print(paste("save_mkde_type:", input$save_mkde_type))
         # createContour(raster, probs, input$zone, input$datum, raster, shape,
         #               input$basename)
         # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
         #               input$basename)
         results <- createContour(raster, probs, input$zone, input$datum, input$map)
-
-        # print(paste("input$map =", input$map))
-        # print(paste("results[[2]] =", results[[2]]))
+        #print(paste("results =", results))
+        print(paste("input$map =", input$map))
+        print(paste("results[[2]] =", results[[2]]))
+        # print(paste("results[[1]] =", results[[1]]))
         
-        if (input$map && results[[2]] == FALSE) {
+        if (input$map && results[[2]] == FALSE)
           showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                            duration = NULL, type = "warning", session = session)
-        }
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
         rasters[[id]]$contours <- results[[1]]
         gps$rasters <- rasters
+        print ("here 20")
+        
+        # output$mkde_plot <- renderPlot(raster)
+        # output$mkde_plot <- renderPlot(results[[1]])
+        data <- gps$data
+        output$mkde_plot <- renderPlot({minConvexPolygon(data, "11", "WGS84",
+                                                         100, "1", TRUE)})
       },
       error = function(error_message) {
         print(paste("error message =", error_message))
@@ -958,32 +976,36 @@ server <- function(input, output, session) {
                          duration = NULL, type = "error", session = session)
       },
       finally = {
-        # shinyjs::enable("inputs")
+        print("here 21")
         shinyjs::enable("controls")
       })
     }
-    # shinyjs::enable("inputs")
   })
 
-  output$mcp_plot <- renderPlot({
-    printf("render mcp_plot\n")
-    # print(paste("gps$data 2 =", gps$data))
-    data <- gps$data
-    # print(paste("data =", data))
-    if (is.null(data)) {
-      print("no data...clear plot!")
-      plot.new()
-    } else {
-      print("calling plot_mcp()")
-      plot_mcp()
-    }
-  })
+  # output$mcp_plot <- renderPlot({
+  #   printf("render mcp_plot\n")
+  #   data <- gps$data
+  #   if (is.null(data)) {
+  #     print("no data...clear mcp plot!")
+  #     plot.new()
+  #   # } else {
+  #   #   print("there is data, plot mcp!")
+  #   #   plot_mcp()
+  #   }
+  # })
   
   output$mkde_plot <- renderPlot({
-    #printf("render mkde_plot\n")
-    replot_mkde(TRUE)
-    plot_mkde()
-    #printf("leaving mkde_plot\n")
+    printf("render mkde_plot\n")
+    data <- gps$data
+    if (is.null(data)) {
+      print("no data...clear mkde plot!")
+      plot.new()
+    } else {
+      print("there is data, plot mkde!")
+      replot_mkde(TRUE)
+      plot_mkde()
+    }
+    printf("leaving mkde_plot\n")
   })
   
   # observeEvent ( input$reset_data, {
@@ -1022,7 +1044,7 @@ server <- function(input, output, session) {
     # print(paste("idx =", id))
     
     mid <- "save_output"
-    message <- paste("Saving output files...")
+    message <- "Saving output files..."
     showNotification(message, id = mid, type = "message", duration = NULL,
                      session = session)
     save_output(input$save_mkde_type, gps$rasters, id, input$zone, input$datum,
