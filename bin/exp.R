@@ -7,6 +7,7 @@ library(ggplot2)
 library(mkde)
 library(raster)
 library(broom)
+library(RColorBrewer)
 
 source("processDataframe.R")
 
@@ -14,7 +15,7 @@ gpsdata <- read.csv("/Users/robertsinkovits/SEGdata/269.csv", header=TRUE)
 gpsdata <- preprocessDataframe(gpsdata)
 gpsdata <- gpsdata[[1]]
 
-buffer = 1000
+buffer = 10000
 xmin <- min(gpsdata$xdata) - buffer
 ymin <- min(gpsdata$ydata) - buffer
 xmax <- max(gpsdata$xdata) + buffer
@@ -98,6 +99,6 @@ mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
 mymap <- ggmap(mybasemap) +
       geom_polygon(aes(x=long, y=lat, group=group), 
       data=tidydta2, 
-      alpha=.2, linewidth=.2)
+      alpha=.25, linewidth=0.1, color="black", fill="purple")
 
 plot(mymap)
