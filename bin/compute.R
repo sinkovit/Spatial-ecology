@@ -189,7 +189,6 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
-  print("entered createContour()")
   # Create raster from MKDE object
   rst.mkde = mkdeToRaster(mkde2d.obj)
 
@@ -262,7 +261,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
                    data=tidydta2,
                    alpha=.25, linewidth=0.1, color="black", fill="blue")
     
-    #plot(mymap)
+    # plot(mymap)
     
     # check to see if contour fits on map
     for (gname in unique(tidydta2$group)) {
@@ -277,7 +276,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   #   contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
   #                              lwd = 1.0, drawlabels = FALSE)
   # }
-    
+  
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
