@@ -190,13 +190,11 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   # Create raster from MKDE object
-  print("here 1")
   rst.mkde = mkdeToRaster(mkde2d.obj)
 
   # Sort prob contours into ascending order and remove values <= 0
   probs <- sort(probs[probs > 0])
   probs_max <- tail(probs, n=1)
-  print("here 2")
 
   # Set filenames and contour probabilites based on whether all
   # contours or outer contour are used
@@ -207,7 +205,6 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
     # filename <- paste(basename, "_outercontour", sep="")
     contour_probs <- tail(probs, n=1)
   }
-  print("here 3")
 
   # Plot contours
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
@@ -275,22 +272,16 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
       }
     }
   } else {
-    print("here 4")
-    plot.new()
+    print("no map")
+    # plot.new()
     plot <- rst.cont
-    print("here 5")
-    contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
-                               lwd = 1.0, drawlabels = FALSE)
-    print("here 6")
+    # plot(rst.cont)
+    # contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
+    #                            lwd = 1.0, drawlabels = FALSE)
   }
-  print("here 7")
-  
+
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
                   probabilities = contour_probs, fits = fits, plot = plot)
-  print(paste("length 1 =", length(results)))
-  print(paste("prob =", results$probabilities))
-  # return(list(results, fits))
-  print("here 8")
   return(results)
 }
 

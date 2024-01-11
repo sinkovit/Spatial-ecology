@@ -930,7 +930,7 @@ server <- function(input, output, session) {
       shinyjs::show("save_files")
     }
     
-    print(paste("replot_mkde =", replot_mkde()))
+    # print(paste("replot_mkde =", replot_mkde()))
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric(unlist(strsplit(input$probability, ",")))
@@ -940,13 +940,6 @@ server <- function(input, output, session) {
         # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
         #               input$basename)
         results <- createContour(raster, probs, input$zone, input$datum, input$map)
-        #print(paste("results =", results))
-        print(paste("length 2 =", length(results)))
-        print(paste("input$map =", input$map))
-        # print(paste("results[[2]] =", results[[2]]))
-        # print(paste("fits =", results[[1]]$fits))
-        print(paste("fits =", results$fits))
-        # print(paste("results[[1]] =", results[[1]]))
         
         # if (input$map && results[[2]] == FALSE)
         if (input$map && results$fits == FALSE)
@@ -955,19 +948,14 @@ server <- function(input, output, session) {
 
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
-        # rasters[[id]]$contours <- results[[1]]
         rasters[[id]]$contours <- results
         gps$rasters <- rasters
 
         # output$mkde_plot <- renderPlot(raster)
-        # output$mkde_plot <- renderPlot(results[[1]])
-        output$mkde_plot <- renderPlot(results)
-        # data <- gps$data
-        # output$mkde_plot <- renderPlot({minConvexPolygon(data, "11", "WGS84",
-        #                                                  100, "1", TRUE)})
+        output$mkde_plot <- renderPlot(results$plot)
       },
       error = function(error_message) {
-        print(paste("error message =", error_message))
+        # print(paste("error message =", error_message))
         # shiny::validate(need(error_message == "",
         #                      "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
@@ -1031,15 +1019,13 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$save_mkde_btn, {
-    # print("save mkde output button!")
     # print(paste("save_mkde_data =", input$save_mkde_data))
     id <- NULL
     if (input$save_mkde_data == "current") {
       summary <- gps$summary
       id <- summary$id[input$table_summary_rows_selected]
     }
-    # print(paste("idx =", id))
-    
+
     mid <- "save_output"
     message <- "Saving output files..."
     showNotification(message, id = mid, type = "message", duration = NULL,
