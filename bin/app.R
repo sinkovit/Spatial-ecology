@@ -507,6 +507,11 @@ server <- function(input, output, session) {
     # graphics.off()
     # plot.new()
     output$mcp_plot <- renderPlot({plot.new()})
+    # For some unknown reason, if the following line is enabled, the MKDE plot
+    # doesn't calculate nor plot!
+    #output$mkde_plot <- renderPlot({plot.new()})
+    shinyjs::hide("mcp_plot")
+    shinyjs::hide("mkde_plot")
 
     # shinyjs::show("status_log")
     # print(paste("length of gps$rasters =", length(gps$rasters)))
@@ -524,8 +529,7 @@ server <- function(input, output, session) {
       # mcp_plot <<- NULL
       # mkde_plot <<- NULL
     # }
-      print("here 1")
-    
+
     if (input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_browse)
       filename <- file$name
@@ -896,18 +900,22 @@ server <- function(input, output, session) {
     id <- summary$id[input$table_summary_rows_selected]
     raster <- NULL
     rasters <- gps$rasters
+    print(paste("recalculate_raster =", recalculate_raster()))
     if(recalculate_raster())
       rasters <- NULL
     
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
+      print("if...")
       raster <- rasters[[id]]$raster
     } else {
+      print("else...")
       data <- gps$data
       
       # display_log("* Calculating raster...", FALSE)
-      # print("calculateRaster2D()...")
+      print("calculateRaster2D()...")
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
+      print("done")
       # display_log("done")
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -926,7 +934,7 @@ server <- function(input, output, session) {
       shinyjs::show("save_files")
     }
     
-    # print(paste("replot_mkde =", replot_mkde()))
+    print(paste("replot_mkde =", replot_mkde()))
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
@@ -935,23 +943,47 @@ server <- function(input, output, session) {
         #               input$basename)
         # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
         #               input$basename)
-        results <- createContour(raster, probs, input$zone, input$datum, input$map)
 
+        mid <- "create_contour"
+        message <- paste("Creating contour...")
+        showNotification(message, id = mid, type = "message", duration = NULL,
+                         session = session)
+        results <- createContour(raster, probs, input$zone, input$datum, input$map)
+        showNotification(paste(message, "done"), id = mid, type = "message",
+                         duration = 2, session = session)
+        
         # print(paste("input$map =", input$map))
         # print(paste("results[[2]] =", results[[2]]))
         
-        if (input$map && results[[2]] == FALSE) {
-          showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
-                           duration = NULL, type = "warning", session = session)
-        }
+        # if (input$map && results[[2]] == FALSE) {
+        #   showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
+        #                    duration = NULL, type = "warning", session = session)
+        # }
+        print("here 3")
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
         rasters[[id]]$contours <- results[[1]]
         gps$rasters <- rasters
+ 
+        print("here 10")
+        if (input$map) {
+          plot(results[[1]]$map)
+          
+          if (results[[2]] == FALSE) {
+            showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
+                             duration = NULL, type = "warning", session = session)
+          }
+        } else {
+          plot(results[[1]]$cut)
+          contour_display <- contour(results[[1]]$raster, add = T,
+                                     levels = results[[1]]$contour$threshold,
+                                     lwd = 1.0, drawlabels = FALSE)
+        }
+        print("here 11")
       },
       error = function(error_message) {
-        print(paste("error message =", error_message))
+        # print(paste("error message =", error_message))
         # shiny::validate(need(error_message == "",
         #                      "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
