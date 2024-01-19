@@ -206,7 +206,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
     contour_probs <- tail(probs, n=1)
   }
 
-  # Plot contours
+  # Calculate contours
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
                                                           na.rm = TRUE)))

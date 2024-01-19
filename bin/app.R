@@ -429,7 +429,7 @@ server <- function(input, output, session) {
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
         })
-        shinyjs::click("mkde_plot_btn")
+        # shinyjs::click("mkde_plot_btn")
       }
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
@@ -506,10 +506,12 @@ server <- function(input, output, session) {
     # dev.off()
     # graphics.off()
     # plot.new()
+    print("clearing & hiding mcp plot")
     output$mcp_plot <- renderPlot({plot.new()})
-    #output$mkde_plot <- renderPlot({plot.new()})
+    # print("clearing & hiding mkde plot")
+    # output$mkde_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
-    #shinyjs::hide("mkde_plot")
+    # shinyjs::hide("mkde_plot")
 
     # shinyjs::show("status_log")
     # print(paste("length of gps$rasters =", length(gps$rasters)))
@@ -524,8 +526,6 @@ server <- function(input, output, session) {
       shinyjs::show("instructions")
       # shinyjs::hide("mcp_plot")
       # shinyjs::hide("mkde_plot")
-      # mcp_plot <<- NULL
-      # mkde_plot <<- NULL
     # }
 
     if (input$data_source == 'Gateway') {
@@ -866,7 +866,8 @@ server <- function(input, output, session) {
   
   
   # plot_mcp <- eventReactive(input$mcp_plot_btn, {
-  plot_mcp <- observeEvent(input$mcp_plot_btn, {
+  # plot_mcp <- observeEvent(input$mcp_plot_btn, {
+  observeEvent(input$mcp_plot_btn, {
     printf("plot_mcp!\n")
     shinyjs::hide("instructions")
     data <- gps$data
@@ -883,13 +884,14 @@ server <- function(input, output, session) {
     # map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom, id,
     #                         mode)
     # map
+    print("plotting mcp")
     output$mcp_plot <-
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
   })
   
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    print("mkde_plot_btn event!")
+    print("plot_mkde!")
     shinyjs::hide("instructions")
     # shinyjs::disable("inputs")
     shinyjs::disable("controls")
@@ -994,43 +996,27 @@ server <- function(input, output, session) {
     # shinyjs::enable("inputs")
   })
 
-  output$mcp_plot <- renderPlot({
-    printf("render mcp_plot\n")
-    # print(paste("gps$data 2 =", gps$data))
-    data <- gps$data
-    # print(paste("data =", data))
-    if (is.null(data)) {
-      print("no data...clear plot!")
-      plot.new()
-    } else {
-      print("calling plot_mcp()")
-      plot_mcp()
-    }
-  })
+  # output$mcp_plot <- renderPlot({
+  #   printf("render mcp_plot\n")
+  #   # print(paste("gps$data 2 =", gps$data))
+  #   data <- gps$data
+  #   # print(paste("data =", data))
+  #   if (is.null(data)) {
+  #     print("no data...clear plot!")
+  #     plot.new()
+  #   } else {
+  #     print("calling plot_mcp()")
+  #     plot_mcp()
+  #   }
+  # })
   
   output$mkde_plot <- renderPlot({
-    #printf("render mkde_plot\n")
+    printf("render mkde_plot\n")
     replot_mkde(TRUE)
     plot_mkde()
     #printf("leaving mkde_plot\n")
   })
-  
-  # observeEvent ( input$reset_data, {
-  #   shinyjs::reset("data_source")
-  #   shinyjs::reset ( "local_file" )
-  #   shinyjs::reset ( "movebank_username" )
-  #   shinyjs::reset ( "movebank_password" )
-  #   shinyjs::reset ( "movebank_studyid" )
-  #   shinyjs::reset ( "movebank_save_local" )
-  #   shinyjs::reset("coordinates")
-  #   shinyjs::reset("zone")
-  #   shinyjs::reset("datum")
-  #   output$table_all <- DT::renderDataTable(NULL)
-  #   output$table_summary <- DT::renderDataTable(NULL)
-  #   shinyjs::disable("data_load_btn")
-  #   shinyjs::disable("reset_data")
-  #   gps <- reactiveValues()
-  # } )
+
   
   observeEvent(input$reset_parameters, {
     shinyjs::reset("sig2obs")
