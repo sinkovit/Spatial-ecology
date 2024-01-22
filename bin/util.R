@@ -58,6 +58,7 @@ contains <- function(haystack, needle) {
   return(FALSE)
 }
 
+
 # Returns TRUE of the parameter is NULL, a string with no non-space characters,
 # or length < 1; otherwise returns FALSE
 isEmpty <- function(x) {
@@ -141,4 +142,16 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
       }
     }
   }
+}
+
+
+# Read and setup the Stadia Map API key for the session from file
+setupAPIkey <- function() {
+  # print("entered setupAPIkey()")
+  file <- paste(getwd(), "/api.key", sep = "")
+  # print(paste("file =", file))
+  key <- read_file(file)
+  # print(paste("key =", key))
+  register_stadiamaps(key = key, write = FALSE)
+  return(TRUE)
 }

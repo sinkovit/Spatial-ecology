@@ -48,6 +48,7 @@ library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
+library("readr")
 
 source("compute.R")
 source("loadDataframe.R")
@@ -349,6 +350,11 @@ server <- function(input, output, session) {
   #print(paste("session$userData:", session$userData))
   # print(paste("session$clientData:", session$clientData))
   pdf(file = NULL)
+  
+  # Setup the Stadiamap API key
+  setupAPIkey()
+  showNotification("API key successfully setup", type = "message", duration = 2,
+                   session = session)
 
   # Global variables
   current_table_selection <- reactiveVal("single")
@@ -492,20 +498,6 @@ server <- function(input, output, session) {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
 
-    # From https://www.statology.org/clear-plots-in-r/ but doesn't seem to work
-    # print(paste("dev.list =", dev.list()))
-    # print(paste("dev.list RStudioGD =", dev.list()["RStudioGD"]))
-    # try(dev.off(dev.list()["RStudioGD"]), silent = TRUE)
-    # try(dev.off(), silent = TRUE)
-    
-    # From https://www.statology.org/empty-plot-in-r/, also doesn't seem to work
-    # plot.new()
-    # these didn't work either...
-    # output$mcp_plot <- plot.new()
-    # plot_mcp()
-    # dev.off()
-    # graphics.off()
-    # plot.new()
     print("clearing & hiding mcp plot")
     output$mcp_plot <- renderPlot({plot.new()})
     # print("clearing & hiding mkde plot")
@@ -772,16 +764,6 @@ server <- function(input, output, session) {
   
   # Handle events that should enable/disable MKDE plot button
   observe ({
-    # if (! isEmpty (gps$original)  &&
-    #    is.numeric(input$sig2obs)  && input$sig2obs >= 0 &&
-    #    is.numeric(input$tmax)     && input$tmax >= 0 &&
-    #    is.numeric(input$cellsize) && input$cellsize >= 1 &&
-    #    is.numeric(input$mkde_buffer)   && input$mkde_buffer >= 0)
-    #   shinyjs::enable("mkde_plot_btn")
-    # else
-    #   shinyjs::disable("mkde_plot_btn")
-    
-    #if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected) ||
     if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
         (is.numeric(input$tmax) && input$tmax < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
@@ -890,10 +872,10 @@ server <- function(input, output, session) {
                                    id, mode)})
   })
   
+  # observeEvent(input$mkde_plot_btn, {
   plot_mkde <- eventReactive(input$mkde_plot_btn, {
-    print("plot_mkde!")
+    print("mkde plot button event!")
     shinyjs::hide("instructions")
-    # shinyjs::disable("inputs")
     shinyjs::disable("controls")
 
     summary <- gps$summary
@@ -912,9 +894,10 @@ server <- function(input, output, session) {
       data <- gps$data
       
       # display_log("* Calculating raster...", FALSE)
-      # print("calculateRaster2D()...")
+      printf("calculateRaster2D()...")
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
+      print("done")
       # display_log("done")
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -964,23 +947,23 @@ server <- function(input, output, session) {
         gps$rasters <- rasters
         
         if (input$map) {
-          print("plotting map")
-          plot(results[[1]]$map)
-          
-          # if (results[[2]] == FALSE) {
           if (results[[1]]$fits == FALSE) {
             showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                              duration = NULL, type = "warning", session = session)
           }
+          results[[1]]$map
         } else {
           plot(results[[1]]$cut)
           contour_display <- contour(results[[1]]$raster, add = T,
                                      levels = results[[1]]$contour$threshold,
                                      lwd = 1.0, drawlabels = FALSE)
+          # not sure why the below doesn't work but the logic works for the if
+          # statement above
+          # results[[1]]$cut
         }
       },
       error = function(error_message) {
-        print(paste("error message =", error_message))
+        # print(paste("error message =", error_message))
         # shiny::validate(need(error_message == "",
         #                      "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
@@ -988,11 +971,9 @@ server <- function(input, output, session) {
       },
       finally = {
         # shinyjs::enable("inputs")
-        print("finally")
         shinyjs::enable("controls")
       })
     }
-    print("here 1")
     # shinyjs::enable("inputs")
   })
 
@@ -1011,7 +992,7 @@ server <- function(input, output, session) {
   # })
   
   output$mkde_plot <- renderPlot({
-    printf("render mkde_plot\n")
+    print("render mkde_plot")
     replot_mkde(TRUE)
     plot_mkde()
     #printf("leaving mkde_plot\n")
