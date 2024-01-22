@@ -790,9 +790,9 @@ server <- function(input, output, session) {
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
       shinyjs::disable("mkde_plot_btn")
       shinyjs::disable("mcp_plot_btn")
-    } else {
-      shinyjs::enable("mkde_plot_btn")
-      shinyjs::enable("mcp_plot_btn")
+    # } else {
+    #   shinyjs::enable("mkde_plot_btn")
+    #   shinyjs::enable("mcp_plot_btn")
     }
   })
 
