@@ -353,13 +353,13 @@ server <- function(input, output, session) {
   
   # Setup the Stadiamap API key
   setupAPIkey()
-  showNotification("API key successfully setup", type = "message", duration = 2,
+  showNotification("Setup API key", type = "message", duration = 2,
                    session = session)
 
   # Global variables
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
-  log <- reactiveVal(NULL)
+  # log <- reactiveVal(NULL)
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
   
@@ -410,6 +410,7 @@ server <- function(input, output, session) {
   
   # shinyjs::hide("status_log")
   shinyjs::hide("mcp_plot")
+  shinyjs::hide("mkde_plot")
   shinyjs::hide("tables")
   shinyjs::hide("save_files")
   shinyjs::disable(selector = "[type=radio][value=25D]")
@@ -498,12 +499,12 @@ server <- function(input, output, session) {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
 
-    print("clearing & hiding mcp plot")
-    output$mcp_plot <- renderPlot({plot.new()})
-    # print("clearing & hiding mkde plot")
+    print("clearing & hiding plots")
+    # the following line causes the mkde not to plot at all, weird!
     # output$mkde_plot <- renderPlot({plot.new()})
+    output$mcp_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
-    # shinyjs::hide("mkde_plot")
+    shinyjs::hide("mkde_plot")
 
     # shinyjs::show("status_log")
     # print(paste("length of gps$rasters =", length(gps$rasters)))
@@ -596,7 +597,6 @@ server <- function(input, output, session) {
       else
         print("there is gps$data 1")
       gps$data <- results[[1]]
-      print("here 2")
       if (is.null(gps$data))
         print("no gps$data 2")
       else
@@ -847,26 +847,18 @@ server <- function(input, output, session) {
   })
   
   
+  # There is a slight delay in displaying the plot but it appears the delay
+  # isn't in this observeEvent
   # plot_mcp <- eventReactive(input$mcp_plot_btn, {
   # plot_mcp <- observeEvent(input$mcp_plot_btn, {
   observeEvent(input$mcp_plot_btn, {
-    printf("plot_mcp!\n")
     shinyjs::hide("instructions")
     data <- gps$data
-    if (is.null(data))
-      print("data is null!")
-    else
-      print("there is data")
-
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     mode <- TRUE
     if (input$display == "Points only")
       mode <- FALSE
-    # map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom, id,
-    #                         mode)
-    # map
-    print("plotting mcp")
     output$mcp_plot <-
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
@@ -977,20 +969,6 @@ server <- function(input, output, session) {
     # shinyjs::enable("inputs")
   })
 
-  # output$mcp_plot <- renderPlot({
-  #   printf("render mcp_plot\n")
-  #   # print(paste("gps$data 2 =", gps$data))
-  #   data <- gps$data
-  #   # print(paste("data =", data))
-  #   if (is.null(data)) {
-  #     print("no data...clear plot!")
-  #     plot.new()
-  #   } else {
-  #     print("calling plot_mcp()")
-  #     plot_mcp()
-  #   }
-  # })
-  
   output$mkde_plot <- renderPlot({
     print("render mkde_plot")
     replot_mkde(TRUE)
