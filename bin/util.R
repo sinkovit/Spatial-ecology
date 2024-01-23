@@ -145,12 +145,17 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
 }
 
 
-# Read and setup the Stadia Map API key for the session from file
+# Read the Stadia map API key file, remove newline if any is present, and setup
+# session with the key. Unfortunately there is no way to test if the api key is
+# valid or not.  If the key is not valid, the error
+# "Error in curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input to a URL function"
+# will be caught at plot run-time
 setupAPIkey <- function() {
   # print("entered setupAPIkey()")
-  file <- paste(getwd(), "/api.key", sep = "")
+  filename <- paste(getwd(), "/api.key", sep = "")
   # print(paste("file =", file))
-  key <- read_file(file)
+  key <- read_file(filename)
+  key <- gsub("[\r\n]", "", key)
   # print(paste("key =", key))
   register_stadiamaps(key = key, write = FALSE)
   return(TRUE)
