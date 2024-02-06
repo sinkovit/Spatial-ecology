@@ -341,7 +341,6 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
-  print("entered server")
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
   # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
@@ -354,7 +353,7 @@ server <- function(input, output, session) {
   
   # Setup the Stadiamap API key
   setupAPIkey()
-  showNotification("Setup API key", type = "message", duration = 2,
+  showNotification("API key setup", type = "message", duration = 2,
                    session = session)
 
   # Global variables
@@ -424,7 +423,6 @@ server <- function(input, output, session) {
   
   # Handle control panel tab changes...
   observeEvent(input$controls, {
-    print("entered observeEvent 1")
     print(paste("** input$controls =", input$controls))
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
@@ -469,12 +467,10 @@ server <- function(input, output, session) {
       shinyjs::show("mkde_plot")
       current_table_selection("single")
     }
-    print("leaving observeEvent 1")
   })
   
   # If the required load data input is missing, disable button; otherwise enable...
   observe({
-    print("entered observe 1")
     if ((input$data_source == 'Gateway') &&
         isEmpty (parseFilePaths (gateway_volumes, input$gateway_browse)$name) ||
         (input$data_source == 'Your computer' && isEmpty(input$local_file)) ||
@@ -487,29 +483,21 @@ server <- function(input, output, session) {
       shinyjs::enable("data_load_btn")
       # shinyjs::enable("reset_data")
     }
-    print("leaving observe 1")
   })
   
   # Update Movebank local filename based on studyid...
   observeEvent(input$movebank_studyid, {
-    print("entered observeEvent 2")
     updateTextInput(session, "movebank_local_filename",
                     value = paste("movebank-", input$movebank_studyid, ".csv",
                                   sep = ""))
-    print("leaving observeEvent 2")
   })
   
   # Handle Data tab "Load data" button click...
+  # eventReactive(input$data_load_btn, {
   observeEvent(input$data_load_btn, {
-    print("entered observeEvent 3")
-    # eventReactive(input$data_load_btn, {
-    
-    print("caught load data button event!")
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
 
-    print("clearing & hiding plots")
-    # the following line causes the mkde not to plot at all, weird!
     output$mkde_plot <- renderPlot({plot.new()})
     output$mcp_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
@@ -667,7 +655,6 @@ server <- function(input, output, session) {
         # shinyjs::show("tables")
       }
     }
-    print("leaving observeEvent 3")
   })
   
   # Handle MKDE tab events...
@@ -678,7 +665,6 @@ server <- function(input, output, session) {
   # 2. check MKDE parameters, if invalid will turn border to red, otherwise no
   #   color
   observe ({
-    print("entered observe 2")
     recalculate_raster(TRUE)
     replot_mkde(TRUE)
     
@@ -739,8 +725,6 @@ server <- function(input, output, session) {
     }
     runjs (paste0 ("document.getElementById('basename').style.border ='", color,
                    "'"))
-    
-    print("leaving observe 2")
   })
   
   # The following observe serves 2 purposes:
@@ -748,7 +732,6 @@ server <- function(input, output, session) {
   # 2. check probability parameter, if invalid will turn border to red,
   # otherwise no color
   observeEvent(input$probability, {
-    print("entered observeEvent 4")
     replot_mkde(TRUE)
     
     # following test doesn't seem to work for the entire probability string
@@ -767,12 +750,10 @@ server <- function(input, output, session) {
     
     runjs (paste0 ("document.getElementById('probability').style.border ='",
                    color, "'"))
-    print("leaving observeEvent 4")
   })
   
   # Handle events that should enable/disable MKDE plot button
   observe ({
-    print("entered observe 3")
     if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
         (is.numeric(input$tmax) && input$tmax < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
@@ -780,18 +761,15 @@ server <- function(input, output, session) {
       shinyjs::disable("mkde_plot_btn")
     else
       shinyjs::enable("mkde_plot_btn")
-    print("leaving observe 3")
   })
 
   # If no basename nor save mkde type, then disable save mkde button
   observe ({
-    print("entered observe 4")
     if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
       shinyjs::disable("save_mkde_btn")
     } else {
       shinyjs::enable("save_mkde_btn")
     }
-    print("leaving observe 4")
   })
   
   
@@ -799,7 +777,6 @@ server <- function(input, output, session) {
   
   # Handle no data or no table row selected...
   observe ({
-    print("entered observe 5")
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
       shinyjs::disable("mkde_plot_btn")
       shinyjs::disable("mcp_plot_btn")
@@ -807,7 +784,6 @@ server <- function(input, output, session) {
     #   shinyjs::enable("mkde_plot_btn")
     #   shinyjs::enable("mcp_plot_btn")
     }
-    print("leaving observe 5")
   })
 
   # Change table_all_data when input$control changes between MCP and MKDE
@@ -815,7 +791,6 @@ server <- function(input, output, session) {
   # table_all_data <- eventReactive (gps$original, {
   # table_all_data <- eventReactive(list(gps$original, input$controls), {
   table_all_data <- reactive({
-    print("entered reactive 1*")
     DT::datatable(
       gps$original[], extensions = 'Buttons',
       #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
@@ -830,7 +805,6 @@ server <- function(input, output, session) {
   
   # table_summary_data <- eventReactive (gps$summary, {
   table_summary_data <- reactive({
-    print("entered reactive 2*")
     shinyjs::show ("tables")
 
     DT::datatable (
@@ -850,7 +824,6 @@ server <- function(input, output, session) {
   output$table_summary <- DT::renderDataTable(table_summary_data())
   
   observeEvent(input$areaUnits, {
-    print("entered observeEvent 5")
     if (!is.null(gps$original)) {
       id <- "recalc"
       message <- "Re-calculating spatial attributes..."
@@ -862,7 +835,6 @@ server <- function(input, output, session) {
                        type = "message", session = session)
       gps$summary <- data
     }
-    print("leaving observeEvent 5")
   })
   
   
@@ -871,7 +843,6 @@ server <- function(input, output, session) {
   # plot_mcp <- eventReactive(input$mcp_plot_btn, {
   # plot_mcp <- observeEvent(input$mcp_plot_btn, {
   observeEvent(input$mcp_plot_btn, {
-    print("entered observeEvent 6")
     shinyjs::hide("instructions")
     data <- gps$data
     summary <- gps$summary
@@ -882,12 +853,10 @@ server <- function(input, output, session) {
     output$mcp_plot <-
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
-    print("leaving observeEvent 6")
   })
   
   # plot_mkde <- eventReactive(input$mkde_plot_btn, {
   observeEvent(input$mkde_plot_btn, {
-    print("entered eventReactive 1")
     print("mkde plot button event!")
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
@@ -969,17 +938,20 @@ server <- function(input, output, session) {
           output$mkde_plot <- renderPlot({results[[1]]$map})
         } else {
           # plot(results[[1]]$cut)
-          contour_display <- contour(results[[1]]$raster, add = T,
-                                     levels = results[[1]]$contour$threshold,
-                                     lwd = 1.0, drawlabels = FALSE)
+          # contour_display <- contour(results[[1]]$raster, add = T,
+          #                            levels = results[[1]]$contour$threshold,
+          #                            lwd = 1.0, drawlabels = FALSE)
           # not sure why the below doesn't work but the logic works for the if
           # statement above
           # results[[1]]$cut
-          output$mkde_plot <-renderPlot({results[[1]]$cut})
+          # output$mkde_plot <- plot.new()
+          # output$mkde_plot <- renderPlot({plot.new()})
+          output$mkde_plot <- renderPlot({results[[1]]$cut})
+          # output$mkde_plot <-plot(results[[1]]$cut)
         }
       },
       error = function(error_message) {
-        # print(paste("error message =", error_message))
+        print(paste("error message =", error_message))
         # shiny::validate(need(error_message == "",
         #                      "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
@@ -991,7 +963,6 @@ server <- function(input, output, session) {
       })
     }
     # shinyjs::enable("inputs")
-    print("leaving eventReactive 1")
   })
 
   # output$mkde_plot <- renderPlot({
@@ -1003,17 +974,14 @@ server <- function(input, output, session) {
 
   
   observeEvent(input$reset_parameters, {
-    print("entered observeEvent 7")
     shinyjs::reset("sig2obs")
     shinyjs::reset("tmax")
     shinyjs::reset("cellsize")
     shinyjs::reset("mkde_buffer")
     shinyjs::reset("probability")
-    print("leaving observeEvent 7")
   })
   
   observeEvent(input$save_mkde_btn, {
-    print("entered observeEvent 8")
     # print("save mkde output button!")
     # print(paste("save_mkde_data =", input$save_mkde_data))
     id <- NULL
@@ -1031,9 +999,7 @@ server <- function(input, output, session) {
                 input$basename)
     showNotification(paste(message, "done"), id = mid, type = "message",
                      duration = 2, session = session)
-    print("leaving observeEvent 8")
   })
-  print("leaving server")
 }
 
 shinyApp ( ui = ui, server = server )
