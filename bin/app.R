@@ -352,10 +352,18 @@ server <- function(input, output, session) {
   pdf(file = NULL)
   
   # Setup the Stadiamap API key
-  setupAPIkey()
-  showNotification("API key setup", type = "message", duration = 2,
-                   session = session)
-
+  message <- "Setting up API key..."
+  tryCatch ({
+    showNotification(message, type = "message", duration = NULL, session = session)
+    setupAPIkey()
+    showNotification(paste(message, "done"), type = "message", duration = 2,
+                     session = session)
+  },
+  error = function(e) {
+    showNotification("System Error: will not be able to plot MKDE!",
+                     type = "error", duration = NULL, session = session)
+  })
+  
   # Global variables
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
