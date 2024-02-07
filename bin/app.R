@@ -352,16 +352,18 @@ server <- function(input, output, session) {
   pdf(file = NULL)
   
   # Setup the Stadiamap API key
+  id <- "api_key"
   message <- "Setting up API key..."
   tryCatch ({
-    showNotification(message, type = "message", duration = NULL, session = session)
-    setupAPIkey()
-    showNotification(paste(message, "done"), type = "message", duration = 2,
+    showNotification(message, id = id, type = "message", duration = NULL,
                      session = session)
+    setupAPIkey()
+    showNotification(paste(message, "done"), id = id, type = "message",
+                     duration = 2, session = session)
   },
   error = function(e) {
-    showNotification("System Error: will not be able to plot MKDE!",
-                     type = "error", duration = NULL, session = session)
+    showNotification(paste(message, "system error: unable to plot MKDE!"),
+                     id = id, type = "error", duration = NULL, session = session)
   })
   
   # Global variables
