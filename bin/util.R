@@ -94,10 +94,10 @@ isEmpty <- function(x) {
 # Write output files
 # id - can be NULL to denote all available rasters or a specific animal id
 save_output <- function(types, rasters, id, utm.zone, datum, basename) {
-  print("save_output()")
-  print(paste("types =", types))
-  print(paste("length of rasters =", length(rasters)))
-  print(paste("idy =(", id, ")", sep = ""))
+  # print("save_output()")
+  # print(paste("types =", types))
+  # print(paste("length of rasters =", length(rasters)))
+  # print(paste("idy =(", id, ")", sep = ""))
   
   if (isEmpty(rasters)) {
     return(NULL)
@@ -113,22 +113,22 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
     # print(paste("raster$id class =", class(raster$id)))
     # print(paste("id class =", class(id)))
     if (is.null(id) || raster$id == id) {
-      print("save!")
+      # print("save!")
       contour_info <- raster$contours
       crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
                       " +units=m +no_defs", sep="")
       # print(paste("crsstr =", crsstr))
       output_file <- paste(path_home(), "/", basename, "-", raster$id, sep = "")
-      print(paste("output_file =", output_file))
+      # print(paste("output_file =", output_file))
       raster.contour <- rasterToContour(contour_info$raster,
                                         levels = contour_info$contour$threshold)
       proj4string(raster.contour) = CRS(crsstr)
        
       if (contains(types, "raster")) {
-        printf("Writing raster to file %s.asc...", output_file)
+        # printf("Writing raster to file %s.asc...", output_file)
         writeRaster(contour_info$cut, output_file, format = "ascii",
                     overwrite = TRUE)
-        printf("done\n")
+        # printf("done\n")
       }
       
       if(contains(types, "shape")) {
@@ -136,9 +136,9 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
                                   paste(contour_info$probabilities,
                                         "% Contour Line", sep=""))
         proj4string(raster.contour) = CRS(crsstr)
-        printf("Writing shape to 5 files %s.*...", output_file)
+        # printf("Writing shape to 5 files %s.*...", output_file)
         shapefile(x = raster.contour, file = output_file, overwrite = TRUE)
-        printf("done\n")
+        # printf("done\n")
       }
     }
   }
@@ -151,7 +151,7 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
 # "Error in curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input to a URL function"
 # will be caught at plot run-time
 setupAPIkey <- function() {
-  filename <- paste(getwd(), "/secrets/mkde.txt", sep = "")
+  filename <- "/secrets/mkde.txt"
   key <- read_file(filename)
   key <- gsub("[\r\n]", "", key)
   register_stadiamaps(key = key, write = FALSE)

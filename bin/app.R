@@ -235,11 +235,11 @@ ui <- dashboardPage(
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
             # https://stackoverflow.com/questions/36709441/how-to-display-widgets-inline-in-shiny
-            div(style = "display: inline-block;vertical-align:sub;",
-                checkboxInput("map", NULL, value=TRUE)),
-            div(style = "display: inline-block;",
-                tags$strong(id = "maplabel", "Show map background")),
-            hr(style = "border-top: 2px solid grey;"),
+            # div(style = "display: inline-block;vertical-align:sub;",
+            #     checkboxInput("map", NULL, value=TRUE)),
+            # div(style = "display: inline-block;",
+            #     tags$strong(id = "maplabel", "Show map background")),
+            # hr(style = "border-top: 2px solid grey;"),
             
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
@@ -857,7 +857,7 @@ server <- function(input, output, session) {
   
   # plot_mkde <- eventReactive(input$mkde_plot_btn, {
   observeEvent(input$mkde_plot_btn, {
-    print("mkde plot button event!")
+    # print("mkde plot button event!")
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
 
@@ -877,10 +877,10 @@ server <- function(input, output, session) {
       data <- gps$data
       
       # display_log("* Calculating raster...", FALSE)
-      printf("calculateRaster2D()...")
+      # printf("calculateRaster2D()...")
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
-      print("done")
+      # print("done")
       # display_log("done")
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -912,12 +912,14 @@ server <- function(input, output, session) {
         message <- paste("Creating contour...")
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
-        results <- createContour(raster, probs, input$zone, input$datum, input$map)
+        # results <- createContour(raster, probs, input$zone, input$datum, input$map)
+        results <- createContour(raster, probs, input$zone, input$datum, FALSE)
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 2, session = session)
 
         # print(paste("input$map =", input$map))
         # print(paste("results[[2]] =", results[[2]]))
+        # print(paste("results =", results))
         
         # if (input$map && results[[2]] == FALSE) {
         #   showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
@@ -929,7 +931,8 @@ server <- function(input, output, session) {
         rasters[[id]]$contours <- results[[1]]
         gps$rasters <- rasters
         
-        if (input$map) {
+        # if (input$map) {
+        if (FALSE) {
           if (results[[1]]$fits == FALSE) {
             showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                              duration = NULL, type = "warning", session = session)
@@ -992,13 +995,14 @@ server <- function(input, output, session) {
     # print(paste("idx =", id))
     
     mid <- "save_output"
-    message <- paste("Saving output files...")
+    message <- paste("Saving output files to ", path_home(), "/", input$basename,
+                     "* ...", sep = "")
     showNotification(message, id = mid, type = "message", duration = NULL,
                      session = session)
     save_output(input$save_mkde_type, gps$rasters, id, input$zone, input$datum,
                 input$basename)
     showNotification(paste(message, "done"), id = mid, type = "message",
-                     duration = 2, session = session)
+                     duration = NULL, session = session)
   })
 }
 

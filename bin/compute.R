@@ -272,15 +272,19 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
       }
     }
   # } else {
-  #   plot(rst.cont)
-  #   contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
-  #                              lwd = 1.0, drawlabels = FALSE)
+  #   # plot(rst.cont)
+    # plot.new()
+    # contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
+    #                            lwd = 1.0, drawlabels = FALSE)
+    # print(paste("contour_display :", contour_display))
   # }
   
+  # print(paste("rst.cont :", rst.cont))
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
-  return(list(results, fits))
+  # return(list(results, fits))
+  return(list(results))
 }
 
 
