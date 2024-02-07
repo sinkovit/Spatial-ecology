@@ -942,7 +942,7 @@ server <- function(input, output, session) {
         gps$rasters <- rasters
         
         # if (input$map) {
-        if (FALSE) {
+        if (TRUE) {
           if (results[[1]]$fits == FALSE) {
             showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                              duration = NULL, type = "warning", session = session)
