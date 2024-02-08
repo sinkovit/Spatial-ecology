@@ -206,16 +206,16 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
     contour_probs <- tail(probs, n=1)
   }
 
-  # Plot contours
+  # Calculate contours
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
                                                           na.rm = TRUE)))
-  results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
-                  probabilities = contour_probs)
+  # results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
+  #                 probabilities = contour_probs)
 
   #RSSRSS Start code to choose between original display and mkde on map
   fits <- TRUE
-  if (map) {
+  # if (map) {
     crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
                     " +units=m +no_defs", sep="")
     
@@ -261,7 +261,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
                    data=tidydta2,
                    alpha=.25, linewidth=0.1, color="black", fill="blue")
     
-    plot(mymap)
+    # plot(mymap)
     
     # check to see if contour fits on map
     for (gname in unique(tidydta2$group)) {
@@ -271,13 +271,20 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
         fits <- FALSE # Contour does not fit on map
       }
     }
-  } else {
-    plot(rst.cont)
-    contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
-                               lwd = 1.0, drawlabels = FALSE)
-  }
+  # } else {
+  #   # plot(rst.cont)
+    # plot.new()
+    # contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
+    #                            lwd = 1.0, drawlabels = FALSE)
+    # print(paste("contour_display :", contour_display))
+  # }
   
-  return(list(results, fits))
+  # print(paste("rst.cont :", rst.cont))
+  results <- list(raster = rst.mkde, contour = cont, cut = rst.cont, map = mymap,
+                  probabilities = contour_probs, fits = fits)
+  
+  # return(list(results, fits))
+  return(list(results))
 }
 
 
