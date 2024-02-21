@@ -240,7 +240,7 @@ ui <- dashboardPage(
             # div(style = "display: inline-block;",
             #     tags$strong(id = "maplabel", "Show map background")),
             # hr(style = "border-top: 2px solid grey;"),
-            
+
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
             
@@ -767,8 +767,10 @@ server <- function(input, output, session) {
     if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
         (is.numeric(input$tmax) && input$tmax < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
-        (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0))
+        (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0)) {
+      print("disabling mkde_plot_btn 1")
       shinyjs::disable("mkde_plot_btn")
+    }
     else
       shinyjs::enable("mkde_plot_btn")
   })
@@ -788,6 +790,7 @@ server <- function(input, output, session) {
   # Handle no data or no table row selected...
   observe ({
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
+      print("disabling mkde_plot_btn 2")
       shinyjs::disable("mkde_plot_btn")
       shinyjs::disable("mcp_plot_btn")
     # } else {
@@ -860,9 +863,16 @@ server <- function(input, output, session) {
     mode <- TRUE
     if (input$display == "Points only")
       mode <- FALSE
+    
+    mid <- "plot_mcp"
+    message <- paste("Creating MCP...")
+    showNotification(message, id = mid, type = "message", duration = NULL,
+                     session = session)
     output$mcp_plot <-
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
+    showNotification(paste(message, "done"), id = mid, type = "message",
+                     duration = 2, session = session)
   })
   
   # plot_mkde <- eventReactive(input$mkde_plot_btn, {
@@ -888,8 +898,15 @@ server <- function(input, output, session) {
       
       # display_log("* Calculating raster...", FALSE)
       # printf("calculateRaster2D()...")
+      mid <- "calculate_raster2d"
+      message <- paste("Calculating 2D raster...")
+      showNotification(message, id = mid, type = "message", duration = NULL,
+                       session = session)
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
+      showNotification(paste(message, "done"), id = mid, type = "message",
+                       duration = 2, session = session)
+      
       # print("done")
       # display_log("done")
       recalculate_raster(FALSE)
