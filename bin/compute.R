@@ -188,7 +188,7 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 # createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
-createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
+createContour <- function(mkde2d.obj, probs, utm.zone, datum, all = TRUE) {
   # Create raster from MKDE object
   rst.mkde = mkdeToRaster(mkde2d.obj)
 
@@ -199,10 +199,8 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   # Set filenames and contour probabilites based on whether all
   # contours or outer contour are used
   if (all) {
-    # filename <- paste(basename, "_allcontour", sep="")
     contour_probs <- probs
   } else {
-    # filename <- paste(basename, "_outercontour", sep="")
     contour_probs <- tail(probs, n=1)
   }
 
@@ -210,80 +208,64 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, map, all = TRUE) {
   cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
   rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
                                                           na.rm = TRUE)))
-  # results <- list(raster = rst.mkde, contour = cont, cut = rst.cont,
-  #                 probabilities = contour_probs)
-
   #RSSRSS Start code to choose between original display and mkde on map
   fits <- TRUE
-  # if (map) {
-    crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
-                    " +units=m +no_defs", sep="")
-    
-    # Setting bounds for map and zoom level
-    xmin <- min(mkde2d.obj$x)
-    ymin <- min(mkde2d.obj$y)
-    xmax <- max(mkde2d.obj$x)
-    ymax <- max(mkde2d.obj$y)
-    area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
-    
-    if (area < 1.0) {
-      zoom = 10
-    } else if (area < 20.0) {
-      zoom = 9
-    } else {
-      zoom = 8
-    }
-    
-    gpsdata.sp <- data.frame(label=character(), x=double(), y=double())
-    gpsdata.sp[1,] = list("dummy", xmin, ymin)
-    gpsdata.sp[2,] = list("dummy", xmin, ymax)
-    gpsdata.sp[3,] = list("dummy", xmax, ymin)
-    gpsdata.sp[4,] = list("dummy", xmax, ymax)
-    
-    # Convert contour data to lat-long
-    raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-    raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
-    proj4string(raster.contour) = CRS(crsstr)
-    raster.contour <- spTransform(raster.contour, CRS("+proj=longlat"))
-    tidydta2 <- tidy(raster.contour, group=group)
-    
-    # Generate basemap and add mkde results
-    coordinates(gpsdata.sp) <- c("x", "y")
-    proj4string(gpsdata.sp) <- CRS(crsstr)
-    gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-    mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
-                                        bottom = min(gpsdata.spgeo@coords[,2]),
-                                        right = max(gpsdata.spgeo@coords[,1]),
-                                        top = max(gpsdata.spgeo@coords[,2])),
-                               zoom = zoom)
-    mymap <- ggmap(mybasemap) +
-      geom_polygon(aes(x=long, y=lat, group=group),
-                   data=tidydta2,
-                   alpha=.25, linewidth=0.1, color="black", fill="blue")
-    
-    # plot(mymap)
-    
-    # check to see if contour fits on map
-    for (gname in unique(tidydta2$group)) {
-      x1 <-  tidydta2$lat[which(tidydta2$group == gname)]
-      y1 <-  tidydta2$long[which(tidydta2$group == gname)]
-      if (x1[1] != x1[length(x1)] && y1[1] != y1[length(y1)]) {
-        fits <- FALSE # Contour does not fit on map
-      }
-    }
-  # } else {
-  #   # plot(rst.cont)
-    # plot.new()
-    # contour_display <- contour(rst.mkde, add = T, levels = cont$threshold,
-    #                            lwd = 1.0, drawlabels = FALSE)
-    # print(paste("contour_display :", contour_display))
-  # }
+  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
+                  " +units=m +no_defs", sep="")
   
-  # print(paste("rst.cont :", rst.cont))
+  # Setting bounds for map and zoom level
+  xmin <- min(mkde2d.obj$x)
+  ymin <- min(mkde2d.obj$y)
+  xmax <- max(mkde2d.obj$x)
+  ymax <- max(mkde2d.obj$y)
+  area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
+    
+  if (area < 1.0) {
+    zoom = 10
+  } else if (area < 20.0) {
+    zoom = 9
+  } else {
+    zoom = 8
+  }
+  
+  gpsdata.sp <- data.frame(label=character(), x=double(), y=double())
+  gpsdata.sp[1,] = list("dummy", xmin, ymin)
+  gpsdata.sp[2,] = list("dummy", xmin, ymax)
+  gpsdata.sp[3,] = list("dummy", xmax, ymin)
+  gpsdata.sp[4,] = list("dummy", xmax, ymax)
+    
+  # Convert contour data to lat-long
+  raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
+  raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
+  proj4string(raster.contour) = CRS(crsstr)
+  raster.contour <- spTransform(raster.contour, CRS("+proj=longlat"))
+  tidydta2 <- tidy(raster.contour, group=group)
+  
+  # Generate basemap and add mkde results
+  coordinates(gpsdata.sp) <- c("x", "y")
+  proj4string(gpsdata.sp) <- CRS(crsstr)
+  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
+  mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
+                                      bottom = min(gpsdata.spgeo@coords[,2]),
+                                      right = max(gpsdata.spgeo@coords[,1]),
+                                      top = max(gpsdata.spgeo@coords[,2])),
+                             zoom = zoom)
+  mymap <- ggmap(mybasemap) +
+    geom_polygon(aes(x=long, y=lat, group=group), data=tidydta2, alpha=.25,
+                 linewidth=0.1, color="black", fill="blue")
+
+  # check to see if contour fits on map
+  for (gname in unique(tidydta2$group)) {
+    x1 <-  tidydta2$lat[which(tidydta2$group == gname)]
+    y1 <-  tidydta2$long[which(tidydta2$group == gname)]
+    if (x1[1] != x1[length(x1)] && y1[1] != y1[length(y1)]) {
+      fits <- FALSE # Contour does not fit on map
+    }
+  }
+
   results <- list(raster = rst.mkde, contour = cont, cut = rst.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
-  # return(list(results, fits))
   return(list(results))
 }
 
