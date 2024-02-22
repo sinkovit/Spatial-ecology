@@ -83,10 +83,10 @@ ui <- dashboardPage(
   dashboardHeader(#title = "Space Use Ecology Gateway",
     # title = span("Space Use Ecology Gateway", style = "color: black;"),
     title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
-              img(src = "logo.png")),
+              img(src = "logo.png"))
 #     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
 # > Password"),style="font-weight: bold;color:white;")),
-    tags$li(class = "dropdown", actionLink("quit_btn", "x", class = "dropdown"))
+    # tags$li(class = "dropdown", actionLink("quit_btn", "x", class = "dropdown"))
     
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
     #                     href = "custom.css")),
@@ -238,11 +238,11 @@ ui <- dashboardPage(
               value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
             ),
             # https://stackoverflow.com/questions/36709441/how-to-display-widgets-inline-in-shiny
-            # div(style = "display: inline-block;vertical-align:sub;",
-            #     checkboxInput("map", NULL, value=TRUE)),
-            # div(style = "display: inline-block;",
-            #     tags$strong(id = "maplabel", "Show map background")),
-            # hr(style = "border-top: 2px solid grey;"),
+            div(style = "display: inline-block;vertical-align:sub;",
+                checkboxInput("map", NULL, value=TRUE)),
+            div(style = "display: inline-block;",
+                tags$strong(id = "maplabel", "Show map background")),
+            hr(style = "border-top: 2px solid grey;"),
 
             actionButton("mkde_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
@@ -392,6 +392,7 @@ server <- function(input, output, session) {
   # Initialize UI
   
   # Retrieve user's Movebank credential info, if set in .Renviron
+  # See https://support.posit.co/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf
   env_var <- Sys.getenv("MovebankUsername")
   updateTextInput(session, "movebank_username", value=env_var)
   # env_var <- Sys.getenv("MovebankPassword")
@@ -404,12 +405,7 @@ server <- function(input, output, session) {
   hideTab(inputId = "controls", target = "MKDE")
   
   # Hide the table elements
-  # hideTab("tables", target = "All", session = session)
   shinyjs::hide("areaUnitsDiv")
-  
-  # Hide the plotting widgets
-  # shinyjs::hide("mcp_plot")
-  # shinyjs::hide("mkde_plot")
   
   output$instructions <- renderUI({
     tagList(h4("First, load your data and verify coordinate parameters..." ))}
@@ -444,7 +440,6 @@ server <- function(input, output, session) {
   
   # Handle control panel tab changes...
   observeEvent(input$controls, {
-    print(paste("** input$controls =", input$controls))
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
         output$instructions <- renderUI({
@@ -474,7 +469,6 @@ server <- function(input, output, session) {
       shinyjs::show("mcp_plot")
       current_table_selection("multiple")
     } else if (input$controls == "MKDE") {
-      # shinyjs::click("mkde_plot_btn")
       output$instructions <- renderUI({
         tagList(h4("To plot movement-based kernel density estimator:"),
                 tags$ol(tags$li("Set parameters (left)"),
@@ -523,7 +517,6 @@ server <- function(input, output, session) {
   })
   
   # Handle Data tab "Load data" button click...
-  # eventReactive(input$data_load_btn, {
   observeEvent(input$data_load_btn, {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
@@ -533,20 +526,12 @@ server <- function(input, output, session) {
     shinyjs::hide("mcp_plot")
     shinyjs::hide("mkde_plot")
 
-    # shinyjs::show("status_log")
-    # print(paste("length of gps$rasters =", length(gps$rasters)))
-    # if there are rasters, then we need to clear the data and plots
-    # if (! is.null (gps$rasters)) {
-      print("clearing gps data")
-      gps$data <- NULL
-      print(paste("gps$data =", gps$data))
-      gps$original <- NULL
-      gps$rasters <- NULL
-      gps$summary <- NULL
-      shinyjs::show("instructions")
-      # shinyjs::hide("mcp_plot")
-      # shinyjs::hide("mkde_plot")
-    # }
+    gps$data <- NULL
+    # print(paste("gps$data =", gps$data))
+    gps$original <- NULL
+    gps$rasters <- NULL
+    gps$summary <- NULL
+    shinyjs::show("instructions")
 
     if (input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_browse)
@@ -619,10 +604,10 @@ server <- function(input, output, session) {
       }
 
       data <- results[[1]]
-      if (is.null(gps$data))
-        print("no gps$data 1")
-      else
-        print("there is gps$data 1")
+      # if (is.null(gps$data))
+      #   print("no gps$data 1")
+      # else
+      #   print("there is gps$data 1")
       gps$data <- results[[1]]
       if (is.null(gps$data))
         print("no gps$data 2")
@@ -788,7 +773,6 @@ server <- function(input, output, session) {
         (is.numeric(input$tmax) && input$tmax < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
         (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0)) {
-      print("disabling mkde_plot_btn 1")
       shinyjs::disable("mkde_plot_btn")
     }
     else
@@ -810,19 +794,13 @@ server <- function(input, output, session) {
   # Handle no data or no table row selected...
   observe ({
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
-      print("disabling mkde_plot_btn 2")
       shinyjs::disable("mkde_plot_btn")
       shinyjs::disable("mcp_plot_btn")
-    # } else {
-    #   shinyjs::enable("mkde_plot_btn")
-    #   shinyjs::enable("mcp_plot_btn")
     }
   })
 
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
-  # table_all_data <- eventReactive (gps$original, {
-  # table_all_data <- eventReactive(list(gps$original, input$controls), {
   table_all_data <- reactive({
     DT::datatable(
       gps$original[], extensions = 'Buttons',
@@ -873,8 +851,6 @@ server <- function(input, output, session) {
   
   # There is a slight delay in displaying the plot but it appears the delay
   # isn't in this observeEvent
-  # plot_mcp <- eventReactive(input$mcp_plot_btn, {
-  # plot_mcp <- observeEvent(input$mcp_plot_btn, {
   observeEvent(input$mcp_plot_btn, {
     shinyjs::hide("instructions")
     data <- gps$data
@@ -895,9 +871,7 @@ server <- function(input, output, session) {
                      duration = 2, session = session)
   })
   
-  # plot_mkde <- eventReactive(input$mkde_plot_btn, {
   observeEvent(input$mkde_plot_btn, {
-    # print("mkde plot button event!")
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
 
@@ -905,19 +879,15 @@ server <- function(input, output, session) {
     id <- summary$id[input$table_summary_rows_selected]
     raster <- NULL
     rasters <- gps$rasters
-    print(paste("recalculate_raster =", recalculate_raster()))
+    # print(paste("recalculate_raster =", recalculate_raster()))
     if(recalculate_raster())
       rasters <- NULL
     
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
-      print("if...")
       raster <- rasters[[id]]$raster
     } else {
-      print("else...")
       data <- gps$data
       
-      # display_log("* Calculating raster...", FALSE)
-      # printf("calculateRaster2D()...")
       mid <- "calculate_raster2d"
       message <- paste("Calculating 2D raster...")
       showNotification(message, id = mid, type = "message", duration = NULL,
@@ -927,8 +897,6 @@ server <- function(input, output, session) {
       showNotification(paste(message, "done"), id = mid, type = "message",
                        duration = 2, session = session)
       
-      # print("done")
-      # display_log("done")
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
       # print(paste("nrow =", raster::nrow(raster), "; ncol =",
@@ -951,78 +919,46 @@ server <- function(input, output, session) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         # print(paste("save_mkde_type:", input$save_mkde_type))
-        # createContour(raster, probs, input$zone, input$datum, raster, shape,
-        #               input$basename)
-        # results <- createContour(raster, probs, input$zone, input$datum, TRUE, TRUE,
-        #               input$basename)
         mid <- "create_contour"
         message <- paste("Creating contour...")
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
-        # results <- createContour(raster, probs, input$zone, input$datum, input$map)
-        results <- createContour(raster, probs, input$zone, input$datum, FALSE)
+        results <- createContour(raster, probs, input$zone, input$datum)
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 2, session = session)
-
-        # print(paste("input$map =", input$map))
-        # print(paste("results[[2]] =", results[[2]]))
-        # print(paste("results =", results))
         
-        # if (input$map && results[[2]] == FALSE) {
-        #   showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
-        #                    duration = NULL, type = "warning", session = session)
-        # }
-
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
         rasters[[id]]$contours <- results[[1]]
         gps$rasters <- rasters
         
-        # if (input$map) {
-        if (TRUE) {
+        if (input$map) {
           if (results[[1]]$fits == FALSE) {
             showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                              duration = NULL, type = "warning", session = session)
           }
-          # results[[1]]$map
           output$mkde_plot <- renderPlot({results[[1]]$map})
         } else {
-          # plot(results[[1]]$cut)
-          # contour_display <- contour(results[[1]]$raster, add = T,
-          #                            levels = results[[1]]$contour$threshold,
-          #                            lwd = 1.0, drawlabels = FALSE)
-          # not sure why the below doesn't work but the logic works for the if
-          # statement above
-          # results[[1]]$cut
-          # output$mkde_plot <- plot.new()
-          # output$mkde_plot <- renderPlot({plot.new()})
-          output$mkde_plot <- renderPlot({results[[1]]$cut})
-          # output$mkde_plot <-plot(results[[1]]$cut)
+          cont <- results[[1]]$contour
+          output$mkde_plot <- renderPlot({
+            plot(results[[1]]$cut)
+            contour_display <- contour(results[[1]]$raster, add = T,
+                                       levels = cont$threshold, lwd = 1.0,
+                                       drawlabels = FALSE)
+            })
         }
       },
       error = function(error_message) {
-        print(paste("error message =", error_message))
-        # shiny::validate(need(error_message == "",
-        #                      "Unable to plot; please try adjusting the parameter(s) and Plot again..."))
+        # print(paste("error message =", error_message))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
                          duration = NULL, type = "error", session = session)
       },
       finally = {
-        # shinyjs::enable("inputs")
         shinyjs::enable("controls")
       })
     }
-    # shinyjs::enable("inputs")
   })
 
-  # output$mkde_plot <- renderPlot({
-  #   print("entered renderPlot 1")
-  #   replot_mkde(TRUE)
-  #   plot_mkde()
-  #   print("leaving renderPlot 1")
-  # })
-
-  
   observeEvent(input$reset_parameters, {
     shinyjs::reset("sig2obs")
     shinyjs::reset("tmax")
@@ -1039,8 +975,7 @@ server <- function(input, output, session) {
       summary <- gps$summary
       id <- summary$id[input$table_summary_rows_selected]
     }
-    # print(paste("idx =", id))
-    
+
     mid <- "save_output"
     message <- paste("Saving output files to ", path_home(), "/", input$basename,
                      "* ...", sep = "")
