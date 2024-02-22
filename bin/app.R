@@ -81,16 +81,19 @@ ui <- dashboardPage(
   
   # code from https://stackoverflow.com/a/41145602
   dashboardHeader(#title = "Space Use Ecology Gateway",
-    #title = span("Space Use Ecology Gateway", style = "color: black;"),
+    # title = span("Space Use Ecology Gateway", style = "color: black;"),
+    title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
+              img(src = "logo.png")),
+#     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
+# > Password"),style="font-weight: bold;color:white;")),
+    tags$li(class = "dropdown", actionLink("quit_btn", "x", class = "dropdown"))
+    
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
     #                     href = "custom.css")),
     # tags$li(a(href = 'http://shinyapps.company.com',
     #           icon("power-off"),
     #           title = "Back to Apps Home"),
     #         class = "dropdown"),
-    
-    title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
-              img(src = "logo.png"))
 
     # tags$li(
     #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
@@ -1030,6 +1033,25 @@ server <- function(input, output, session) {
                 input$basename)
     showNotification(paste(message, "done"), id = mid, type = "message",
                      duration = NULL, session = session)
+  })
+  
+  # See https://shiny.posit.co/r/reference/shiny/latest/session.html
+  observeEvent(input$quit_btn, {
+    print("Quit! Session:")
+    showNotification(paste("clientData:", toString(session$clientData)),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("url_pathname:", session$url_pathname),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("PATH_INFO:", toString(session$request$PATH_INFO)),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("session:", toString(session$userData$session)),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("SESSION:", toString(session$userData$SESSION)),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("user:", session$user),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("groups:", session$groups),
+                     type = "message", duration = NULL, session = session)
   })
 }
 
