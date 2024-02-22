@@ -391,6 +391,14 @@ server <- function(input, output, session) {
   ############################################################################
   # Initialize UI
   
+  # Retrieve user's Movebank credential info, if set in .Renviron
+  env_var <- Sys.getenv("MovebankUsername")
+  updateTextInput(session, "movebank_username", value=env_var)
+  # env_var <- Sys.getenv("MovebankPassword")
+  # updateTextInput(session, "movebank_password", value=env_var)
+  env_var <- Sys.getenv("MovebankStudyID")
+  updateTextInput(session, "movebank_studyid", value=env_var)
+  
   # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
   hideTab(inputId = "controls", target = "MKDE")
@@ -498,8 +506,17 @@ server <- function(input, output, session) {
     }
   })
   
+  # Save changes to Movebank variables into .Renviron
+  observeEvent(input$movebank_username, {
+    Sys.setenv(MovebankUsername = input$movebank_username)
+  })
+  # observeEvent(input$movebank_password, {
+  #   Sys.setenv(MovebankPassword = input$movebank_password)
+  # })
+    
   # Update Movebank local filename based on studyid...
   observeEvent(input$movebank_studyid, {
+    Sys.setenv(MovebankStudyID = input$movebank_studyid)
     updateTextInput(session, "movebank_local_filename",
                     value = paste("movebank-", input$movebank_studyid, ".csv",
                                   sep = ""))
