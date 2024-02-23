@@ -402,6 +402,10 @@ server <- function(input, output, session) {
   print(paste("TMP:", Sys.getenv("TMP")))
   print(paste("TEMP:", Sys.getenv("TEMP")))
   print(paste("MovebankStudyID:", Sys.getenv("MovebankStudyID")))
+  showNotification(paste("MovebankUsername =", Sys.getenv("MovebankUsername")),
+                   type = "message", duration = NULL, session = session)
+  showNotification(paste("MovebankStudyID =", Sys.getenv("MovebankStudyID")),
+                   type = "message", duration = NULL, session = session)
   print(paste("MovebankUsername:", Sys.getenv("MovebankUsername")))
   print(paste("COMMAND_MODE:", Sys.getenv("COMMAND_MODE")))
   print(paste("HOME:", Sys.getenv("HOME")))
@@ -412,6 +416,8 @@ server <- function(input, output, session) {
   #env_var <- Sys.getenv(names = TRUE)
   env_var <- names(s <- Sys.getenv())
   print(paste("Sys.getenv:", env_var))
+  showNotification(paste("Sys.getenv:", toString(env_var)), type = "message",
+                   duration = NULL, session = session)
   env_var <- Sys.getenv("MovebankUsername")
   updateTextInput(session, "movebank_username", value=env_var)
   # env_var <- Sys.getenv("MovebankPassword")
