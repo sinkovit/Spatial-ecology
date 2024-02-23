@@ -416,8 +416,10 @@ server <- function(input, output, session) {
   #env_var <- Sys.getenv(names = TRUE)
   env_var <- names(s <- Sys.getenv())
   print(paste("Sys.getenv:", env_var))
-  showNotification(paste("Sys.getenv:", toString(env_var)), type = "message",
-                   duration = NULL, session = session)
+  showNotification(paste("Sys.getenv keys:", toString(env_var)),
+                   type = "message", duration = NULL, session = session)
+  showNotification(paste("Sys.getenv values:", toString(Sys.getenv())),
+                   type = "message", duration = NULL, session = session)
   env_var <- Sys.getenv("MovebankUsername")
   updateTextInput(session, "movebank_username", value=env_var)
   # env_var <- Sys.getenv("MovebankPassword")
