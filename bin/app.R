@@ -397,6 +397,21 @@ server <- function(input, output, session) {
   
   # Retrieve user's Movebank credential info, if set in .Renviron
   # See https://support.posit.co/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf
+  print(paste("R_ENVIRON:", Sys.getenv("R_ENVIRON")))
+  print(paste("TMPDIR:", Sys.getenv("TMPDIR")))
+  print(paste("TMP:", Sys.getenv("TMP")))
+  print(paste("TEMP:", Sys.getenv("TEMP")))
+  print(paste("MovebankStudyID:", Sys.getenv("MovebankStudyID")))
+  print(paste("MovebankUsername:", Sys.getenv("MovebankUsername")))
+  print(paste("COMMAND_MODE:", Sys.getenv("COMMAND_MODE")))
+  print(paste("HOME:", Sys.getenv("HOME")))
+  print(paste("LOGNAME:", Sys.getenv("LOGNAME")))
+  print(paste("RSTUDIO_SESSION_PID:", Sys.getenv("RSTUDIO_SESSION_PID")))
+  print(paste("RSTUDIO_USER_IDENTITY:", Sys.getenv("RSTUDIO_USER_IDENTITY")))
+  print(paste("USER:", Sys.getenv("USER")))
+  #env_var <- Sys.getenv(names = TRUE)
+  env_var <- names(s <- Sys.getenv())
+  print(paste("Sys.getenv:", env_var))
   env_var <- Sys.getenv("MovebankUsername")
   updateTextInput(session, "movebank_username", value=env_var)
   # env_var <- Sys.getenv("MovebankPassword")
