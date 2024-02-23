@@ -348,14 +348,14 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
+  ############################################################################
+  # Setup some system-related configuraions
+  
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
   # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
   options(shiny.maxRequestSize=100*1024^2)
   
-  # print(paste("session$user:", session$user))
-  #print(paste("session$userData:", session$userData))
-  # print(paste("session$clientData:", session$clientData))
   pdf(file = NULL)
   
   # Setup the Stadiamap API key
@@ -374,29 +374,31 @@ server <- function(input, output, session) {
   })
   
   # Global variables
+  app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
+  showNotification(paste("app_env_path_filename =", app_env_path_filename),
+                   type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
-  # log <- reactiveVal(NULL)
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
-  
-  # Utility function to append a message to the status_log component
-  # display_log <- function(msg, br = TRUE) {
-  #   tmp <- log()
-  #   if(br) {
-  #     log(paste(tmp, msg, '<br/>'))
-  #   } else {
-  #     log(paste(tmp, msg))
-  #   }
-  #   output$status_log <- renderUI({HTML(log())})
-  # }
-  
+
   
   ############################################################################
   # Initialize UI
   
   # Retrieve user's Movebank credential info, if set in .Renviron
   # See https://support.posit.co/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf
+  if (file.exists(app_env_path_filename)) {
+    showNotification("app_env_path_filename exists", type = "message",
+                     duration = NULL, session = session)
+    file_content <- read_file(app_env_path_filename)
+    showNotification(paste("file_content: ", toString(file_content)),
+                     type = "message", duration = NULL, session = session)
+  } else {
+    showNotification("creating app_env_path_filename", type = "message",
+                     duration = NULL, session = session)
+    file.create(app_env_path_filename)
+  }
   print(paste("R_ENVIRON:", Sys.getenv("R_ENVIRON")))
   print(paste("TMPDIR:", Sys.getenv("TMPDIR")))
   print(paste("TMP:", Sys.getenv("TMP")))
@@ -408,7 +410,6 @@ server <- function(input, output, session) {
                    type = "message", duration = NULL, session = session)
   print(paste("MovebankUsername:", Sys.getenv("MovebankUsername")))
   print(paste("COMMAND_MODE:", Sys.getenv("COMMAND_MODE")))
-  print(paste("HOME:", Sys.getenv("HOME")))
   print(paste("LOGNAME:", Sys.getenv("LOGNAME")))
   print(paste("RSTUDIO_SESSION_PID:", Sys.getenv("RSTUDIO_SESSION_PID")))
   print(paste("RSTUDIO_USER_IDENTITY:", Sys.getenv("RSTUDIO_USER_IDENTITY")))
@@ -416,10 +417,10 @@ server <- function(input, output, session) {
   #env_var <- Sys.getenv(names = TRUE)
   env_var <- names(s <- Sys.getenv())
   print(paste("Sys.getenv:", env_var))
-  showNotification(paste("Sys.getenv keys:", toString(env_var)),
-                   type = "message", duration = NULL, session = session)
-  showNotification(paste("Sys.getenv values:", toString(Sys.getenv())),
-                   type = "message", duration = NULL, session = session)
+  # showNotification(paste("Sys.getenv keys:", toString(env_var)),
+  #                  type = "message", duration = NULL, session = session)
+  # showNotification(paste("Sys.getenv values:", toString(Sys.getenv())),
+  #                  type = "message", duration = NULL, session = session)
   env_var <- Sys.getenv("MovebankUsername")
   updateTextInput(session, "movebank_username", value=env_var)
   # env_var <- Sys.getenv("MovebankPassword")
@@ -571,6 +572,7 @@ server <- function(input, output, session) {
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
     } else if (input$data_source == 'Movebank') {
+      # If we are loading from Movebank, then also save the info entered by user
       filename <- input$movebank_studyid
       id <- "load_movebank"
       message <- "Accessing Movebank..."
