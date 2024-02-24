@@ -153,15 +153,15 @@ ui <- dashboardPage(
               textInput("movebank_username", "Movebank username"),
               passwordInput("movebank_password", "Password"),
               textInput("movebank_studyid", "Study ID"),
-              checkboxInput("movebank_save_local",
-                "Save Movebank data to your computer"
-              ),
-              bsTooltip(id = "movebank_save_local", placement = "right",
-                title = "If local file already exists, will overwrite"
-              ),
-              conditionalPanel(condition = "input.movebank_save_local == 1",
-                textInput("movebank_local_filename", "Local filename")
-              ),
+              # checkboxInput("movebank_save_local",
+              #   "Save Movebank data to your computer"
+              # ),
+              # bsTooltip(id = "movebank_save_local", placement = "right",
+              #   title = "If local file already exists, will overwrite"
+              # ),
+              # conditionalPanel(condition = "input.movebank_save_local == 1",
+              #   textInput("movebank_local_filename", "Local filename")
+              # ),
             ),
             conditionalPanel(condition = "input.data_source === 'Your computer'",
               fileInput("local_file", label = NULL, multiple = FALSE,
@@ -375,8 +375,6 @@ server <- function(input, output, session) {
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
-  # showNotification(paste("app_env_path_filename =", app_env_path_filename),
-  #                  type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
@@ -386,18 +384,15 @@ server <- function(input, output, session) {
   ############################################################################
   # Initialize UI
   
-  # Unfortunately it seems that user's .Renviron doesn't work so we'll create
-  # our own app's environment file
+  # I couldn't get the environment variable to persist on the hub so we'll
+  # create our app's own environment file
   # Retrieve user's Movebank credential info, if found
+  # env_var <- names(s <- Sys.getenv())
   if (file.exists(app_env_path_filename)) {
-    # showNotification("app_env_path_filename exists", type = "message",
-    #                  duration = NULL, session = session)
     file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
                                progress = TRUE)
     for (i in 1:length(file_content)) {
       s <- str_split_1(file_content[i], "=")
-      # print(paste("s =", s[1]))
-      # print(paste("length = ", length(s)))
       if (s[1] == "MovebankUsername")
         updateTextInput(session, "movebank_username", value = s[2])
       else if (s[1] == "MovebankPassword")
@@ -405,44 +400,11 @@ server <- function(input, output, session) {
       else if (s[1] == "MovebankStudyID")
         updateTextInput(session, "movebank_studyid", value = s[2])
     }
-    # showNotification(paste("file_content: ", file_content[[1]]),
-    #                  type = "message", duration = NULL, session = session)
   } else {
-    # showNotification("creating app_env_path_filename", type = "message",
-    #                  duration = NULL, session = session)
     file.create(app_env_path_filename)
   }
-  # Set the file permission (again) to only readable & writable by owner
+  # Set the file permission (again) so only readable & writable by owner
   Sys.chmod(app_env_path_filename, mode = "600")
-  
-  # print(paste("R_ENVIRON:", Sys.getenv("R_ENVIRON")))
-  # print(paste("TMPDIR:", Sys.getenv("TMPDIR")))
-  # print(paste("TMP:", Sys.getenv("TMP")))
-  # print(paste("TEMP:", Sys.getenv("TEMP")))
-  # print(paste("MovebankStudyID:", Sys.getenv("MovebankStudyID")))
-  # showNotification(paste("MovebankUsername =", Sys.getenv("MovebankUsername")),
-  #                  type = "message", duration = NULL, session = session)
-  # showNotification(paste("MovebankStudyID =", Sys.getenv("MovebankStudyID")),
-  #                  type = "message", duration = NULL, session = session)
-  # print(paste("MovebankUsername:", Sys.getenv("MovebankUsername")))
-  # print(paste("COMMAND_MODE:", Sys.getenv("COMMAND_MODE")))
-  # print(paste("LOGNAME:", Sys.getenv("LOGNAME")))
-  # print(paste("RSTUDIO_SESSION_PID:", Sys.getenv("RSTUDIO_SESSION_PID")))
-  # print(paste("RSTUDIO_USER_IDENTITY:", Sys.getenv("RSTUDIO_USER_IDENTITY")))
-  # print(paste("USER:", Sys.getenv("USER")))
-  # #env_var <- Sys.getenv(names = TRUE)
-  # env_var <- names(s <- Sys.getenv())
-  # print(paste("Sys.getenv:", env_var))
-  # # showNotification(paste("Sys.getenv keys:", toString(env_var)),
-  # #                  type = "message", duration = NULL, session = session)
-  # # showNotification(paste("Sys.getenv values:", toString(Sys.getenv())),
-  # #                  type = "message", duration = NULL, session = session)
-  # env_var <- Sys.getenv("MovebankUsername")
-  # updateTextInput(session, "movebank_username", value=env_var)
-  # # env_var <- Sys.getenv("MovebankPassword")
-  # # updateTextInput(session, "movebank_password", value=env_var)
-  # env_var <- Sys.getenv("MovebankStudyID")
-  # updateTextInput(session, "movebank_studyid", value=env_var)
   
   # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -544,17 +506,8 @@ server <- function(input, output, session) {
     }
   })
   
-  # Save changes to Movebank variables into .Renviron
-  observeEvent(input$movebank_username, {
-    Sys.setenv(MovebankUsername = input$movebank_username)
-  })
-  # observeEvent(input$movebank_password, {
-  #   Sys.setenv(MovebankPassword = input$movebank_password)
-  # })
-    
   # Update Movebank local filename based on studyid...
   observeEvent(input$movebank_studyid, {
-    Sys.setenv(MovebankStudyID = input$movebank_studyid)
     updateTextInput(session, "movebank_local_filename",
                     value = paste("movebank-", input$movebank_studyid, ".csv",
                                   sep = ""))
@@ -638,7 +591,6 @@ server <- function(input, output, session) {
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
 
-      # display_log("* Preprocessing data...", FALSE)
       id <- "preprocessing"
       message <- "Preprocessing data..."
       showNotification(message, id = id, type = "message", duration = NULL,
@@ -646,7 +598,6 @@ server <- function(input, output, session) {
       results <- preprocessDataframe(data)
       showNotification(paste(message, "done"), id = id, type = "message", 
                        duration = 2, session = session)
-      # display_log("done")
       # shiny::validate(need(is.null(results[[2]]), results[[2]]))
       if (! is.null(results[[2]])) {
         showNotification(paste("Error :", results[[2]]), duration = NULL,
@@ -655,26 +606,33 @@ server <- function(input, output, session) {
       }
 
       data <- results[[1]]
-      # if (is.null(gps$data))
-      #   print("no gps$data 1")
-      # else
-      #   print("there is gps$data 1")
       gps$data <- results[[1]]
-      if (is.null(gps$data))
-        print("no gps$data 2")
-      else
-        print("there is gps$data 2")
       gps$original <- results[[1]]
       
       # Now save MB data locally
-      if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
-        # printf("Saving local file %s...", input$movebank_local_filename)
-        result = saveDataframeFromMB(gps$original, input$movebank_local_filename)
-        if(is.null(result))
-          printf("done\n")
-        else
-          printf("error: %s\n", result)
-      }
+      # Disable for now since saving from hub to local needs different mechanism
+      # if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
+      #   # printf("Saving local file %s...", input$movebank_local_filename)
+      #   
+      #   id <- "save_mb_file"
+      #   message <- "Saving Movebank data..."
+      #   showNotification(message, id = id, type = "message", duration = NULL,
+      #                    session = session)
+      #   tryCatch({
+      #     result = saveDataframeFromMB(gps$original,
+      #                                  input$movebank_local_filename)
+      #     if (is.null(result))
+      #       showNotification(paste(message, "done"), duration = 2, id = id,
+      #                        type = "message", session = session)
+      #     else
+      #       showNotification(paste(message, "error:", result), duration = NULL,
+      #                        id = id, type = "error", session = session)
+      #   },
+      #   error = function(e) {
+      #     showNotification(paste("Error :", e$message), id = id,
+      #                      duration = NULL, type = "error", session = session)
+      #   })
+      # }
       
       continue <- TRUE
       
@@ -692,7 +650,6 @@ server <- function(input, output, session) {
         # display_log("done")
       },
       error = function(e) {
-        # print(paste("error = ", e$message))
         showNotification(paste("Error :", e$message), id = id,
                          duration = NULL, type = "error", session = session)
         continue <<- FALSE
