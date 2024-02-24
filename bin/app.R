@@ -348,6 +348,8 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
+  showNotification(paste("session$token =", session$token), session = session)
+  
   ############################################################################
   # Setup some system-related configuraions
   
