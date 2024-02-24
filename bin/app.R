@@ -399,6 +399,9 @@ server <- function(input, output, session) {
                      duration = NULL, session = session)
     file.create(app_env_path_filename)
   }
+  # Set the file permission (again) to only readable & writable by owner
+  Sys.chmod(app_env_path_filename, mode = "600")
+  
   print(paste("R_ENVIRON:", Sys.getenv("R_ENVIRON")))
   print(paste("TMPDIR:", Sys.getenv("TMPDIR")))
   print(paste("TMP:", Sys.getenv("TMP")))
@@ -582,6 +585,10 @@ server <- function(input, output, session) {
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
       basename <- input$movebank_studyid
+      write_file(paste("MovebankUsername=", input$movebank_username,
+                       "\nMovebankPassword=", input$movebank_password,
+                       "\nMovebankStudyID=", input$movebank_studyid, sep = ""),
+                 app_env_path_filename)
     } else if(input$data_source == 'Your computer') {
       # print(paste("input$local_file$name =", input$local_file$name))
       # print(paste("input$local_file$size =", input$local_file$size))
