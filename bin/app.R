@@ -375,8 +375,8 @@ server <- function(input, output, session) {
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
-  showNotification(paste("app_env_path_filename =", app_env_path_filename),
-                   type = "message", duration = NULL, session = session)
+  # showNotification(paste("app_env_path_filename =", app_env_path_filename),
+  #                  type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
@@ -386,50 +386,63 @@ server <- function(input, output, session) {
   ############################################################################
   # Initialize UI
   
-  # Retrieve user's Movebank credential info, if set in .Renviron
-  # See https://support.posit.co/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf
+  # Unfortunately it seems that user's .Renviron doesn't work so we'll create
+  # our own app's environment file
+  # Retrieve user's Movebank credential info, if found
   if (file.exists(app_env_path_filename)) {
-    showNotification("app_env_path_filename exists", type = "message",
-                     duration = NULL, session = session)
-    file_content <- read_file(app_env_path_filename)
-    showNotification(paste("file_content: ", toString(file_content)),
-                     type = "message", duration = NULL, session = session)
+    # showNotification("app_env_path_filename exists", type = "message",
+    #                  duration = NULL, session = session)
+    file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
+                               progress = TRUE)
+    for (i in 1:length(file_content)) {
+      s <- str_split_1(file_content[i], "=")
+      # print(paste("s =", s[1]))
+      # print(paste("length = ", length(s)))
+      if (s[1] == "MovebankUsername")
+        updateTextInput(session, "movebank_username", value = s[2])
+      else if (s[1] == "MovebankPassword")
+        updateTextInput(session, "movebank_password", value = s[2])
+      else if (s[1] == "MovebankStudyID")
+        updateTextInput(session, "movebank_studyid", value = s[2])
+    }
+    # showNotification(paste("file_content: ", file_content[[1]]),
+    #                  type = "message", duration = NULL, session = session)
   } else {
-    showNotification("creating app_env_path_filename", type = "message",
-                     duration = NULL, session = session)
+    # showNotification("creating app_env_path_filename", type = "message",
+    #                  duration = NULL, session = session)
     file.create(app_env_path_filename)
   }
   # Set the file permission (again) to only readable & writable by owner
   Sys.chmod(app_env_path_filename, mode = "600")
   
-  print(paste("R_ENVIRON:", Sys.getenv("R_ENVIRON")))
-  print(paste("TMPDIR:", Sys.getenv("TMPDIR")))
-  print(paste("TMP:", Sys.getenv("TMP")))
-  print(paste("TEMP:", Sys.getenv("TEMP")))
-  print(paste("MovebankStudyID:", Sys.getenv("MovebankStudyID")))
-  showNotification(paste("MovebankUsername =", Sys.getenv("MovebankUsername")),
-                   type = "message", duration = NULL, session = session)
-  showNotification(paste("MovebankStudyID =", Sys.getenv("MovebankStudyID")),
-                   type = "message", duration = NULL, session = session)
-  print(paste("MovebankUsername:", Sys.getenv("MovebankUsername")))
-  print(paste("COMMAND_MODE:", Sys.getenv("COMMAND_MODE")))
-  print(paste("LOGNAME:", Sys.getenv("LOGNAME")))
-  print(paste("RSTUDIO_SESSION_PID:", Sys.getenv("RSTUDIO_SESSION_PID")))
-  print(paste("RSTUDIO_USER_IDENTITY:", Sys.getenv("RSTUDIO_USER_IDENTITY")))
-  print(paste("USER:", Sys.getenv("USER")))
-  #env_var <- Sys.getenv(names = TRUE)
-  env_var <- names(s <- Sys.getenv())
-  print(paste("Sys.getenv:", env_var))
-  # showNotification(paste("Sys.getenv keys:", toString(env_var)),
+  # print(paste("R_ENVIRON:", Sys.getenv("R_ENVIRON")))
+  # print(paste("TMPDIR:", Sys.getenv("TMPDIR")))
+  # print(paste("TMP:", Sys.getenv("TMP")))
+  # print(paste("TEMP:", Sys.getenv("TEMP")))
+  # print(paste("MovebankStudyID:", Sys.getenv("MovebankStudyID")))
+  # showNotification(paste("MovebankUsername =", Sys.getenv("MovebankUsername")),
   #                  type = "message", duration = NULL, session = session)
-  # showNotification(paste("Sys.getenv values:", toString(Sys.getenv())),
+  # showNotification(paste("MovebankStudyID =", Sys.getenv("MovebankStudyID")),
   #                  type = "message", duration = NULL, session = session)
-  env_var <- Sys.getenv("MovebankUsername")
-  updateTextInput(session, "movebank_username", value=env_var)
-  # env_var <- Sys.getenv("MovebankPassword")
-  # updateTextInput(session, "movebank_password", value=env_var)
-  env_var <- Sys.getenv("MovebankStudyID")
-  updateTextInput(session, "movebank_studyid", value=env_var)
+  # print(paste("MovebankUsername:", Sys.getenv("MovebankUsername")))
+  # print(paste("COMMAND_MODE:", Sys.getenv("COMMAND_MODE")))
+  # print(paste("LOGNAME:", Sys.getenv("LOGNAME")))
+  # print(paste("RSTUDIO_SESSION_PID:", Sys.getenv("RSTUDIO_SESSION_PID")))
+  # print(paste("RSTUDIO_USER_IDENTITY:", Sys.getenv("RSTUDIO_USER_IDENTITY")))
+  # print(paste("USER:", Sys.getenv("USER")))
+  # #env_var <- Sys.getenv(names = TRUE)
+  # env_var <- names(s <- Sys.getenv())
+  # print(paste("Sys.getenv:", env_var))
+  # # showNotification(paste("Sys.getenv keys:", toString(env_var)),
+  # #                  type = "message", duration = NULL, session = session)
+  # # showNotification(paste("Sys.getenv values:", toString(Sys.getenv())),
+  # #                  type = "message", duration = NULL, session = session)
+  # env_var <- Sys.getenv("MovebankUsername")
+  # updateTextInput(session, "movebank_username", value=env_var)
+  # # env_var <- Sys.getenv("MovebankPassword")
+  # # updateTextInput(session, "movebank_password", value=env_var)
+  # env_var <- Sys.getenv("MovebankStudyID")
+  # updateTextInput(session, "movebank_studyid", value=env_var)
   
   # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -575,7 +588,13 @@ server <- function(input, output, session) {
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
     } else if (input$data_source == 'Movebank') {
-      # If we are loading from Movebank, then also save the info entered by user
+      # First, save the info entered by user and then load data from Movebank
+      write_file(paste("MovebankUsername=", input$movebank_username,
+                       "\nMovebankPassword=", input$movebank_password,
+                       "\nMovebankStudyID=", input$movebank_studyid, "\n",
+                       sep = ""),
+                 app_env_path_filename)
+      
       filename <- input$movebank_studyid
       id <- "load_movebank"
       message <- "Accessing Movebank..."
@@ -585,10 +604,6 @@ server <- function(input, output, session) {
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
       basename <- input$movebank_studyid
-      write_file(paste("MovebankUsername=", input$movebank_username,
-                       "\nMovebankPassword=", input$movebank_password,
-                       "\nMovebankStudyID=", input$movebank_studyid, sep = ""),
-                 app_env_path_filename)
     } else if(input$data_source == 'Your computer') {
       # print(paste("input$local_file$name =", input$local_file$name))
       # print(paste("input$local_file$size =", input$local_file$size))
