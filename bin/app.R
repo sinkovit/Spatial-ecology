@@ -49,6 +49,8 @@ library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFi
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 library("readr")
+library(terra)
+library(sf)
 
 source("compute.R")
 source("loadDataframe.R")
@@ -390,21 +392,23 @@ server <- function(input, output, session) {
   # create our app's own environment file
   # Retrieve user's Movebank credential info, if found
   # env_var <- names(s <- Sys.getenv())
-  if (file.exists(app_env_path_filename)) {
-    file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
-                               progress = TRUE)
-    for (i in 1:length(file_content)) {
-      s <- str_split_1(file_content[i], "=")
-      if (s[1] == "MovebankUsername")
-        updateTextInput(session, "movebank_username", value = s[2])
-      else if (s[1] == "MovebankPassword")
-        updateTextInput(session, "movebank_password", value = s[2])
-      else if (s[1] == "MovebankStudyID")
-        updateTextInput(session, "movebank_studyid", value = s[2])
-    }
-  } else {
-    file.create(app_env_path_filename)
-  }
+  
+  #if (file.exists(app_env_path_filename)) {
+  #  file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
+  #                             progress = TRUE)
+  #  for (i in 1:length(file_content)) {
+  #    s <- str_split_1(file_content[i], "=")
+  #    if (s[1] == "MovebankUsername")
+  #      updateTextInput(session, "movebank_username", value = s[2])
+  #    else if (s[1] == "MovebankPassword")
+  #      updateTextInput(session, "movebank_password", value = s[2])
+  #    else if (s[1] == "MovebankStudyID")
+  #      updateTextInput(session, "movebank_studyid", value = s[2])
+  #  }
+  #} else {
+  #  file.create(app_env_path_filename)
+  #}
+  
   # Set the file permission (again) so only readable & writable by owner
   Sys.chmod(app_env_path_filename, mode = "600")
   

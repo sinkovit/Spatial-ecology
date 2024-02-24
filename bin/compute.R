@@ -38,6 +38,9 @@ library(scales)
 library(ggmap)
 library(fs)
 library(broom)
+library(terra)
+library(sf)
+library(dplyr)
 
 
 # From Bob's code
@@ -63,9 +66,9 @@ animalAttributes <- function(data_df, areaUnits) {
   # print("entered animalAttributes()")
   printf <- function(...) cat(sprintf(...))
 
-  gpsdata.sp <- data_df[, c("id", "xdata", "ydata")]
-  coordinates(gpsdata.sp) <- c("xdata", "ydata")
-  area_mcp <- mcp.area(gpsdata.sp, unin="m", unout=areaUnits, percent=100, plotit=FALSE)
+  gpsdata.sf <- data_df[, c("id", "xdata", "ydata")]
+  coordinates(gpsdata.sf) <- c("xdata", "ydata")
+  area_mcp <- mcp.area(gpsdata.sf, unin="m", unout=areaUnits, percent=100, plotit=FALSE)
 
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
@@ -228,11 +231,11 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, all = TRUE) {
     zoom = 8
   }
   
-  gpsdata.sp <- data.frame(label=character(), x=double(), y=double())
-  gpsdata.sp[1,] = list("dummy", xmin, ymin)
-  gpsdata.sp[2,] = list("dummy", xmin, ymax)
-  gpsdata.sp[3,] = list("dummy", xmax, ymin)
-  gpsdata.sp[4,] = list("dummy", xmax, ymax)
+  gpsdata.sf <- data.frame(label=character(), x=double(), y=double())
+  gpsdata.sf[1,] = list("dummy", xmin, ymin)
+  gpsdata.sf[2,] = list("dummy", xmin, ymax)
+  gpsdata.sf[3,] = list("dummy", xmax, ymin)
+  gpsdata.sf[4,] = list("dummy", xmax, ymax)
     
   # Convert contour data to lat-long
   raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
@@ -242,13 +245,13 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, all = TRUE) {
   tidydta2 <- tidy(raster.contour, group=group)
   
   # Generate basemap and add mkde results
-  coordinates(gpsdata.sp) <- c("x", "y")
-  proj4string(gpsdata.sp) <- CRS(crsstr)
-  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-  mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
-                                      bottom = min(gpsdata.spgeo@coords[,2]),
-                                      right = max(gpsdata.spgeo@coords[,1]),
-                                      top = max(gpsdata.spgeo@coords[,2])),
+  coordinates(gpsdata.sf) <- c("x", "y")
+  proj4string(gpsdata.sf) <- CRS(crsstr)
+  gpsdata.sfgeo <- spTransform(gpsdata.sf, CRS("+proj=longlat"))
+  mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.sfgeo@coords[,1]),
+                                      bottom = min(gpsdata.sfgeo@coords[,2]),
+                                      right = max(gpsdata.sfgeo@coords[,1]),
+                                      top = max(gpsdata.sfgeo@coords[,2])),
                              zoom = zoom)
   mymap <- ggmap(mybasemap) +
     geom_polygon(aes(x=long, y=lat, group=group), data=tidydta2, alpha=.25,
@@ -292,13 +295,13 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   gpsdata$id <- as.character(gpsdata$id)
   
   # Generate the basemap using all data
-  gpsdata.sp <- gpsdata[gpsdata$id %in% ids, c("id", "xdata", "ydata")]
+  gpsdata.sf <- gpsdata[gpsdata$id %in% ids, c("id", "xdata", "ydata")]
   
   # Add rows with buffering
-  xmin <- min(gpsdata.sp$xdata) - buffer
-  xmax <- max(gpsdata.sp$xdata) + buffer
-  ymin <- min(gpsdata.sp$ydata) - buffer
-  ymax <- max(gpsdata.sp$ydata) + buffer
+  xmin <- min(gpsdata.sf$xdata) - buffer
+  xmax <- max(gpsdata.sf$xdata) + buffer
+  ymin <- min(gpsdata.sf$ydata) - buffer
+  ymax <- max(gpsdata.sf$ydata) + buffer
   area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
 
   # Choose the map zoom based on area
@@ -314,62 +317,75 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   printf(paste("y:", ymin, ",", ymax, "\n"))
   printf(paste("area:", area, "\n"))
   printf(paste("zoom:", zoom, "\n"))
-  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymin)
-  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmin, ymax)
-  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymin)
-  gpsdata.sp[nrow(gpsdata.sp)+1,] = list("dummy", xmax, ymax)
+  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymin)
+  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymax)
+  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymin)
+  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymax)
   
-  coordinates(gpsdata.sp) <- c("xdata", "ydata")
+  # Set the coordinates in the sf object
   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
-  proj4string(gpsdata.sp) <- CRS(crsstr)
-  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-
-  print(min(gpsdata.spgeo@coords[,1]))
-  print(min(gpsdata.spgeo@coords[,2]))
-  print(max(gpsdata.spgeo@coords[,1]))
-  print(max(gpsdata.spgeo@coords[,2]))
-
-  mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.spgeo@coords[,1]),
-                                      bottom = min(gpsdata.spgeo@coords[,2]),
-                                      right = max(gpsdata.spgeo@coords[,1]),
-                                      top = max(gpsdata.spgeo@coords[,2])),
+  gpsdata.sf <- st_as_sf(gpsdata.sf, coords = c("xdata", "ydata"), crs = crsstr)
+  
+  # Transform the coordinate reference system (CRS)
+  gpsdata.sfgeo <- st_transform(gpsdata.sf, crs = "+proj=longlat") 
+  
+  print(min(st_coordinates(gpsdata.sfgeo)[, 1]))
+  print(min(st_coordinates(gpsdata.sfgeo)[, 2]))
+  print(max(st_coordinates(gpsdata.sfgeo)[, 1]))
+  print(max(st_coordinates(gpsdata.sfgeo)[, 2]))
+  
+  # Get the base map
+  mybasemap <- get_stadiamap(bbox = c(left = min(st_coordinates(gpsdata.sfgeo)[, 1]),
+                                      bottom = min(st_coordinates(gpsdata.sfgeo)[, 2]),
+                                      right = max(st_coordinates(gpsdata.sfgeo)[, 1]),
+                                      top = max(st_coordinates(gpsdata.sfgeo)[, 2])),
                              zoom = zoom)
+  
   
   # Filter data based on selected animal IDs
   ids <- as.character(ids)
-  gpsdata.sp <- gpsdata.sp[gpsdata.sp$id %in% ids, ]
+  gpsdata.sf <- gpsdata.sf[gpsdata.sf$id %in% ids, ]
   
   # Prepare data and minimum convex polygon
-  gpsdata.mcp <- mcp(gpsdata.sp, percent = 100)
-  gpsdata.spgeo <- spTransform(gpsdata.sp, CRS("+proj=longlat"))
-  gpsdata.mcpgeo <- spTransform(gpsdata.mcp, CRS("+proj=longlat"))
-  gpsdata.geo <- data.frame(gpsdata.spgeo@coords, id = gpsdata.spgeo@data$id)
+  gpsdata.mcp <- st_buffer(gpsdata.sf, dist = 0) 
+  gpsdata.sfgeo <- st_transform(gpsdata.sf, crs = "+proj=longlat") 
+  gpsdata.geo <- cbind(st_coordinates(gpsdata.sfgeo), id = gpsdata.sfgeo$id) 
   
-  # Plot data points on basemap
-  # Note that kludge below needed so that code works everywhere
+  # Extract coordinates and attributes from gpsdata.sf and combine into a dataframe
+  coords <- st_coordinates(gpsdata.sfgeo)
+  attributes <- st_drop_geometry(gpsdata.sfgeo)
+  gpsdata_df <- cbind(attributes, coords)
+  
+  # Plot data points on the map
+  mymap <- ggmap(mybasemap) +
+    geom_point(data = gpsdata_df, aes(x = X, y = Y, color = factor(id)), size = 1.5) + 
+    theme(legend.position = c(-0.2, 0.90)) +
+    labs(x = "Longitude", y = "Latitude") 
+  
+  # Modified here to handle multiple ids
 
-  if ('xdata' %in% colnames(gpsdata.geo) && 'ydata' %in% colnames(gpsdata.geo)) {
-     mymap <- ggmap(mybasemap) +
-              geom_point(data = gpsdata.geo, 
-              aes(x = xdata, y = ydata, colour = id), size = 1.5)  +
-              theme(legend.position = c(-0.2, 0.90)) +
-              labs(x = "Longitude", y = "Latitude")
-  } else {
-     mymap <- ggmap(mybasemap) +
-              geom_point(data = gpsdata.geo, 
-              aes(x = coords.x1, y = coords.x2, colour = id), size = 1.5)  +
-              theme(legend.position = c(-0.2, 0.90)) +
-              labs(x = "Longitude", y = "Latitude")
-  }
-  
-  # Add minimum convex polygon
+  # Add a polygon
   if (include_mcp) {
+    
+    # Initialize a list to store convex hull polygons for each ID
+    hull_list <- list()
+    
+    # Loop over unique IDs and compute convex hull for each
+    for (unique_id in unique(gpsdata_df$id)) {
+      subset_data <- gpsdata_df[gpsdata_df$id == unique_id, ]
+      hull_points <- subset_data[chull(subset_data$X, subset_data$Y), ]
+      hull_list[[unique_id]] <- hull_points
+    }
+    
+    # Combine all hull polygons into a single data frame
+    all_hulls <- do.call(rbind, hull_list)
+    
+    # Add the combined convex hull polygons to the map
     mymap <- mymap +
-      geom_polygon(data = fortify(gpsdata.mcpgeo),
-                   aes(long, lat, colour = id, fill = id),
-                   alpha = 0.5) # alpha sets the transparency
+      geom_polygon(data = all_hulls, aes(x = X, y = Y, fill = factor(id), colour = factor(id)), alpha = 0.5)
   }
   
   return(mymap)
+  
 }
 
