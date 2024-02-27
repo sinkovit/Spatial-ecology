@@ -27,3 +27,5 @@ https://github.com/nanohub-apps/hubtooljupytertemplate).
 18. sp
 19. stringr
 20. tools
+21. sf
+22. terra
