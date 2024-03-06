@@ -625,6 +625,7 @@ server <- function(input, output, session) {
           # path_home()
           path_filename <- paste("/tmp/", input$movebank_local_filename,
                                  sep = "")
+          showNotification(paste("saving Movebank file to", path_filename))
           result = saveDataframeFromMB(gps$original, path_filename)
           if (is.null(result))
             showNotification(paste(message, "done"), duration = 2, id = id,
@@ -635,8 +636,8 @@ server <- function(input, output, session) {
           
           # now download the saved file
           output$download_data_button <-
-            downloadHeandler(filename = input$movebank_local_filename,
-                             content = write.csv(gps$original, path_filename))
+            downloadHandler(filename = input$movebank_local_filename,
+                            content = write.csv(gps$original, path_filename))
         },
         error = function(e) {
           showNotification(paste("Error :", e$message), id = id,
