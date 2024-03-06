@@ -408,8 +408,10 @@ server <- function(input, output, session) {
   } else {
     file.create(app_env_path_filename)
   }
+  showNotification("here 1", type = "message", duration = NULL, session = session)
   # Set the file permission (again) so only readable & writable by owner
   Sys.chmod(app_env_path_filename, mode = "600")
+  showNotification("here 2", type = "message", duration = NULL, session = session)
   
   # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -444,6 +446,7 @@ server <- function(input, output, session) {
   shinyjs::hide("save_files")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
+  showNotification("here 3", type = "message", duration = NULL, session = session)
 
   
   ############################################################################
@@ -639,8 +642,11 @@ server <- function(input, output, session) {
           
           # now download the saved file
           output$download_data_button <-
-            downloadHandler(filename = input$movebank_local_filename,
-                            content = write.csv(gps$original, path_filename))
+            downloadHandler(filename = "download.csv",
+                            content = function(path_filename) {
+                              write.csv(gps$original, path_filename)
+                            },
+                            contentType="text/csv")
         },
         error = function(e) {
           showNotification(paste("Error :", e$message), id = id,
