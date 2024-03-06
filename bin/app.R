@@ -378,6 +378,8 @@ server <- function(input, output, session) {
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
+  showNotification(paste("app_env_path_filename =", app_env_path_filename),
+                   type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
@@ -623,9 +625,10 @@ server <- function(input, output, session) {
                          session = session)
         tryCatch({
           # path_home()
-          path_filename <- paste("/tmp/", input$movebank_local_filename,
+          path_filename <- paste(path_home(), "/", input$movebank_local_filename,
                                  sep = "")
-          showNotification(paste("saving Movebank file to", path_filename))
+          showNotification(paste("saving Movebank file to", path_filename),
+                           type = "message", duration = NULL, session = session)
           result = saveDataframeFromMB(gps$original, path_filename)
           if (is.null(result))
             showNotification(paste(message, "done"), duration = 2, id = id,
