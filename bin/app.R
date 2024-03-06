@@ -153,15 +153,16 @@ ui <- dashboardPage(
               textInput("movebank_username", "Movebank username"),
               passwordInput("movebank_password", "Password"),
               textInput("movebank_studyid", "Study ID"),
-              # checkboxInput("movebank_save_local",
-              #   "Save Movebank data to your computer"
-              # ),
-              # bsTooltip(id = "movebank_save_local", placement = "right",
-              #   title = "If local file already exists, will overwrite"
-              # ),
-              # conditionalPanel(condition = "input.movebank_save_local == 1",
-              #   textInput("movebank_local_filename", "Local filename")
-              # ),
+              checkboxInput("movebank_save_local",
+                "Save Movebank data to your computer"
+              ),
+              bsTooltip(id = "movebank_save_local", placement = "right",
+                title = "If local file already exists, will overwrite"
+              ),
+              conditionalPanel(condition = "input.movebank_save_local == 1",
+                textInput("movebank_local_filename", "Local filename"),
+                downloadButton("download_data_button", "Download")
+              ),
             ),
             conditionalPanel(condition = "input.data_source === 'Your computer'",
               fileInput("local_file", label = NULL, multiple = FALSE,
@@ -348,7 +349,7 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
-  showNotification(paste("session$token =", session$token), session = session)
+  # showNotification(paste("session$token =", session$token), session = session)
   
   ############################################################################
   # Setup some system-related configuraions
@@ -613,28 +614,35 @@ server <- function(input, output, session) {
       
       # Now save MB data locally
       # Disable for now since saving from hub to local needs different mechanism
-      # if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
-      #   # printf("Saving local file %s...", input$movebank_local_filename)
-      #   
-      #   id <- "save_mb_file"
-      #   message <- "Saving Movebank data..."
-      #   showNotification(message, id = id, type = "message", duration = NULL,
-      #                    session = session)
-      #   tryCatch({
-      #     result = saveDataframeFromMB(gps$original,
-      #                                  input$movebank_local_filename)
-      #     if (is.null(result))
-      #       showNotification(paste(message, "done"), duration = 2, id = id,
-      #                        type = "message", session = session)
-      #     else
-      #       showNotification(paste(message, "error:", result), duration = NULL,
-      #                        id = id, type = "error", session = session)
-      #   },
-      #   error = function(e) {
-      #     showNotification(paste("Error :", e$message), id = id,
-      #                      duration = NULL, type = "error", session = session)
-      #   })
-      # }
+      if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
+        printf("Saving local file %s...", input$movebank_local_filename)
+
+        id <- "save_mb_file"
+        message <- "Saving Movebank data..."
+        showNotification(message, id = id, type = "message", duration = NULL,
+                         session = session)
+        tryCatch({
+          # path_home()
+          path_filename <- paste("/tmp/", input$movebank_local_filename,
+                                 sep = "")
+          result = saveDataframeFromMB(gps$original, path_filename)
+          if (is.null(result))
+            showNotification(paste(message, "done"), duration = 2, id = id,
+                             type = "message", session = session)
+          else
+            showNotification(paste(message, "error:", result), duration = NULL,
+                             id = id, type = "error", session = session)
+          
+          # now download the saved file
+          output$download_data_button <-
+            downloadHeandler(filename = input$movebank_local_filename,
+                             content = write.csv(gps$original, path_filename))
+        },
+        error = function(e) {
+          showNotification(paste("Error :", e$message), id = id,
+                           duration = NULL, type = "error", session = session)
+        })
+      }
       
       continue <- TRUE
       
