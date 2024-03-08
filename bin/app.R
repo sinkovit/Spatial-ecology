@@ -369,17 +369,17 @@ server <- function(input, output, session) {
                      session = session)
     setupAPIkey()
     showNotification(paste(message, "done"), id = id, type = "message",
-                     duration = 2, session = session)
+                     duration = 3, session = session)
   },
   error = function(e) {
-    showNotification(paste(message, "system error: unable to plot MKDE!"),
+    showNotification(paste(message, "system error: unable to plot!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
-  showNotification(paste("app_env_path_filename =", app_env_path_filename),
-                   type = "message", duration = NULL, session = session)
+  # showNotification(paste("app_env_path_filename =", app_env_path_filename),
+  #                  type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
@@ -390,39 +390,45 @@ server <- function(input, output, session) {
   # Initialize UI
   
   # I couldn't get the environment variable to persist on the hub so we'll
-  # create our app's own environment file
-  # Retrieve user's Movebank credential info, if found
+  # create our app's own environment file.
   # env_var <- names(s <- Sys.getenv())
-  if (file.exists(app_env_path_filename)) {
-    showNotification("file exists", type = "message", duration = NULL,
-                     session = session)
-    file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
-                               progress = TRUE)
-    for (i in 1:length(file_content)) {
-      s <- str_split_1(file_content[i], "=")
-      if (s[1] == "MovebankUsername")
-        updateTextInput(session, "movebank_username", value = s[2])
-      else if (s[1] == "MovebankPassword")
-        updateTextInput(session, "movebank_password", value = s[2])
-      else if (s[1] == "MovebankStudyID")
-        updateTextInput(session, "movebank_studyid", value = s[2])
-    }
-  } else {
-    tryCatch ({
-      showNotification("no file; creating...", type = "message", duration = NULL,
-                       session = session)
+  
+  # Retrieve user's Movebank credential info, if available
+  tryCatch({
+    if (file.exists(app_env_path_filename)) {
+      # showNotification("file exists", type = "message", duration = NULL,
+      #                  session = session)
+      file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
+                                 progress = TRUE)
+      for (i in 1:length(file_content)) {
+        s <- str_split_1(file_content[i], "=")
+        if (s[1] == "MovebankUsername")
+          updateTextInput(session, "movebank_username", value = s[2])
+        else if (s[1] == "MovebankPassword")
+          updateTextInput(session, "movebank_password", value = s[2])
+        else if (s[1] == "MovebankStudyID")
+          updateTextInput(session, "movebank_studyid", value = s[2])
+      }
+      showNotification("Retrieved your Movebank credential", type = "message",
+                       duration = 3, session = session)
+    } else {
+      # showNotification("no file; creating...", type = "message", duration = NULL,
+      #                  session = session)
       file.create(app_env_path_filename)
-      showNotification("done", type = "message", duration = NULL, session = session)
-    },
-    error = function(e) {
-      showNotification(paste("error:", e), type = "error", duration = NULL,
-                       session = session)
-    })
-  }
-  showNotification("here 1", type = "message", duration = NULL, session = session)
-  # Set the file permission (again) so only readable & writable by owner
-  Sys.chmod(app_env_path_filename, mode = "600")
-  showNotification("here 2", type = "message", duration = NULL, session = session)
+      # showNotification("done", type = "message", duration = NULL, session = session)
+    }
+    
+    # showNotification("here 1", type = "message", duration = NULL, session = session)
+    # Set the file permission (again) so only readable & writable by owner
+    Sys.chmod(app_env_path_filename, mode = "600")
+    # showNotification("here 2", type = "message", duration = NULL, session = session)
+  },
+  # we can ignore any error since Movebank credential is optional; note that
+  # read_lines() above will throw an exception if the file has no content
+  error = function(e) {
+    # showNotification(paste("Movebank credential error:", e), type = "error",
+    #                  duration = NULL, session = session)
+  })
   
   # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -457,7 +463,6 @@ server <- function(input, output, session) {
   shinyjs::hide("save_files")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
-  showNotification("here 3", type = "message", duration = NULL, session = session)
 
   
   ############################################################################
@@ -566,6 +571,8 @@ server <- function(input, output, session) {
                        "\nMovebankStudyID=", input$movebank_studyid, "\n",
                        sep = ""),
                  app_env_path_filename)
+      showNotification("Saved your Movebank credential", type = "message",
+                       duration = 3, session = session)
       
       filename <- input$movebank_studyid
       id <- "load_movebank"
@@ -602,7 +609,7 @@ server <- function(input, output, session) {
       showNotification(paste("Error", filename, ":", results[[2]]),
                        duration = NULL, type = "error", session = session)
     } else {
-      showNotification(paste(message, "done"), duration = 2, id = id,
+      showNotification(paste(message, "done"), duration = 3, id = id,
                        type = "message", session = session)
       updateTextInput(session, "basename", value = basename)
       
@@ -616,7 +623,7 @@ server <- function(input, output, session) {
                        session = session)
       results <- preprocessDataframe(data)
       showNotification(paste(message, "done"), id = id, type = "message", 
-                       duration = 2, session = session)
+                       duration = 3, session = session)
       # shiny::validate(need(is.null(results[[2]]), results[[2]]))
       if (! is.null(results[[2]])) {
         showNotification(paste("Error :", results[[2]]), duration = NULL,
@@ -645,7 +652,7 @@ server <- function(input, output, session) {
                            type = "message", duration = NULL, session = session)
           result = saveDataframeFromMB(gps$original, path_filename)
           if (is.null(result))
-            showNotification(paste(message, "done"), duration = 2, id = id,
+            showNotification(paste(message, "done"), duration = 3, id = id,
                              type = "message", session = session)
           else
             showNotification(paste(message, "error:", result), duration = NULL,
@@ -676,7 +683,7 @@ server <- function(input, output, session) {
                          session = session)
         data <- animalAttributes(data, input$areaUnits)
         showNotification(paste(message, "done"), id = id, type = "message",
-                         duration = 2, session = session)
+                         duration = 3, session = session)
         # printf("done\n")
         # display_log("done")
       },
@@ -881,7 +888,7 @@ server <- function(input, output, session) {
                        session = session)
       data <- animalAttributes(gps$original, input$areaUnits)
       # printf(paste("data =", data, "\n"))
-      showNotification(paste(message, "done"), duration = 2, id = id,
+      showNotification(paste(message, "done"), duration = 3, id = id,
                        type = "message", session = session)
       gps$summary <- data
     }
@@ -907,7 +914,7 @@ server <- function(input, output, session) {
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
     showNotification(paste(message, "done"), id = mid, type = "message",
-                     duration = 2, session = session)
+                     duration = 3, session = session)
   })
   
   observeEvent(input$mkde_plot_btn, {
@@ -934,7 +941,7 @@ server <- function(input, output, session) {
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
       showNotification(paste(message, "done"), id = mid, type = "message",
-                       duration = 2, session = session)
+                       duration = 3, session = session)
       
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -964,7 +971,7 @@ server <- function(input, output, session) {
                          session = session)
         results <- createContour(raster, probs, input$zone, input$datum)
         showNotification(paste(message, "done"), id = mid, type = "message",
-                         duration = 2, session = session)
+                         duration = 3, session = session)
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
