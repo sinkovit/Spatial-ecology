@@ -153,15 +153,15 @@ ui <- dashboardPage(
               textInput("movebank_username", "Movebank username"),
               passwordInput("movebank_password", "Password"),
               textInput("movebank_studyid", "Study ID"),
-              checkboxInput("movebank_save_local",
-                "Save Movebank data to your computer"
+              checkboxInput("movebank_save_gateway_button",
+                "Save Movebank data to gateway"
               ),
-              bsTooltip(id = "movebank_save_local", placement = "right",
-                title = "If local file already exists, will overwrite"
+              bsTooltip(id = "movebank_save_gateway_button", placement = "right",
+                title = "If gateway file already exists, will overwrite"
               ),
-              conditionalPanel(condition = "input.movebank_save_local == 1",
+              conditionalPanel(condition = "input.movebank_save_gateway_button == 1",
                 textInput("movebank_local_filename", "Local filename"),
-                downloadButton("download_data_button", "Download")
+                downloadButton("movebank_download_button", "Download")
               ),
             ),
             conditionalPanel(condition = "input.data_source === 'Your computer'",
@@ -394,6 +394,8 @@ server <- function(input, output, session) {
   # Retrieve user's Movebank credential info, if found
   # env_var <- names(s <- Sys.getenv())
   if (file.exists(app_env_path_filename)) {
+    showNotification("file exists", type = "message", duration = NULL,
+                     session = session)
     file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
                                progress = TRUE)
     for (i in 1:length(file_content)) {
@@ -406,7 +408,16 @@ server <- function(input, output, session) {
         updateTextInput(session, "movebank_studyid", value = s[2])
     }
   } else {
-    file.create(app_env_path_filename)
+    tryCatch ({
+      showNotification("no file; creating...", type = "message", duration = NULL,
+                       session = session)
+      file.create(app_env_path_filename)
+      showNotification("done", type = "message", duration = NULL, session = session)
+    },
+    error = function(e) {
+      showNotification(paste("error:", e), type = "error", duration = NULL,
+                       session = session)
+    })
   }
   showNotification("here 1", type = "message", duration = NULL, session = session)
   # Set the file permission (again) so only readable & writable by owner
@@ -619,7 +630,7 @@ server <- function(input, output, session) {
       
       # Now save MB data locally
       # Disable for now since saving from hub to local needs different mechanism
-      if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
+      if(input$data_source == "Movebank" && input$movebank_save_gateway_button == 1) {
         printf("Saving local file %s...", input$movebank_local_filename)
 
         id <- "save_mb_file"
@@ -641,8 +652,8 @@ server <- function(input, output, session) {
                              id = id, type = "error", session = session)
           
           # now download the saved file
-          output$download_data_button <-
-            downloadHandler(filename = "download.csv",
+          output$movebank_download_button <-
+            downloadHandler(filename = input$movebank_local_filename,
                             content = function(path_filename) {
                               write.csv(gps$original, path_filename)
                             },
