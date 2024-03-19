@@ -139,7 +139,7 @@ ui <- dashboardPage(
         tabsetPanel(id = "controls", type = "tabs",
           tabPanel(title = "Data", value = "Data", tags$br(),
             radioButtons("data_source", "Load data from:",
-              choices = c ("Gateway", "Movebank", "Your computer")
+              choices = c ("Your computer", "Movebank", "Gateway")
             ),
             conditionalPanel(condition = "input.data_source === 'Gateway'",
               shinyFilesButton('gateway_browse', label='Browse',
@@ -153,15 +153,18 @@ ui <- dashboardPage(
               textInput("movebank_username", "Movebank username"),
               passwordInput("movebank_password", "Password"),
               textInput("movebank_studyid", "Study ID"),
-              checkboxInput("movebank_save_gateway_button",
-                "Save Movebank data to gateway"
+              checkboxInput("save_movebank_button",
+                "Save/download Movebank data"
               ),
-              bsTooltip(id = "movebank_save_gateway_button", placement = "right",
-                title = "If gateway file already exists, will overwrite"
+              bsTooltip(id = "save_movebank_button", placement = "right",
+                title = "Save the loaded data to the gateway, then download"
               ),
-              conditionalPanel(condition = "input.movebank_save_gateway_button == 1",
-                textInput("movebank_local_filename", "Local filename"),
-                downloadButton("movebank_download_button", "Download")
+              conditionalPanel(condition = "input.save_movebank_button == 1",
+                textInput("save_movebank_filename", "Filename"),
+                actionButton("save_movebank_data_button", label = "Save data to gateway"),
+                bsTooltip(id = "save_movebank_data_button", placement = "right",
+                          title = "Save data to the above filename in your gateway home directory; overwrite if file already exists"),
+                downloadButton("download_movebank_data_button", "Download file")
               ),
             ),
             conditionalPanel(condition = "input.data_source === 'Your computer'",
@@ -192,8 +195,7 @@ ui <- dashboardPage(
               ),
             ),
             hr(style = "border-top: 2px solid grey;"),
-            actionButton("data_load_btn", label = "Load data"),
-            # actionButton("reset_data", "Reset data"),
+            actionButton("load_data_button", label = "Load data"),
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
@@ -352,7 +354,7 @@ server <- function(input, output, session) {
   # showNotification(paste("session$token =", session$token), session = session)
   
   ############################################################################
-  # Setup some system-related configuraions
+  # Setup some system-related configurations
   
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
@@ -378,8 +380,6 @@ server <- function(input, output, session) {
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
-  # showNotification(paste("app_env_path_filename =", app_env_path_filename),
-  #                  type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
@@ -389,6 +389,23 @@ server <- function(input, output, session) {
   ############################################################################
   # Initialize UI
   
+  # shinyjs::hide("status_log")
+  shinyjs::hide("mcp_plot")
+  shinyjs::hide("mkde_plot")
+  shinyjs::hide("tables")
+  shinyjs::hide("save_files")
+  shinyjs::hide("save_movebank_button")
+  shinyjs::hide("download_movebank_data_button")
+  shinyjs::disable(selector = "[type=radio][value=25D]")
+  shinyjs::disable(selector = "[type=radio][value=3D]")
+ 
+  # Hide the MCP & MKDE control tabs until data is loaded
+  hideTab(inputId = "controls", target = "MCP")
+  hideTab(inputId = "controls", target = "MKDE")
+  
+  # Hide the table elements
+  shinyjs::hide("areaUnitsDiv")
+  
   # I couldn't get the environment variable to persist on the hub so we'll
   # create our app's own environment file.
   # env_var <- names(s <- Sys.getenv())
@@ -396,8 +413,6 @@ server <- function(input, output, session) {
   # Retrieve user's Movebank credential info, if available
   tryCatch({
     if (file.exists(app_env_path_filename)) {
-      # showNotification("file exists", type = "message", duration = NULL,
-      #                  session = session)
       file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
                                  progress = TRUE)
       for (i in 1:length(file_content)) {
@@ -412,16 +427,11 @@ server <- function(input, output, session) {
       showNotification("Retrieved your Movebank credential", type = "message",
                        duration = 3, session = session)
     } else {
-      # showNotification("no file; creating...", type = "message", duration = NULL,
-      #                  session = session)
       file.create(app_env_path_filename)
-      # showNotification("done", type = "message", duration = NULL, session = session)
     }
     
-    # showNotification("here 1", type = "message", duration = NULL, session = session)
     # Set the file permission (again) so only readable & writable by owner
     Sys.chmod(app_env_path_filename, mode = "600")
-    # showNotification("here 2", type = "message", duration = NULL, session = session)
   },
   # we can ignore any error since Movebank credential is optional; note that
   # read_lines() above will throw an exception if the file has no content
@@ -429,13 +439,6 @@ server <- function(input, output, session) {
     # showNotification(paste("Movebank credential error:", e), type = "error",
     #                  duration = NULL, session = session)
   })
-  
-  # Hide the MCP & MKDE control tabs until data is loaded
-  hideTab(inputId = "controls", target = "MCP")
-  hideTab(inputId = "controls", target = "MKDE")
-  
-  # Hide the table elements
-  shinyjs::hide("areaUnitsDiv")
   
   output$instructions <- renderUI({
     tagList(h4("First, load your data and verify coordinate parameters..." ))}
@@ -455,16 +458,8 @@ server <- function(input, output, session) {
         tmp <- parseFilePaths (gateway_volumes, input$gateway_browse)
         HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
-  
-  # shinyjs::hide("status_log")
-  shinyjs::hide("mcp_plot")
-  shinyjs::hide("mkde_plot")
-  shinyjs::hide("tables")
-  shinyjs::hide("save_files")
-  shinyjs::disable(selector = "[type=radio][value=25D]")
-  shinyjs::disable(selector = "[type=radio][value=3D]")
 
-  
+
   ############################################################################
   # Handle UI events
   
@@ -522,23 +517,51 @@ server <- function(input, output, session) {
         (input$data_source == 'Movebank' && (isEmpty(input$movebank_username) ||
                                              isEmpty(input$movebank_password) ||
                                              isEmpty(input$movebank_studyid)))) {
-      shinyjs::disable("data_load_btn")
-      # shinyjs::disable("reset_data")
+      shinyjs::disable("load_data_button")
     } else {
-      shinyjs::enable("data_load_btn")
-      # shinyjs::enable("reset_data")
+      shinyjs::enable("load_data_button")
     }
   })
   
-  # Update Movebank local filename based on studyid...
-  observeEvent(input$movebank_studyid, {
-    updateTextInput(session, "movebank_local_filename",
-                    value = paste("movebank-", input$movebank_studyid, ".csv",
-                                  sep = ""))
+  observeEvent(input$save_movebank_data_button, {
+    id <- "save_mb_file"
+    message <- "Saving Movebank data..."
+    showNotification(message, id = id, type = "message", duration = NULL,
+                     session = session)
+    tryCatch({
+      # path_home()
+      path_filename <- paste(path_home(), "/", input$save_movebank_filename,
+                             sep = "")
+      # showNotification(paste("saving Movebank file to", path_filename),
+      #                  type = "message", duration = NULL, session = session)
+      result = saveDataframeFromMB(gps$original, path_filename)
+      if (is.null(result))
+        showNotification(paste(
+          message, "done; your file has been saved to your gateway home directory"),
+          duration = 3, id = id, type = "message", session = session)
+      else
+        showNotification(paste(message, "error:", result), duration = NULL,
+                         id = id, type = "error", session = session)
+      
+      # now download the saved file
+      output$download_movebank_data_button <-
+        downloadHandler(filename = input$save_movebank_filename,
+                        content = function(path_filename) {
+                          write.csv(gps$original, path_filename)
+                        },
+                        contentType="text/csv")
+    },
+    error = function(e) {
+      showNotification(paste("Error :", e$message), id = id,
+                       duration = NULL, type = "error", session = session)
+    })
+
+    shinyjs::hide("save_movebank_data_button")
+    shinyjs::show("download_movebank_data_button")
   })
   
   # Handle Data tab "Load data" button click...
-  observeEvent(input$data_load_btn, {
+  observeEvent(input$load_data_button, {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
 
@@ -583,7 +606,14 @@ server <- function(input, output, session) {
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
       basename <- input$movebank_studyid
-    } else if(input$data_source == 'Your computer') {
+      
+      updateTextInput(session, "save_movebank_filename",
+                      value = paste("movebank-", input$movebank_studyid, ".csv",
+                                    sep = ""))
+      shinyjs::show("save_movebank_button")
+      shinyjs::show("save_movebank_data_button")
+      shinyjs::hide("download_movebank_data_button")
+    } else if (input$data_source == 'Your computer') {
       # print(paste("input$local_file$name =", input$local_file$name))
       # print(paste("input$local_file$size =", input$local_file$size))
       # print(paste("input$local_file$type =", input$local_file$type))
@@ -635,43 +665,6 @@ server <- function(input, output, session) {
       gps$data <- results[[1]]
       gps$original <- results[[1]]
       
-      # Now save MB data locally
-      # Disable for now since saving from hub to local needs different mechanism
-      if(input$data_source == "Movebank" && input$movebank_save_gateway_button == 1) {
-        printf("Saving local file %s...", input$movebank_local_filename)
-
-        id <- "save_mb_file"
-        message <- "Saving Movebank data..."
-        showNotification(message, id = id, type = "message", duration = NULL,
-                         session = session)
-        tryCatch({
-          # path_home()
-          path_filename <- paste(path_home(), "/", input$movebank_local_filename,
-                                 sep = "")
-          showNotification(paste("saving Movebank file to", path_filename),
-                           type = "message", duration = NULL, session = session)
-          result = saveDataframeFromMB(gps$original, path_filename)
-          if (is.null(result))
-            showNotification(paste(message, "done"), duration = 3, id = id,
-                             type = "message", session = session)
-          else
-            showNotification(paste(message, "error:", result), duration = NULL,
-                             id = id, type = "error", session = session)
-          
-          # now download the saved file
-          output$movebank_download_button <-
-            downloadHandler(filename = input$movebank_local_filename,
-                            content = function(path_filename) {
-                              write.csv(gps$original, path_filename)
-                            },
-                            contentType="text/csv")
-        },
-        error = function(e) {
-          showNotification(paste("Error :", e$message), id = id,
-                           duration = NULL, type = "error", session = session)
-        })
-      }
-      
       continue <- TRUE
       
       # printf("Calculating spatial attributes...")
@@ -684,8 +677,6 @@ server <- function(input, output, session) {
         data <- animalAttributes(data, input$areaUnits)
         showNotification(paste(message, "done"), id = id, type = "message",
                          duration = 3, session = session)
-        # printf("done\n")
-        # display_log("done")
       },
       error = function(e) {
         showNotification(paste("Error :", e$message), id = id,
