@@ -556,9 +556,7 @@ server <- function(input, output, session) {
                        duration = NULL, type = "error", session = session)
     })
 
-    print("hiding save movebank data button")
     shinyjs::hide("save_movebank_data_button")
-    print("show download movebank_data_button")
     shinyjs::show("download_movebank_data_button")
   })
   
