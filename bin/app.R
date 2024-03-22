@@ -404,6 +404,8 @@ server <- function(input, output, session) {
                  client_data$url_pathname, sep = "")
     showNotification(paste("url =", url), type = "message", duration = NULL,
                      session = session)
+    showNotification(paste("session id =", tmp[3]), type = "message",
+                     duration = NULL, session = session)
     
     # if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
     #   shinyjs::hide("gateway_quit_button")
