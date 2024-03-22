@@ -94,9 +94,11 @@ ui <- dashboardPage(
     
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
     #                     href = "custom.css")),
-      tags$li(a(href = 'https://uccommunityhub.hubzero.org/tools/mkde/stop?sess=',
-                icon("power-off"), title = "Quit app"), class = "dropdown",
-              id = "gateway_quit_button")
+      # tags$li(a(href = 'https://uccommunityhub.hubzero.org/tools/mkde/stop?sess=',
+      #           icon("power-off"), title = "Quit app"), class = "dropdown",
+      #         id = "gateway_quit_button"),
+    tags$li(htmlOutput("gateway_quit_button", container = tags$a), class = "dropdown")
+    # tags$li(p("Please click", htmlOutput("link", inline = TRUE)), class = "dropdown")
 
     # tags$li(
     #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
@@ -383,7 +385,7 @@ server <- function(input, output, session) {
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
   current_table_selection <- reactiveVal("single")
   # https://stackoverflow.com/questions/62741646/how-to-update-url-in-shiny-r
-  gateway_quit_url <- reactiveVal("")
+  # gateway_quit_url <- reactiveVal("")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
@@ -397,14 +399,19 @@ server <- function(input, output, session) {
   observe({
     client_data <- session$clientData;
     tmp <- str_split_1(client_data$url_pathname, "/")
+    # tmp <- c("a", "b", "12")
     showNotification(paste("tmp (", length(tmp), ") ="), type = "message",
                      duration = NULL, session = session)
     showNotification(paste("session id =", tmp[3]), type = "message",
                      duration = NULL, session = session)
-    url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
-                 "/tools/mkde/stop?sess=", sep = "")
-    showNotification(paste("url =", url), type = "message", duration = NULL,
-                     session = session)
+    gateway_quit_url <- paste(client_data$url_protocol, "//",
+                              client_data$url_hostname, "/tools/mkde/stop?sess=",
+                              sep = "")
+    showNotification(paste("gateway_quit_url =", gateway_quit_url),
+                     type = "message", duration = NULL, session = session)
+    # showNotification(paste("attribute =",
+    #                        htmltools::tagGetAttribute("gateway_quit_button", "href")),
+    #                  type = "message", duration = NULL, session = session)
     
     if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
       showNotification("not gateway!", type = "message", duration = NULL,
@@ -420,10 +427,14 @@ server <- function(input, output, session) {
       if (length(tmp) >= 3) {
         showNotification(paste("session id =", tmp[3]), type = "message",
                          duration = NULL, session = session )
-        url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
-                     "/tools/mkde/stop?sess=", tmp[3], sep = "")
-        showNotification(paste("new url =", url), type = "message", duration = NULL,
-                         session = session)
+        gateway_quit_url <- paste(client_data$url_protocol, "//",
+                                  client_data$url_hostname,
+                                  "/tools/mkde/stop?sess=", tmp[3], sep = "")
+        showNotification(paste("new gateway_quit_url =", gateway_quit_url),
+                         type = "message", duration = NULL, session = session)
+        output$gateway_quit_button <- renderUI({a(href=gateway_quit_url,
+                                                  icon("power-off"),
+                                                  title = "Quit app")})
       }
     }
   })
