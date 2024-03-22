@@ -396,26 +396,36 @@ server <- function(input, output, session) {
   # buttons
   observe({
     client_data <- session$clientData;
-    tmp <- str_split(client_data$url_pathname, "/")
-    showNotification(paste("tmp (", length(tmp), ") =", tmp), type = "message",
+    tmp <- str_split_1(client_data$url_pathname, "/")
+    showNotification(paste("tmp (", length(tmp), ") ="), type = "message",
                      duration = NULL, session = session)
     showNotification(paste("session id =", tmp[3]), type = "message",
-                     duration = NULL, session = session)
-    tmp2 <- c("this", "is a", "test")
-    showNotification(paste("tmp2 (", length(tmp2), ") =", tmp2), type = "message",
                      duration = NULL, session = session)
     url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
                  "/tools/mkde/stop?sess=", sep = "")
     showNotification(paste("url =", url), type = "message", duration = NULL,
                      session = session)
     
-    # if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
-    #   shinyjs::hide("gateway_quit_button")
-    #   # shinyjs::html("gateway_quit_button", html = )
-    #   # gateway_quit_url(paste(client_data$url_protocol))
-    # } else {
-    #   shinyjs::hide("quit_button")
-    # }
+    if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
+      showNotification("not gateway!", type = "message", duration = NULL,
+                       session = session)
+      shinyjs::hide("gateway_quit_button")
+      # shinyjs::html("gateway_quit_button", html = )
+      # gateway_quit_url(paste(client_data$url_protocol))
+    } else {
+      showNotification("gateway!", type = "message", duration = NULL,
+                       session = session)
+      shinyjs::hide("quit_button")
+      
+      if (length(tmp) >= 3) {
+        showNotification(paste("session id =", tmp[3]), type = "message",
+                         duration = NULL, session = session )
+        url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
+                     "/tools/mkde/stop?sess=", tmp[3], sep = "")
+        showNotification(paste("new url =", url), type = "message", duration = NULL,
+                         session = session)
+      }
+    }
   })
   
   shinyjs::hide("mcp_plot")
