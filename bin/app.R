@@ -399,13 +399,15 @@ server <- function(input, output, session) {
     tmp <- str_split(client_data$url_pathname, "/")
     showNotification(paste("tmp (", length(tmp), ") =", tmp), type = "message",
                      duration = NULL, session = session)
-    print(paste("split =", tmp))
-    url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
-                 client_data$url_pathname, sep = "")
-    showNotification(paste("url =", url), type = "message", duration = NULL,
-                     session = session)
     showNotification(paste("session id =", tmp[3]), type = "message",
                      duration = NULL, session = session)
+    tmp2 <- c("this", "is a", "test")
+    showNotification(paste("tmp2 (", length(tmp2), ") =", tmp2), type = "message",
+                     duration = NULL, session = session)
+    url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
+                 "/tools/mkde/stop?sess=", sep = "")
+    showNotification(paste("url =", url), type = "message", duration = NULL,
+                     session = session)
     
     # if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
     #   shinyjs::hide("gateway_quit_button")
