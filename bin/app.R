@@ -87,16 +87,16 @@ ui <- dashboardPage(
     # title = span("Space Use Ecology Gateway", style = "color: black;"),
     title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
               img(src = "logo.png")),
+    .list = tagList(
 #     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
 # > Password"),style="font-weight: bold;color:white;")),
-    tags$li(class = "dropdown", actionLink("quit_btn", "x", class = "dropdown"))
+      tags$li(class = "dropdown", actionLink("quit_button", "x", class = "dropdown")),
     
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
     #                     href = "custom.css")),
-    # tags$li(a(href = 'http://shinyapps.company.com',
-    #           icon("power-off"),
-    #           title = "Back to Apps Home"),
-    #         class = "dropdown"),
+      tags$li(a(href = 'https://uccommunityhub.hubzero.org/tools/mkde/stop?sess=',
+                icon("power-off"), title = "Quit app"), class = "dropdown",
+              id = "gateway_quit_button")
 
     # tags$li(
     #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
@@ -104,6 +104,7 @@ ui <- dashboardPage(
     #         #height = "52px"), style = "padding: 0px"),
     #         )),
     #   class = "dropdown")
+    )
   ),
   dashboardSidebar(disable = TRUE),
   dashboardBody(
@@ -381,6 +382,8 @@ server <- function(input, output, session) {
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
   current_table_selection <- reactiveVal("single")
+  # https://stackoverflow.com/questions/62741646/how-to-update-url-in-shiny-r
+  gateway_quit_url <- reactiveVal("")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
@@ -389,7 +392,28 @@ server <- function(input, output, session) {
   ############################################################################
   # Initialize UI
   
-  # shinyjs::hide("status_log")
+  # Depending on whether we are on the gateway or not, hide one of the 2 quit
+  # buttons
+  observe({
+    client_data <- session$clientData;
+    
+    if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
+      # shinyjs::hide("gateway_quit_button")
+      # shinyjs::html("gateway_quit_button", html = )
+      tmp <- str_split(client_data$url_pathname, "/")
+      showNotification(paste("tmp (", length(tmp), ") =", tmp), type = "message",
+                       duration = NULL, session = session)
+      print(paste("split =", tmp))
+      url <- paste(client_data$url_protocol, "//", client_data$url_hostname,
+                   client_data$url_pathname, sep = "")
+      showNotification(paste("url =", url), type = "message", duration = NULL,
+                       session = session)
+      # gateway_quit_url(paste(client_data$url_protocol))
+    } else {
+      shinyjs::hide("quit_button")
+    }
+  })
+  
   shinyjs::hide("mcp_plot")
   shinyjs::hide("mkde_plot")
   shinyjs::hide("tables")
@@ -458,13 +482,31 @@ server <- function(input, output, session) {
         tmp <- parseFilePaths (gateway_volumes, input$gateway_browse)
         HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
-
+  
 
   ############################################################################
   # Handle UI events
   
   # Handle control panel tab changes...
   observeEvent(input$controls, {
+    
+    # see https://shiny.posit.co/r/articles/build/client-data/ and
+    # https://shiny.posit.co/r/reference/shiny/latest/session.html
+    # showNotification(paste("clientData:", toString(session$clientData)),
+    #                  type = "message", duration = NULL, session = session)
+    showNotification(paste("url_protocol:", session$clientData$url_protocol),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("url_hostname:", session$clientData$url_hostname),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("url_pathname:", session$clientData$url_pathname),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("url_port:", session$clientData$url_port),
+                     type = "message", duration = NULL, session = session)
+    showNotification(paste("url_search:", session$clientData$url_search),
+                     type = "message", duration = NULL, session = session)
+    # showNotification(paste("ns(name):", session$ns("name")),
+    #                  type = "message", duration = NULL, session = session)
+    
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
         output$instructions <- renderUI({
@@ -1026,22 +1068,7 @@ server <- function(input, output, session) {
   
   # See https://shiny.posit.co/r/reference/shiny/latest/session.html
   # See https://github.com/daattali/advanced-shiny/tree/master/auto-kill-app
-  observeEvent(input$quit_btn, {
-    # print("Quit! Session:")
-    # showNotification(paste("clientData:", toString(session$clientData)),
-    #                  type = "message", duration = NULL, session = session)
-    # showNotification(paste("url_pathname:", session$url_pathname),
-    #                  type = "message", duration = NULL, session = session)
-    # showNotification(paste("PATH_INFO:", toString(session$request$PATH_INFO)),
-    #                  type = "message", duration = NULL, session = session)
-    # showNotification(paste("session:", toString(session$userData$session)),
-    #                  type = "message", duration = NULL, session = session)
-    # showNotification(paste("SESSION:", toString(session$userData$SESSION)),
-    #                  type = "message", duration = NULL, session = session)
-    # showNotification(paste("user:", session$user),
-    #                  type = "message", duration = NULL, session = session)
-    # showNotification(paste("groups:", session$groups),
-    #                  type = "message", duration = NULL, session = session)
+  observeEvent(input$quit_button, {
     js$closeWindow()
     stopApp()
   })
