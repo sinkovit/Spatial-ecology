@@ -97,8 +97,8 @@ ui <- dashboardPage(
       # tags$li(a(href = 'https://uccommunityhub.hubzero.org/tools/mkde/stop?sess=',
       #           icon("power-off"), title = "Quit app"), class = "dropdown",
       #         id = "gateway_quit_button"),
+    # See https://stackoverflow.com/questions/46943507/dynamically-add-remove-whole-ui-elements-in-shiny
     tags$li(htmlOutput("gateway_quit_button", container = tags$a), class = "dropdown")
-    # tags$li(p("Please click", htmlOutput("link", inline = TRUE)), class = "dropdown")
 
     # tags$li(
     #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
@@ -398,42 +398,24 @@ server <- function(input, output, session) {
   # buttons
   observe({
     client_data <- session$clientData;
-    tmp <- str_split_1(client_data$url_pathname, "/")
-    # tmp <- c("a", "b", "12")
-    showNotification(paste("tmp (", length(tmp), ") ="), type = "message",
-                     duration = NULL, session = session)
-    showNotification(paste("session id =", tmp[3]), type = "message",
-                     duration = NULL, session = session)
+    
     gateway_quit_url <- paste(client_data$url_protocol, "//",
                               client_data$url_hostname, "/tools/mkde/stop?sess=",
                               sep = "")
-    showNotification(paste("gateway_quit_url =", gateway_quit_url),
-                     type = "message", duration = NULL, session = session)
-    # showNotification(paste("attribute =",
-    #                        htmltools::tagGetAttribute("gateway_quit_button", "href")),
+    # showNotification(paste("gateway_quit_url =", gateway_quit_url),
     #                  type = "message", duration = NULL, session = session)
-    
+
     if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
-    # if (FALSE) {
-      showNotification("not gateway!", type = "message", duration = NULL,
-                       session = session)
       shinyjs::hide("gateway_quit_button")
-      # shinyjs::html("gateway_quit_button", html = )
-      # gateway_quit_url(paste(client_data$url_protocol))
     } else {
-      showNotification("gateway!", type = "message", duration = NULL,
-                       session = session)
       shinyjs::hide("quit_button")
+      pathname_parts <- str_split_1(client_data$url_pathname, "/")
       
-      if (length(tmp) >= 3) {
-        showNotification(paste("session id =", tmp[3]), type = "message",
-                         duration = NULL, session = session )
+      if (length(pathname_parts) >= 3) {
         gateway_quit_url <-
           paste(client_data$url_protocol, "//",
                 "uccommunityhub.hubzero.org/tools/mkde/stop?sess=", tmp[3],
                 sep = "")
-        showNotification(paste("new gateway_quit_url =", gateway_quit_url),
-                         type = "message", duration = NULL, session = session)
         output$gateway_quit_button <- renderUI({a(href=gateway_quit_url,
                                                   icon("power-off"),
                                                   title = "Quit app")})
@@ -519,18 +501,16 @@ server <- function(input, output, session) {
     
     # see https://shiny.posit.co/r/articles/build/client-data/ and
     # https://shiny.posit.co/r/reference/shiny/latest/session.html
-    # showNotification(paste("clientData:", toString(session$clientData)),
+    # showNotification(paste("url_protocol:", session$clientData$url_protocol),
     #                  type = "message", duration = NULL, session = session)
-    showNotification(paste("url_protocol:", session$clientData$url_protocol),
-                     type = "message", duration = NULL, session = session)
-    showNotification(paste("url_hostname:", session$clientData$url_hostname),
-                     type = "message", duration = NULL, session = session)
-    showNotification(paste("url_pathname:", session$clientData$url_pathname),
-                     type = "message", duration = NULL, session = session)
-    showNotification(paste("url_port:", session$clientData$url_port),
-                     type = "message", duration = NULL, session = session)
-    showNotification(paste("url_search:", session$clientData$url_search),
-                     type = "message", duration = NULL, session = session)
+    # showNotification(paste("url_hostname:", session$clientData$url_hostname),
+    #                  type = "message", duration = NULL, session = session)
+    # showNotification(paste("url_pathname:", session$clientData$url_pathname),
+    #                  type = "message", duration = NULL, session = session)
+    # showNotification(paste("url_port:", session$clientData$url_port),
+    #                  type = "message", duration = NULL, session = session)
+    # showNotification(paste("url_search:", session$clientData$url_search),
+    #                  type = "message", duration = NULL, session = session)
     # showNotification(paste("ns(name):", session$ns("name")),
     #                  type = "message", duration = NULL, session = session)
     
@@ -1101,15 +1081,14 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$gateway_quit_button, {
-    print("gateway quit!")
     js$closeWindow()
-    # stopApp()
   })
 }
 
 shinyApp(
   ui = ui,
   server = server,
+  # See https://rstudio.github.io/shiny/reference/onStop.html
   # onStart = function() {
   #   onStop(function() {
   #     print("stopping!")
