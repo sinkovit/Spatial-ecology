@@ -396,18 +396,21 @@ server <- function(input, output, session) {
   
   # Depending on whether we are on the gateway or not, hide one of the 2 quit
   # buttons
+  showNotification("here 1", type = "message", duration = NULL, session = session)
   observe({
     client_data <- session$clientData;
-    
-    gateway_quit_url <- paste(client_data$url_protocol, "//",
-                              client_data$url_hostname, "/tools/mkde/stop?sess=",
-                              sep = "")
+    # gateway_quit_url <- paste(client_data$url_protocol, "//",
+    #                           client_data$url_hostname, "/tools/mkde/stop?sess=",
+    #                           sep = "")
     # showNotification(paste("gateway_quit_url =", gateway_quit_url),
     #                  type = "message", duration = NULL, session = session)
+    showNotification("here 2", type = "message", duration = NULL, session = session)
 
     if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
       shinyjs::hide("gateway_quit_button")
     } else {
+      showNotification("gateway!", type = "message", duration = NULL,
+                       session = session)
       shinyjs::hide("quit_button")
       pathname_parts <- str_split_1(client_data$url_pathname, "/")
       
@@ -416,6 +419,8 @@ server <- function(input, output, session) {
           paste(client_data$url_protocol, "//",
                 "uccommunityhub.hubzero.org/tools/mkde/stop?sess=", tmp[3],
                 sep = "")
+        showNotification(paste("gateway_quit_url =", gateway_quit_url),
+                         type = "message", duration = NULL, session = session)
         output$gateway_quit_button <- renderUI({a(href=gateway_quit_url,
                                                   icon("power-off"),
                                                   title = "Quit app")})
