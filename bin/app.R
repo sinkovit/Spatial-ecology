@@ -422,8 +422,8 @@ server <- function(input, output, session) {
         showNotification("here 4", type = "message", duration = NULL, session = session)
         gateway_quit_url <-
           paste(client_data$url_protocol, "//",
-                "uccommunityhub.hubzero.org/tools/mkde/stop?sess=", tmp[3],
-                sep = "")
+                "uccommunityhub.hubzero.org/tools/mkde/stop?sess=",
+                pathname_parts[3], sep = "")
         showNotification(paste("gateway_quit_url =", gateway_quit_url),
                          type = "message", duration = NULL, session = session)
         output$gateway_quit_button <- renderUI({a(href=gateway_quit_url,
