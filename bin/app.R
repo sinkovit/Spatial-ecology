@@ -413,8 +413,13 @@ server <- function(input, output, session) {
                        session = session)
       shinyjs::hide("quit_button")
       pathname_parts <- str_split_1(client_data$url_pathname, "/")
+      showNotification("here 3", type = "message", duration = NULL, session = session)
+      # print(paste("pathname_parts =", pathname_parts))
+      # showNotification(paste("pathname_parts =", pathname_parts),
+      #                  type = "message", duration = NULL, session = session)
       
       if (length(pathname_parts) >= 3) {
+        showNotification("here 4", type = "message", duration = NULL, session = session)
         gateway_quit_url <-
           paste(client_data$url_protocol, "//",
                 "uccommunityhub.hubzero.org/tools/mkde/stop?sess=", tmp[3],
@@ -425,6 +430,7 @@ server <- function(input, output, session) {
                                                   icon("power-off"),
                                                   title = "Quit app")})
       }
+      showNotification("here 5", type = "message", duration = NULL, session = session)
     }
   })
   
