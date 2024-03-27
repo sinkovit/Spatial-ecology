@@ -32,7 +32,6 @@
 # MODIFICATIONS.
 
 
-library(sp)
 library(adehabitatHR)
 library(scales)
 library(ggmap)
@@ -62,58 +61,97 @@ library(dplyr)
 # loaded. The animalAttributes() function is first defined and call to
 # function is made at bottom of file
 # --------------------------------------------------------------------
+
 animalAttributes <- function(data_df, areaUnits) {
-  # print("entered animalAttributes()")
   printf <- function(...) cat(sprintf(...))
+  
+  gpsdata <- data_df[, c("xdata", "ydata")]
+  
+  area.convexhull <- function(points) {
+    
+    if(base::nrow(points) < 3) {  
+      
+      return(0)
+      
+    }
+    
+    points <- rbind(points, points[1, ])  
 
-  gpsdata.sf <- data_df[, c("id", "xdata", "ydata")]
-  coordinates(gpsdata.sf) <- c("xdata", "ydata")
-  area_mcp <- mcp.area(gpsdata.sf, unin="m", unout=areaUnits, percent=100, plotit=FALSE)
-
-  animals <- as.list(sort(unique(data_df$id)))
+    points <- apply(points, 2, as.numeric)
+    shoelace.sum <- sum(points[1:(base::nrow(points)-1), 1] * points[2:(base::nrow(points)), 2] - 
+                          points[2:(base::nrow(points)), 1] * points[1:(base::nrow(points)-1), 2])
+    return(abs(shoelace.sum) / 2)
+  }
+  
+  convertArea <- function(area, units) {
+    switch(units,
+           "km" = area / (10^6),    
+           "m" = area,              
+           "ha" = area / (10^4),    
+           area                     
+    )
+  }
+  
+  animals <- base::as.list(sort(base::unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
   areaString <- paste("Area (", areaUnits, ")", sep="")
-
+  
   result <- data.frame(id = numeric())
-  result[ , 'Easting (min)'] <- numeric()
-  result[ , 'Easting (max)'] <- numeric()
-  result[ , 'Northing (min)'] <- character()
-  result[ , 'Northing (max)'] <- character()
-  result[ , areaString] <- character()
+  result[, 'Easting (min)'] <- numeric()
+  result[, 'Easting (max)'] <- numeric()
+  result[, 'Northing (min)'] <- character()
+  result[, 'Northing (max)'] <- character()
+  result[, areaString] <- numeric()
   row.index <- 1
   
   tryCatch({
     for (local_id in animals) {
-      # print(paste("local_id =", local_id))
-      x_minmax = range(data_df[which(data_df$id == local_id), "xdata"])
-      y_minmax = range(data_df[which(data_df$id == local_id), "ydata"])
-      t_minmax = range(data_df[which(data_df$id == local_id), "time"])
+
+      animal.data <- gpsdata[which(data_df$id == local_id), ]
+      
+      hull.indices <- chull(animal.data[, 1], animal.data[, 2])
+      hull.points <- animal.data[hull.indices, ]
+      
+      x_minmax <- range(animal.data[, 1])
+      y_minmax <- range(animal.data[, 2])
+      t_minmax <- range(data_df[which(data_df$id == local_id), "time"])
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
+      t_range <- t_minmax[2] - t_minmax[1]
       
-      area_raw <- area_mcp[1, as.character(local_id)]
-      if (area_raw < 100) {
-        area <- sprintf("%.3f", area_raw)
-      } else if (area_raw < 1000000) {
-        area <- as.integer(area_raw)
-      } else {
-        area <- sprintf("%.3e", area_raw)      	
+ 
+      area <- area.convexhull(hull.points)
+      
+      if (is.na(area)) {
+        
+        area <- 0  
+        
       }
       
-      row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area)
+      area <- convertArea(area, areaUnits)
+      
+      area.str <- as.character(area)  
+      
+      row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area.str)
       row.tail = c()
       
       # Loop over pixel sizes
       for (max_pix in max_pixels) {
+        
         nx <- as.integer(x_range/max_pix)
         ny <- as.integer(y_range/max_pix)
         dims <- sprintf("%dx%d", nx, ny)
+        
         if(row.index == 1) {
+          
           label <- sprintf("Grid \n (%dm)", max_pix)
-          result[ , label] <- character()
+          result[, label] <- character()
+          
         }
+        
         value <- paste(dims)
         row.tail <- append(row.tail, c(value))
+        
       }
       
       row <- append(row,row.tail)
@@ -121,16 +159,18 @@ animalAttributes <- function(data_df, areaUnits) {
       row.index <- row.index + 1
       
     }
-    # print(paste("result =", result))
-    return(result)
   },
   error = function(error_message) {
-    print(paste("error_message =", error_message))
+    
+    base::print(paste("error_message =", error_message))
     return(NULL)
+    
   })
-  print("leaving animalAttributes()")
+  
+  base::print("leaving animalAttributes()")
+  return(result)
+  
 }
-
 
 # Calculate rasters for each indivdual in a dataframe using mkde
 # package and return the results as a list of rasters
@@ -158,13 +198,13 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   nx <- as.integer(xrange/cell.sz)
   ny <- as.integer(yrange/cell.sz)
   
-  print(paste("identifier =", id))
-  print("Home range dimensions (pixels/voxels)")
-  print(paste("nx =", nx, "ny =", ny))
-  print("Home range dimensions (meters)")
-  print(paste("xrange =", xrange, "yrange =", yrange))
-  print(paste("cell size =", cell.sz))
-  print("---------------------------------------")
+  base::print(paste("identifier =", id))
+  base::print("Home range dimensions (pixels/voxels)")
+  base::print(paste("nx =", nx, "ny =", ny))
+  base::print("Home range dimensions (meters)")
+  base::print(paste("xrange =", xrange, "yrange =", yrange))
+  base::print(paste("cell size =", cell.sz))
+  base::print("---------------------------------------")
   
   mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = t.max)
   mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
@@ -172,8 +212,58 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   mkde.obj <- dens.res$mkde.obj
   
   return (mkde.obj)
+  
 }
 
+# mkdeToTerra converts an mkde object to a SpatRaster
+mkdeToTerra <- function(mkde.obj) {
+  
+  sx <- mkde.obj$x[2] - mkde.obj$x[1]
+  sy <- mkde.obj$y[2] - mkde.obj$y[1]
+  
+  if (mkde.obj$dimension == 2 | mkde.obj$dimension == 2.5) {
+    
+    # Calculate the extent using the calculated values
+    extent <- c(min(mkde.obj$x) - 0.5 * sx, max(mkde.obj$x) + 0.5 * sx,
+                min(mkde.obj$y) - 0.5 * sy, max(mkde.obj$y) + 0.5 * sy)
+    
+    rst <- terra::rast(nrow = mkde.obj$ny, ncol = mkde.obj$nx, xmin = extent[1], xmax = extent[2],
+                ymin = extent[3], ymax = extent[4], crs = st_crs("+proj=longlat"))
+    
+    # Transpose and then flip vertically by reversing rows
+    d_matrix <- base::t(matrix(mkde.obj$d[,,1], nrow = mkde.obj$nx, ncol = mkde.obj$ny))
+    d_flipped <- d_matrix[base::nrow(d_matrix):1, ]
+    
+    # Assign the flipped matrix to the raster
+    terra::values(rst) <- d_flipped
+    
+    return(rst)
+    
+  } 
+  
+  else {
+    
+    # Not able to test this
+    stop("Only 2D and 2.5D MKDE objects are supported")
+    
+  }
+  
+}
+
+# terraToContour converts a SpatRaster to lat long
+terraToContour <- function(terra.obj, levels, crsstr) {
+  
+  # Create contours from mkde_terra and set it's CRS
+  terra_contour <- terra::as.contour(terra.obj, levels = levels)
+  terra::crs(terra_contour) <- crsstr
+  
+  # Transform it to an sf object and set it's CRS to longlat
+  sf_contour <- sf::st_as_sf(terra_contour)
+  sf_contour <- sf::st_transform(sf_contour, crs="+proj=longlat")
+  
+  return(sf_contour)
+  
+}
 
 # Input
 # mkde2d.obj: MKDE object
@@ -191,30 +281,7 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 # createContour(rasters[[1]], c(0.99, 0.9, 0.8), "condor", 11, "WGS84", all=TRUE)
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
-createContour <- function(mkde2d.obj, probs, utm.zone, datum, all = TRUE) {
-  # Create raster from MKDE object
-  rst.mkde = mkdeToRaster(mkde2d.obj)
-
-  # Sort prob contours into ascending order and remove values <= 0
-  probs <- sort(probs[probs > 0])
-  probs_max <- tail(probs, n=1)
-
-  # Set filenames and contour probabilites based on whether all
-  # contours or outer contour are used
-  if (all) {
-    contour_probs <- probs
-  } else {
-    contour_probs <- tail(probs, n=1)
-  }
-
-  # Calculate contours
-  cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
-  rst.cont = cut(rst.mkde, breaks = c(cont$threshold, max(values(rst.mkde),
-                                                          na.rm = TRUE)))
-  #RSSRSS Start code to choose between original display and mkde on map
-  fits <- TRUE
-  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
-                  " +units=m +no_defs", sep="")
+createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE) {
   
   # Setting bounds for map and zoom level
   xmin <- min(mkde2d.obj$x)
@@ -222,7 +289,57 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, all = TRUE) {
   xmax <- max(mkde2d.obj$x)
   ymax <- max(mkde2d.obj$y)
   area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
-    
+  
+  # Create terra raster from MKDE object
+  dimension <- c(mkde2d.obj$nx, mkde2d.obj$ny, mkde2d.obj$nz)
+  extent <- c(xmin-buffer, xmax+buffer, ymin-buffer, ymax+buffer)
+  
+  # Setting the default CRS
+  crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
+  
+  # Calling mkdeToTerra to convert MKDE object to SpatRaster
+  mkde_terra <- mkdeToTerra(mkde2d.obj)
+  
+  # Sort prob contours into ascending order and remove values <= 0
+  #probs <- sort(probs[probs > 0])
+  #probs_max <- raster::tail(probs, n=1)
+  
+  # Set filenames and contour probabilites based on whether all
+  # contours or outer contour are used
+  #if (all) {
+    # filename <- paste(basename, "_allcontour", sep="")
+  #  contour_probs <- probs
+  #} else {
+    # filename <- paste(basename, "_outercontour", sep="")
+  #  contour_probs <- raster::tail(probs, n=1)
+  #}
+  # Sort prob contours into ascending order and remove values <= 0
+  probs <- sort(probs[probs > 0])
+  
+  # Function to get the last element of a vector
+  my_tail <- function(x, n = 1) {
+    x[length(x) - (0:(n-1))]
+  }
+  
+  # Get the last element of the sorted vector
+  probs_max <- my_tail(probs, n = 1)
+  
+  # Set filenames and contour probabilities based on whether all contours or outer contour are used
+  if (all) {
+    # filename <- paste(basename, "_allcontour", sep="")
+    contour_probs <- probs
+  } else {
+    # filename <- paste(basename, "_outercontour", sep="")
+    contour_probs <- my_tail(probs, n = 1)
+  }
+  
+  # Calculate contours
+  cont <- computeContourValues(mkde2d.obj, prob = contour_probs)
+  terra.cont <- terra::crop(mkde_terra, extent)
+  
+  #RSSRSS Start code to choose between original display and mkde on map
+  fits <- TRUE
+  
   if (area < 1.0) {
     zoom = 10
   } else if (area < 20.0) {
@@ -236,42 +353,56 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, all = TRUE) {
   gpsdata.sf[2,] = list("dummy", xmin, ymax)
   gpsdata.sf[3,] = list("dummy", xmax, ymin)
   gpsdata.sf[4,] = list("dummy", xmax, ymax)
-    
-  # Convert contour data to lat-long
-  raster.contour <- rasterToContour(rst.mkde, levels = cont$threshold)
-  raster.contour = spChFIDs(raster.contour, paste(contour_probs, "% Contour Line", sep=""))
-  proj4string(raster.contour) = CRS(crsstr)
-  raster.contour <- spTransform(raster.contour, CRS("+proj=longlat"))
-  tidydta2 <- tidy(raster.contour, group=group)
   
-  # Generate basemap and add mkde results
-  coordinates(gpsdata.sf) <- c("x", "y")
-  proj4string(gpsdata.sf) <- CRS(crsstr)
-  gpsdata.sfgeo <- spTransform(gpsdata.sf, CRS("+proj=longlat"))
-  mybasemap <- get_stadiamap(bbox = c(left = min(gpsdata.sfgeo@coords[,1]),
-                                      bottom = min(gpsdata.sfgeo@coords[,2]),
-                                      right = max(gpsdata.sfgeo@coords[,1]),
-                                      top = max(gpsdata.sfgeo@coords[,2])),
-                             zoom = zoom)
+  # Call terraToContour to convert SpatRaster to lat long
+  sf_contour <- terraToContour(mkde_terra, cont$threshold, crsstr)
+  
+  # St_Cast is called to avoid using sfc_GEOMETRY
+  gpsdata.sfgeo <- st_cast(st_geometry(sf_contour))
+  
+  # Convert the coordinate data to a dataframe
+  coords <- as.data.frame(sf::st_coordinates(gpsdata.sfgeo))
+  
+  # Get the base map
+  mean_lat <- base::mean(c(min(coords$Y), max(coords$Y)))
+  
+  # Adjust the bounding box by the buffer
+  left <- adjustLongByMeters(min(coords$X), mean_lat, -buffer)
+  right <- adjustLongByMeters(max(coords$X), mean_lat, buffer)
+  bottom <- adjustLatByMeters(min(coords$Y), -buffer)
+  top <- adjustLatByMeters(max(coords$Y), buffer)
+  
+  # Use the adjusted coordinates to get the base map with an appropriate buffer
+  mybasemap <- get_stadiamap(bbox = c(left = left, bottom = bottom, right = right, top = top), zoom = zoom)
+  
+  # Add the MKDE results to the map
   mymap <- ggmap(mybasemap) +
-    geom_polygon(aes(x=long, y=lat, group=group), data=tidydta2, alpha=.25,
-                 linewidth=0.1, color="black", fill="blue")
-
-  # check to see if contour fits on map
-  for (gname in unique(tidydta2$group)) {
-    x1 <-  tidydta2$lat[which(tidydta2$group == gname)]
-    y1 <-  tidydta2$long[which(tidydta2$group == gname)]
-    if (x1[1] != x1[length(x1)] && y1[1] != y1[length(y1)]) {
-      fits <- FALSE # Contour does not fit on map
-    }
-  }
-
-  results <- list(raster = rst.mkde, contour = cont, cut = rst.cont, map = mymap,
+    geom_polygon(aes(x = X, y = Y, group = paste(L2, L1, sep = "_")), data = coords,
+                 alpha = 0.25, linewidth = 0.1, color = "black", fill = "blue")
+  
+  results <- list(raster = mkde_terra, contour = cont, cut = terra.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
-  return(list(results))
+  return(list(results, fits))
+
 }
 
+adjustLatByMeters <- function(lat, buffer_meters) {
+
+  radius_earth_meters <- 6378137
+  buffer_deg_lat <- (buffer_meters / radius_earth_meters) * (180 / pi)
+  return(lat + buffer_deg_lat)
+  
+}
+
+adjustLongByMeters <- function(lon, lat, buffer_meters) {
+
+  radius_earth_meters <- 6378137
+  width_deg_long <- cos(lat * pi / 180) * 2 * pi * radius_earth_meters / 360
+  buffer_deg_long <- buffer_meters / width_deg_long
+  return(lon + buffer_deg_long)
+  
+}
 
 # Input
 # gpsdata:     data frame containing animal GPS data
@@ -303,7 +434,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   ymin <- min(gpsdata.sf$ydata) - buffer
   ymax <- max(gpsdata.sf$ydata) + buffer
   area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
-
+  
   # Choose the map zoom based on area
   if (area < 1.0) {
     zoom = 10
@@ -312,15 +443,15 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   } else {
     zoom = 8
   }
-
+  
   printf(paste("x:", xmin, ",", xmax, "\n"))
   printf(paste("y:", ymin, ",", ymax, "\n"))
   printf(paste("area:", area, "\n"))
   printf(paste("zoom:", zoom, "\n"))
-  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymin)
-  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymax)
-  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymin)
-  gpsdata.sf[nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymax)
+  gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymin)
+  gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymax)
+  gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymin)
+  gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymax)
   
   # Set the coordinates in the sf object
   crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep="")
@@ -329,10 +460,10 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   # Transform the coordinate reference system (CRS)
   gpsdata.sfgeo <- st_transform(gpsdata.sf, crs = "+proj=longlat") 
   
-  print(min(st_coordinates(gpsdata.sfgeo)[, 1]))
-  print(min(st_coordinates(gpsdata.sfgeo)[, 2]))
-  print(max(st_coordinates(gpsdata.sfgeo)[, 1]))
-  print(max(st_coordinates(gpsdata.sfgeo)[, 2]))
+  base::print(min(st_coordinates(gpsdata.sfgeo)[, 1]))
+  base::print(min(st_coordinates(gpsdata.sfgeo)[, 2]))
+  base::print(max(st_coordinates(gpsdata.sfgeo)[, 1]))
+  base::print(max(st_coordinates(gpsdata.sfgeo)[, 2]))
   
   # Get the base map
   mybasemap <- get_stadiamap(bbox = c(left = min(st_coordinates(gpsdata.sfgeo)[, 1]),
@@ -362,8 +493,6 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
     theme(legend.position = c(-0.2, 0.90)) +
     labs(x = "Longitude", y = "Latitude") 
   
-  # Modified here to handle multiple ids
-
   # Add a polygon
   if (include_mcp) {
     
@@ -371,7 +500,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
     hull_list <- list()
     
     # Loop over unique IDs and compute convex hull for each
-    for (unique_id in unique(gpsdata_df$id)) {
+    for (unique_id in base::unique(gpsdata_df$id)) {
       subset_data <- gpsdata_df[gpsdata_df$id == unique_id, ]
       hull_points <- subset_data[chull(subset_data$X, subset_data$Y), ]
       hull_list[[unique_id]] <- hull_points
@@ -383,9 +512,10 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
     # Add the combined convex hull polygons to the map
     mymap <- mymap +
       geom_polygon(data = all_hulls, aes(x = X, y = Y, fill = factor(id), colour = factor(id)), alpha = 0.5)
+    
   }
   
   return(mymap)
-  
+
 }
 

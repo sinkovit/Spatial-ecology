@@ -31,6 +31,8 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
+library(terra)
+
 # function - determine if the given haystack contains the needle
 # haystack - can be a single variable or a vector
 # needle - value to look for in the haystack
@@ -91,59 +93,33 @@ isEmpty <- function(x) {
   return(FALSE)
 }
 
-# Write output files
-# id - can be NULL to denote all available rasters or a specific animal id
 save_output <- function(types, rasters, id, utm.zone, datum, basename) {
-  # print("save_output()")
-  # print(paste("types =", types))
-  # print(paste("length of rasters =", length(rasters)))
-  # print(paste("idy =(", id, ")", sep = ""))
-  
-  if (isEmpty(rasters)) {
+  if (length(rasters) == 0) {
     return(NULL)
   }
   
-  # this shouldn't occur but just in case...
-  if (isEmpty(basename)) {
+  if (is.null(basename)) {
     basename <- "noname"
   }
-
+  
   for (raster in rasters) {
-    # print(paste("raster$id =(", raster$id, ")", sep = ""))
-    # print(paste("raster$id class =", class(raster$id)))
-    # print(paste("id class =", class(id)))
     if (is.null(id) || raster$id == id) {
-      # print("save!")
       contour_info <- raster$contours
       crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
                       " +units=m +no_defs", sep="")
-      # print(paste("crsstr =", crsstr))
-      output_file <- paste(path_home(), "/", basename, "-", raster$id, sep = "")
-      # print(paste("output_file =", output_file))
-      raster.contour <- rasterToContour(contour_info$raster,
-                                        levels = contour_info$contour$threshold)
-      proj4string(raster.contour) = CRS(crsstr)
-       
-      if (contains(types, "raster")) {
-        # printf("Writing raster to file %s.asc...", output_file)
-        writeRaster(contour_info$cut, output_file, format = "ascii",
-                    overwrite = TRUE)
-        # printf("done\n")
+      output_file <- file.path(path_home(), paste0(basename, "-", raster$id))
+      
+      if ("raster" %in% types) {
+        terra::writeRaster(contour_info$raster, filename = paste0(output_file, ".asc"), overwrite = TRUE)
       }
       
-      if(contains(types, "shape")) {
-        raster.contour = spChFIDs(raster.contour,
-                                  paste(contour_info$probabilities,
-                                        "% Contour Line", sep=""))
-        proj4string(raster.contour) = CRS(crsstr)
-        # printf("Writing shape to 5 files %s.*...", output_file)
-        shapefile(x = raster.contour, file = output_file, overwrite = TRUE)
-        # printf("done\n")
+      if ("shape" %in% types) {
+        contour_lines <- terraToContour(contour_info$raster, contour_info$contour$threshold, crsstr = paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep=""))
+        sf::st_write(contour_lines, paste0(output_file, "_Contours.shp"), overwrite=TRUE)
       }
     }
   }
 }
-
 
 # Read the Stadia map API key file, remove newline if any is present, and setup
 # session with the key. Unfortunately there is no way to test if the api key is

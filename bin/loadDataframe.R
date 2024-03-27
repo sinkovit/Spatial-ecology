@@ -57,7 +57,7 @@ loadDataframeFromFile <- function(file) {
   # print(paste("length =", length(gpsdata)))
   # print(paste("nrow =", nrow(gpsdata)))
   
-  if (nrow(gpsdata) < 1) {
+  if (base::nrow(gpsdata) < 1) {
     return(list(NULL, paste("No data found in file")))
   } else {
     return(list(gpsdata, NULL))
@@ -83,12 +83,12 @@ loadDataframeFromMB <- function(study, username, password) {
     #   printf("done\n")
     #   return(list(data, NULL))
     # } else {
-      login <- movebankLogin(username = username, password = password )
-      # maybe try shiny::invalidateLater()?
-      # data <- getMovebankData(study=strtoi(study), login=login)
-      data <- getMovebankLocationData(study=strtoi(study), login=login)
-      # save(data, file=file.local)
-      return(list(data, NULL))
+    login <- movebankLogin(username = username, password = password )
+    # maybe try shiny::invalidateLater()?
+    # data <- getMovebankData(study=strtoi(study), login=login)
+    data <- getMovebankLocationData(study=strtoi(study), login=login)
+    # save(data, file=file.local)
+    return(list(data, NULL))
     # }
   },
   error = function(error_message) {
@@ -100,7 +100,7 @@ loadDataframeFromMB <- function(study, username, password) {
                   "Please go to Movebank and accept the data license terms, then return here and try again..."))
     }
     if (str_detect(error_message[1],
-                  "unable to find an inherited method for function ‘getMovebankLocationData’")) {
+                   "unable to find an inherited method for function ‘getMovebankLocationData’")) {
       return(list(NULL, "Invalid Movebank study ID. Do you have access to this dataset?  Did you agree to the licensing term on Movebank.org?  Is it a test study?"))
     }
     if (str_detect(error_message[1], "There are no valid credentials")) {

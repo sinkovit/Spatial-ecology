@@ -35,7 +35,6 @@
 
 library(shiny)
 library(mkde)
-library(raster)
 library(R.utils)
 library(shinyjs)
 library(shinycssloaders)
@@ -49,8 +48,6 @@ library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFi
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 library("readr")
-library(terra)
-library(sf)
 
 source("compute.R")
 source("loadDataframe.R")
@@ -89,8 +86,8 @@ ui <- dashboardPage(
     # title = span("Space Use Ecology Gateway", style = "color: black;"),
     title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
               img(src = "logo.png")),
-#     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
-# > Password"),style="font-weight: bold;color:white;")),
+    #     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
+    # > Password"),style="font-weight: bold;color:white;")),
     tags$li(class = "dropdown", actionLink("quit_btn", "x", class = "dropdown"))
     
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
@@ -99,7 +96,7 @@ ui <- dashboardPage(
     #           icon("power-off"),
     #           title = "Back to Apps Home"),
     #         class = "dropdown"),
-
+    
     # tags$li(
     #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
     #     img(src = 'logo.png', title = "Space Use Ecology Gateway",
@@ -112,7 +109,7 @@ ui <- dashboardPage(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
     ),
-  
+    
     # tags$head(
     #   tags$style(HTML("
     #     .shiny-output-error-validation {
@@ -129,181 +126,182 @@ ui <- dashboardPage(
     
     useShinyjs(), # include shinyjs
     extendShinyjs(text = jscode, functions = c("closeWindow")),
-  
+    
     # titlePanel ( h3 ("Welcome to the Space Use Ecology Gateway!",
     #                  align = "center" )),
     
     # Sidebar layout with input and output definitions ----
     sidebarLayout(
-
+      
       # Sidebar panel for inputs ----
       sidebarPanel(id = "inputs",
-        tabsetPanel(id = "controls", type = "tabs",
-          tabPanel(title = "Data", value = "Data", tags$br(),
-            radioButtons("data_source", "Load data from:",
-              choices = c ("Gateway", "Movebank", "Your computer")
-            ),
-            conditionalPanel(condition = "input.data_source === 'Gateway'",
-              shinyFilesButton('gateway_browse', label='Browse',
-                               title = 'Select your GPS data file',
-                               multiple = FALSE, viewtype = "detail"
-              ),
-              htmlOutput("gateway_file", TRUE),
-              tags$p()
-            ),
-            conditionalPanel(condition = "input.data_source === 'Movebank'",
-              textInput("movebank_username", "Movebank username"),
-              passwordInput("movebank_password", "Password"),
-              textInput("movebank_studyid", "Study ID"),
-              # checkboxInput("movebank_save_local",
-              #   "Save Movebank data to your computer"
-              # ),
-              # bsTooltip(id = "movebank_save_local", placement = "right",
-              #   title = "If local file already exists, will overwrite"
-              # ),
-              # conditionalPanel(condition = "input.movebank_save_local == 1",
-              #   textInput("movebank_local_filename", "Local filename")
-              # ),
-            ),
-            conditionalPanel(condition = "input.data_source === 'Your computer'",
-              fileInput("local_file", label = NULL, multiple = FALSE,
-                buttonLabel = "Browse",
-                accept = c("text/csv","text/comma-separated-values,text/plain",
-                           ".csv"
-                )
-              )
-            ),
-            conditionalPanel(
-              condition = "input.data_source === 'Gateway' || input.data_source === 'Your computer'",
-              radioButtons("coordinates", label = "Coordinate system:",
-                choices = list("Latitude/Longitude" = 1, "UTM" = 2),
-                selected = 1
-              ),
-              conditionalPanel(condition = "input.coordinates === '2'",
-                # zone 30 is CA & AZ
-                numericInput("zone", label = "Zone", value = 11, min = 1,
-                  max = 60, step = 1, width = "50%"
-                )
-              ),
-              radioButtons("datum", label = "Datum:",
-                choices = list("NAD 27" = "NAD27", "NAD 83" = "NAD83",
-                  "WGS 84" = "WGS84"
-                ),
-                selected = "WGS84"
-              ),
-            ),
-            hr(style = "border-top: 2px solid grey;"),
-            actionButton("data_load_btn", label = "Load data"),
-            # actionButton("reset_data", "Reset data"),
-          ),
-          tabPanel(title = "MCP", value = "MCP", tags$br(),
-            radioButtons("display", label = "Display",
-                         choices = list("Polygons & Points", "Points only")),
-            tags$strong(id = "mcp_zoom_label", "Display zoom (meters):"),
-            bsTooltip(id = "mcp_zoom_label", placement = "right",
-                      title = "Brownian Bridge buffer"),
-            numericInput("mcp_zoom", label = NULL, value = 100, min = 0,
-                         width = "50%"),
-            hr(style = "border-top: 2px solid grey;"),
-            actionButton("mcp_plot_btn", label = "Plot"),
-          ),
-          tabPanel(title = "MKDE", value = "MKDE", tags$br(),
-            tags$strong(id = "modelabel", "Mode:"),
-            bsTooltip(id = "modelabel", placement = "right",
-              title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"
-            ),
-            radioButtons("mode", label = NULL, inline = TRUE,
-              choices = list("2D" = '2D', "2.5D" = '25D', "3D" = '3D')
-            ),
-            tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
-            bsTooltip(id = "sig2obslabel", placement = "right",
-              title = "Location error / variance"
-            ),
-            numericInput("sig2obs", label = NULL, value = 25.0, width = "50%"),
-            tags$strong(id = "tmaxlabel", "Time max (minutes):"),
-            bsTooltip(id = "tmaxlabel", placement = "right",
-              title = "Maximum time threshold between consecutive locations"
-            ),
-            numericInput("tmax", label = NULL, value = 185.0, width = "50%"),
-            #bsPopover(id = "tmax", title = "title", content = "content"),
-            numericInput("cellsize", label = "Cell size (meters):", value = 0,
-              min = 1, width = "75%"
-            ),
-            tags$strong(id = "mkde_buffer_label", "Buffer (meters):"),
-            bsTooltip(id = "mkde_buffer_label", placement = "right",
-              title = "Brownian Bridge buffer"
-            ),
-            numericInput("mkde_buffer", label = NULL, value = 1000.0,
-              width = "50%"
-            ),
-            tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
-            bsTooltip(id = "probabilitylabel", placement = "right",
-              title = "Used to plot probability range; should be comma separated values"
-            ),
-            textInput("probability", label = NULL,
-              value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
-            ),
-            # https://stackoverflow.com/questions/36709441/how-to-display-widgets-inline-in-shiny
-            div(style = "display: inline-block;vertical-align:sub;",
-                checkboxInput("map", NULL, value=TRUE)),
-            div(style = "display: inline-block;",
-                tags$strong(id = "maplabel", "Show map background")),
-            hr(style = "border-top: 2px solid grey;"),
-
-            actionButton("mkde_plot_btn", label = "Plot"),
-            actionButton("reset_parameters", "Reset parameters"),
-            
-            hr(style = "border-top: 2px solid black;"),
-            
-            checkboxInput("save_files", "Save output files..."),
-            # radioButtons("save_files", label = "Save output files...",
-            #              choices = list("Save" = 1)),
-            conditionalPanel(
-              condition = "input.save_files == 1",
-              checkboxGroupInput("save_mkde_type", "Type:",
-                                 inline = TRUE,
-                                 c("Raster" = "raster", "Shape" = "shape")),
-              radioButtons("save_mkde_data", label = "Data:",
-                           choices = list("Current selected" = 'current',
-                                          "All calculated" = 'calculated')),
-              tags$strong(id = "save_raster_label", "Basename:"),
-              bsTooltip(id = "save_raster_label", placement = "right",
-                        title = "File name prefix"),
-              textInput("basename", label = NULL),
-              HTML(paste(tags$strong("Note:"),
-                         "Files will be saved to your gateway home directory",
-                         tags$span(style="color:red",
-                                   "and existing file(s) will be overwritten!"))),
-              hr(style = "border-top: 2px solid grey;"),
-              actionButton("save_mkde_btn", label = "Save"),
-            ),
-            
-            # tags$strong("Save output files..."),
-            # tags$br(),
-            
-            # tags$strong(id = "save_raster_label", "Save raster file:"),
-            # bsTooltip(id = "save_raster_label", placement = "right",
-            #           title = "filename extension"
-            # ),
-            # checkboxInput("save_raster", "Save raster file"),
-            # checkboxInput("save_shape", "Save 4 shape files"),
-            # conditionalPanel(
-            #   condition = "input.save_raster == 1 || input.save_shape == 1",
-            #   textInput("basename", "Basename"),
-            #   HTML(paste(tags$strong("Note:"),
-            #              "Files will be saved to your gateway home directory",
-            #              tags$span(style="color:red",
-            #                        "and existing file(s) will be overwritten!"))),
-            #                  # p("<b>Note:</b> Files will be saved to your gateway home directory"),
-            # ),
-          )
-        ),
-        # htmlOutput("status_log"),
-        # From https://community.rstudio.com/t/verbatimtextoutput-sizing-and-scrollable/1193
-        # tags$head(tags$style("#status_log{color:red; font-size:12px; font-style:italic; overflow-y:scroll; max-height: 50px; background: ghostwhite;}"))
-        # tags$head(tags$style("#status_log{overflow-y:scroll; max-height: 50px;}"))
+                   tabsetPanel(id = "controls", type = "tabs",
+                               tabPanel(title = "Data", value = "Data", tags$br(),
+                                        radioButtons("data_source", "Load data from:",
+                                                     choices = c ("Gateway", "Movebank", "Your computer")
+                                        ),
+                                        conditionalPanel(condition = "input.data_source === 'Gateway'",
+                                                         shinyFilesButton('gateway_browse', label='Browse',
+                                                                          title = 'Select your GPS data file',
+                                                                          multiple = FALSE, viewtype = "detail"
+                                                         ),
+                                                         htmlOutput("gateway_file", TRUE),
+                                                         tags$p()
+                                        ),
+                                        conditionalPanel(condition = "input.data_source === 'Movebank'",
+                                                         textInput("movebank_username", "Movebank username"),
+                                                         passwordInput("movebank_password", "Password"),
+                                                         textInput("movebank_studyid", "Study ID"),
+                                                         checkboxInput("movebank_save_gateway_button",
+                                                                       "Save Movebank data to gateway"
+                                                         ),
+                                                         bsTooltip(id = "movebank_save_gateway_button", placement = "right",
+                                                                   title = "If gateway file already exists, will overwrite"
+                                                         ),
+                                                         conditionalPanel(condition = "input.movebank_save_gateway_button == 1",
+                                                                          textInput("movebank_local_filename", "Local filename"),
+                                                                          downloadButton("movebank_download_button", "Download")
+                                                         ),
+                                        ),
+                                        conditionalPanel(condition = "input.data_source === 'Your computer'",
+                                                         fileInput("local_file", label = NULL, multiple = FALSE,
+                                                                   buttonLabel = "Browse",
+                                                                   accept = c("text/csv","text/comma-separated-values,text/plain",
+                                                                              ".csv"
+                                                                   )
+                                                         )
+                                        ),
+                                        conditionalPanel(
+                                          condition = "input.data_source === 'Gateway' || input.data_source === 'Your computer'",
+                                          radioButtons("coordinates", label = "Coordinate system:",
+                                                       choices = list("Latitude/Longitude" = 1, "UTM" = 2),
+                                                       selected = 1
+                                          ),
+                                          conditionalPanel(condition = "input.coordinates === '2'",
+                                                           # zone 30 is CA & AZ
+                                                           numericInput("zone", label = "Zone", value = 11, min = 1,
+                                                                        max = 60, step = 1, width = "50%"
+                                                           )
+                                          ),
+                                          radioButtons("datum", label = "Datum:",
+                                                       choices = list("NAD 27" = "NAD27", "NAD 83" = "NAD83",
+                                                                      "WGS 84" = "WGS84"
+                                                       ),
+                                                       selected = "WGS84"
+                                          ),
+                                        ),
+                                        hr(style = "border-top: 2px solid grey;"),
+                                        actionButton("data_load_btn", label = "Load data"),
+                                        # actionButton("reset_data", "Reset data"),
+                               ),
+                               tabPanel(title = "MCP", value = "MCP", tags$br(),
+                                        radioButtons("display", label = "Display",
+                                                     choices = list("Polygons & Points", "Points only")),
+                                        tags$strong(id = "mcp_zoom_label", "Display zoom (meters):"),
+                                        bsTooltip(id = "mcp_zoom_label", placement = "right",
+                                                  title = "Brownian Bridge buffer"),
+                                        numericInput("mcp_zoom", label = NULL, value = 100, min = 0,
+                                                     width = "50%"),
+                                        hr(style = "border-top: 2px solid grey;"),
+                                        actionButton("mcp_plot_btn", label = "Plot"),
+                               ),
+                               tabPanel(title = "MKDE", value = "MKDE", tags$br(),
+                                        tags$strong(id = "modelabel", "Mode:"),
+                                        bsTooltip(id = "modelabel", placement = "right",
+                                                  title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"
+                                        ),
+                                        radioButtons("mode", label = NULL, inline = TRUE,
+                                                     choices = list("2D" = '2D', "2.5D" = '25D', "3D" = '3D')
+                                        ),
+                                        tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
+                                        bsTooltip(id = "sig2obslabel", placement = "right",
+                                                  title = "Location error / variance"
+                                        ),
+                                        numericInput("sig2obs", label = NULL, value = 25.0, width = "50%"),
+                                        tags$strong(id = "tmaxlabel", "Time max (minutes):"),
+                                        bsTooltip(id = "tmaxlabel", placement = "right",
+                                                  title = "Maximum time threshold between consecutive locations"
+                                        ),
+                                        numericInput("tmax", label = NULL, value = 185.0, width = "50%"),
+                                        #bsPopover(id = "tmax", title = "title", content = "content"),
+                                        numericInput("cellsize", label = "Cell size (meters):", value = 0,
+                                                     min = 1, width = "75%"
+                                        ),
+                                        tags$strong(id = "mkde_buffer_label", "Buffer (meters):"),
+                                        bsTooltip(id = "mkde_buffer_label", placement = "right",
+                                                  title = "Brownian Bridge buffer"
+                                        ),
+                                        numericInput("mkde_buffer", label = NULL, value = 1000.0,
+                                                     width = "50%"
+                                        ),
+                                        tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
+                                        bsTooltip(id = "probabilitylabel", placement = "right",
+                                                  title = "Used to plot probability range; should be comma separated values"
+                                        ),
+                                        textInput("probability", label = NULL,
+                                                  value = "0.99, 0.95, 0.90, 0.75, 0.5, 0.0"
+                                        ),
+                                        # https://stackoverflow.com/questions/36709441/how-to-display-widgets-inline-in-shiny
+                                        div(style = "display: inline-block;vertical-align:sub;",
+                                            checkboxInput("map", NULL, value=TRUE)),
+                                        div(style = "display: inline-block;",
+                                            tags$strong(id = "maplabel", "Show map background")),
+                                        hr(style = "border-top: 2px solid grey;"),
+                                        
+                                        actionButton("mkde_plot_btn", label = "Plot"),
+                                        actionButton("reset_parameters", "Reset parameters"),
+                                        
+                                        hr(style = "border-top: 2px solid black;"),
+                                        
+                                        checkboxInput("save_files", "Save output files..."),
+                                        # radioButtons("save_files", label = "Save output files...",
+                                        #              choices = list("Save" = 1)),
+                                        conditionalPanel(
+                                          condition = "input.save_files == 1",
+                                          checkboxGroupInput("save_mkde_type", "Type:",
+                                                             inline = TRUE,
+                                                             c("Raster" = "raster", "Shape" = "shape")),
+                                          radioButtons("save_mkde_data", label = "Data:",
+                                                       choices = list("Current selected" = 'current',
+                                                                      "All calculated" = 'calculated')),
+                                          tags$strong(id = "save_raster_label", "Basename:"),
+                                          bsTooltip(id = "save_raster_label", placement = "right",
+                                                    title = "File name prefix"),
+                                          textInput("basename", label = NULL),
+                                          HTML(paste(tags$strong("Note:"),
+                                                     "Files will be saved to your gateway home directory",
+                                                     tags$span(style="color:red",
+                                                               "and existing file(s) will be overwritten!"))),
+                                          hr(style = "border-top: 2px solid grey;"),
+                                          actionButton("save_mkde_btn", label = "Save"),
+                                        ),
+                                        
+                                        # tags$strong("Save output files..."),
+                                        # tags$br(),
+                                        
+                                        # tags$strong(id = "save_raster_label", "Save raster file:"),
+                                        # bsTooltip(id = "save_raster_label", placement = "right",
+                                        #           title = "filename extension"
+                                        # ),
+                                        # checkboxInput("save_raster", "Save raster file"),
+                                        # checkboxInput("save_shape", "Save 4 shape files"),
+                                        # conditionalPanel(
+                                        #   condition = "input.save_raster == 1 || input.save_shape == 1",
+                                        #   textInput("basename", "Basename"),
+                                        #   HTML(paste(tags$strong("Note:"),
+                                        #              "Files will be saved to your gateway home directory",
+                                        #              tags$span(style="color:red",
+                                        #                        "and existing file(s) will be overwritten!"))),
+                                        #                  # p("<b>Note:</b> Files will be saved to your gateway home directory"),
+                                        # ),
+                               )
+                   ),
+                   # htmlOutput("status_log"),
+                   # From https://community.rstudio.com/t/verbatimtextoutput-sizing-and-scrollable/1193
+                   # tags$head(tags$style("#status_log{color:red; font-size:12px; font-style:italic; overflow-y:scroll; max-height: 50px; background: ghostwhite;}"))
+                   # tags$head(tags$style("#status_log{overflow-y:scroll; max-height: 50px;}"))
       ),
-
+      
       # Main panel for displaying outputs ----
       mainPanel(
         htmlOutput("instructions"),
@@ -312,18 +310,18 @@ ui <- dashboardPage(
         # shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 4),
         plotOutput("mcp_plot" ),
         plotOutput("mkde_plot"),
-
+        
         tabsetPanel(
           id = "tables",
           type = "tabs", 
           # header = tagList(h1("HEADER")),
           # tabPanel("All", value = 1,
           tabPanel("All",
-            # shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
-            #                              type = 5)
-            DT::dataTableOutput('table_all')
-            ),
-            # tabPanel("Summary", value = 2,
+                   # shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
+                   #                              type = 5)
+                   DT::dataTableOutput('table_all')
+          ),
+          # tabPanel("Summary", value = 2,
           tabPanel("Summary",
                    # Choose/update units for animal areas
                    # hr(style = "border-top: 1px solid #000000;"),
@@ -350,7 +348,7 @@ ui <- dashboardPage(
 # Define server logic required
 server <- function(input, output, session) {
   
-  showNotification(paste("session$token =", session$token), session = session)
+  # showNotification(paste("session$token =", session$token), session = session)
   
   ############################################################################
   # Setup some system-related configuraions
@@ -370,47 +368,66 @@ server <- function(input, output, session) {
                      session = session)
     setupAPIkey()
     showNotification(paste(message, "done"), id = id, type = "message",
-                     duration = 2, session = session)
+                     duration = 3, session = session)
   },
   error = function(e) {
-    showNotification(paste(message, "system error: unable to plot MKDE!"),
+    showNotification(paste(message, "system error: unable to plot!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
+  # showNotification(paste("app_env_path_filename =", app_env_path_filename),
+  #                  type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
-
+  
   
   ############################################################################
   # Initialize UI
   
   # I couldn't get the environment variable to persist on the hub so we'll
-  # create our app's own environment file
-  # Retrieve user's Movebank credential info, if found
+  # create our app's own environment file.
   # env_var <- names(s <- Sys.getenv())
   
-  #if (file.exists(app_env_path_filename)) {
-  #  file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
-  #                             progress = TRUE)
-  #  for (i in 1:length(file_content)) {
-  #    s <- str_split_1(file_content[i], "=")
-  #    if (s[1] == "MovebankUsername")
-  #      updateTextInput(session, "movebank_username", value = s[2])
-  #    else if (s[1] == "MovebankPassword")
-  #      updateTextInput(session, "movebank_password", value = s[2])
-  #    else if (s[1] == "MovebankStudyID")
-  #      updateTextInput(session, "movebank_studyid", value = s[2])
-  #  }
-  #} else {
-  #  file.create(app_env_path_filename)
-  #}
-  
-  # Set the file permission (again) so only readable & writable by owner
-  Sys.chmod(app_env_path_filename, mode = "600")
+  # Retrieve user's Movebank credential info, if available
+  tryCatch({
+    if (file.exists(app_env_path_filename)) {
+      # showNotification("file exists", type = "message", duration = NULL,
+      #                  session = session)
+      file_content <- read_lines(app_env_path_filename, skip_empty_rows = TRUE,
+                                 progress = TRUE)
+      for (i in 1:length(file_content)) {
+        s <- str_split_1(file_content[i], "=")
+        if (s[1] == "MovebankUsername")
+          updateTextInput(session, "movebank_username", value = s[2])
+        else if (s[1] == "MovebankPassword")
+          updateTextInput(session, "movebank_password", value = s[2])
+        else if (s[1] == "MovebankStudyID")
+          updateTextInput(session, "movebank_studyid", value = s[2])
+      }
+      showNotification("Retrieved your Movebank credential", type = "message",
+                       duration = 3, session = session)
+    } else {
+      # showNotification("no file; creating...", type = "message", duration = NULL,
+      #                  session = session)
+      file.create(app_env_path_filename)
+      # showNotification("done", type = "message", duration = NULL, session = session)
+    }
+    
+    # showNotification("here 1", type = "message", duration = NULL, session = session)
+    # Set the file permission (again) so only readable & writable by owner
+    Sys.chmod(app_env_path_filename, mode = "600")
+    # showNotification("here 2", type = "message", duration = NULL, session = session)
+  },
+  # we can ignore any error since Movebank credential is optional; note that
+  # read_lines() above will throw an exception if the file has no content
+  error = function(e) {
+    # showNotification(paste("Movebank credential error:", e), type = "error",
+    #                  duration = NULL, session = session)
+  })
   
   # Hide the MCP & MKDE control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
@@ -445,7 +462,7 @@ server <- function(input, output, session) {
   shinyjs::hide("save_files")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
-
+  
   
   ############################################################################
   # Handle UI events
@@ -523,19 +540,19 @@ server <- function(input, output, session) {
   observeEvent(input$data_load_btn, {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
-
+    
     output$mkde_plot <- renderPlot({plot.new()})
     output$mcp_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
     shinyjs::hide("mkde_plot")
-
+    
     gps$data <- NULL
     # print(paste("gps$data =", gps$data))
     gps$original <- NULL
     gps$rasters <- NULL
     gps$summary <- NULL
     shinyjs::show("instructions")
-
+    
     if (input$data_source == 'Gateway') {
       file <- parseFilePaths (gateway_volumes, input$gateway_browse)
       filename <- file$name
@@ -553,6 +570,8 @@ server <- function(input, output, session) {
                        "\nMovebankStudyID=", input$movebank_studyid, "\n",
                        sep = ""),
                  app_env_path_filename)
+      showNotification("Saved your Movebank credential", type = "message",
+                       duration = 3, session = session)
       
       filename <- input$movebank_studyid
       id <- "load_movebank"
@@ -577,7 +596,7 @@ server <- function(input, output, session) {
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
     }
-
+    
     data <- results[[1]]
     # print(paste("filename =", filename))
     # print(paste("id = ", id))
@@ -589,56 +608,68 @@ server <- function(input, output, session) {
       showNotification(paste("Error", filename, ":", results[[2]]),
                        duration = NULL, type = "error", session = session)
     } else {
-      showNotification(paste(message, "done"), duration = 2, id = id,
+      showNotification(paste(message, "done"), duration = 3, id = id,
                        type = "message", session = session)
       updateTextInput(session, "basename", value = basename)
       
       rm(results)
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
-
+      
       id <- "preprocessing"
       message <- "Preprocessing data..."
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
       results <- preprocessDataframe(data)
       showNotification(paste(message, "done"), id = id, type = "message", 
-                       duration = 2, session = session)
+                       duration = 3, session = session)
       # shiny::validate(need(is.null(results[[2]]), results[[2]]))
       if (! is.null(results[[2]])) {
         showNotification(paste("Error :", results[[2]]), duration = NULL,
                          type = "error", session = session)
         shiny::validate(need(is.null(results[[2]]), results[[2]]))
       }
-
+      
       data <- results[[1]]
       gps$data <- results[[1]]
       gps$original <- results[[1]]
       
       # Now save MB data locally
       # Disable for now since saving from hub to local needs different mechanism
-      # if(input$data_source == "Movebank" && input$movebank_save_local == 1) {
-      #   # printf("Saving local file %s...", input$movebank_local_filename)
-      #   
-      #   id <- "save_mb_file"
-      #   message <- "Saving Movebank data..."
-      #   showNotification(message, id = id, type = "message", duration = NULL,
-      #                    session = session)
-      #   tryCatch({
-      #     result = saveDataframeFromMB(gps$original,
-      #                                  input$movebank_local_filename)
-      #     if (is.null(result))
-      #       showNotification(paste(message, "done"), duration = 2, id = id,
-      #                        type = "message", session = session)
-      #     else
-      #       showNotification(paste(message, "error:", result), duration = NULL,
-      #                        id = id, type = "error", session = session)
-      #   },
-      #   error = function(e) {
-      #     showNotification(paste("Error :", e$message), id = id,
-      #                      duration = NULL, type = "error", session = session)
-      #   })
-      # }
+      if(input$data_source == "Movebank" && input$movebank_save_gateway_button == 1) {
+        printf("Saving local file %s...", input$movebank_local_filename)
+        
+        id <- "save_mb_file"
+        message <- "Saving Movebank data..."
+        showNotification(message, id = id, type = "message", duration = NULL,
+                         session = session)
+        tryCatch({
+          # path_home()
+          path_filename <- paste(path_home(), "/", input$movebank_local_filename,
+                                 sep = "")
+          showNotification(paste("saving Movebank file to", path_filename),
+                           type = "message", duration = NULL, session = session)
+          result = saveDataframeFromMB(gps$original, path_filename)
+          if (is.null(result))
+            showNotification(paste(message, "done"), duration = 3, id = id,
+                             type = "message", session = session)
+          else
+            showNotification(paste(message, "error:", result), duration = NULL,
+                             id = id, type = "error", session = session)
+          
+          # now download the saved file
+          output$movebank_download_button <-
+            downloadHandler(filename = input$movebank_local_filename,
+                            content = function(path_filename) {
+                              write.csv(gps$original, path_filename)
+                            },
+                            contentType="text/csv")
+        },
+        error = function(e) {
+          showNotification(paste("Error :", e$message), id = id,
+                           duration = NULL, type = "error", session = session)
+        })
+      }
       
       continue <- TRUE
       
@@ -651,7 +682,7 @@ server <- function(input, output, session) {
                          session = session)
         data <- animalAttributes(data, input$areaUnits)
         showNotification(paste(message, "done"), id = id, type = "message",
-                         duration = 2, session = session)
+                         duration = 3, session = session)
         # printf("done\n")
         # display_log("done")
       },
@@ -722,7 +753,7 @@ server <- function(input, output, session) {
     }
     runjs (paste0 ("document.getElementById('sig2obs').style.border ='", color,
                    "'"))
-
+    
     if (!is.numeric (input$tmax) || input$tmax <= 0) {
       color <- "solid #FF0000"
     } else {
@@ -730,7 +761,7 @@ server <- function(input, output, session) {
     }
     runjs (paste0 ("document.getElementById('tmax').style.border ='", color,
                    "'"))
-
+    
     if (!is.numeric (input$cellsize) || input$cellsize <= 0) {
       color <- "solid #FF0000"
     } else {
@@ -738,7 +769,7 @@ server <- function(input, output, session) {
     }
     runjs (paste0 ("document.getElementById('cellsize').style.border ='", color,
                    "'"))
-
+    
     if (!is.numeric (input$mkde_buffer) || input$mkde_buffer < 0) {
       color <- "solid #FF0000"
     } else {
@@ -792,7 +823,7 @@ server <- function(input, output, session) {
     else
       shinyjs::enable("mkde_plot_btn")
   })
-
+  
   # If no basename nor save mkde type, then disable save mkde button
   observe ({
     if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
@@ -812,7 +843,7 @@ server <- function(input, output, session) {
       shinyjs::disable("mcp_plot_btn")
     }
   })
-
+  
   # Change table_all_data when input$control changes between MCP and MKDE
   # code from https://stackoverflow.com/a/34590704/1769758
   table_all_data <- reactive({
@@ -831,7 +862,7 @@ server <- function(input, output, session) {
   # table_summary_data <- eventReactive (gps$summary, {
   table_summary_data <- reactive({
     shinyjs::show ("tables")
-
+    
     DT::datatable (
       gps$summary[], extension = "Buttons",
       caption="Tip: you can do multi-column sorting by shift clicking on the columns",
@@ -856,7 +887,7 @@ server <- function(input, output, session) {
                        session = session)
       data <- animalAttributes(gps$original, input$areaUnits)
       # printf(paste("data =", data, "\n"))
-      showNotification(paste(message, "done"), duration = 2, id = id,
+      showNotification(paste(message, "done"), duration = 3, id = id,
                        type = "message", session = session)
       gps$summary <- data
     }
@@ -882,13 +913,13 @@ server <- function(input, output, session) {
       renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                                    id, mode)})
     showNotification(paste(message, "done"), id = mid, type = "message",
-                     duration = 2, session = session)
+                     duration = 3, session = session)
   })
   
   observeEvent(input$mkde_plot_btn, {
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
-
+    
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     raster <- NULL
@@ -909,7 +940,7 @@ server <- function(input, output, session) {
       raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
                                   input$cellsize, input$mkde_buffer)
       showNotification(paste(message, "done"), id = mid, type = "message",
-                       duration = 2, session = session)
+                       duration = 3, session = session)
       
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -923,12 +954,12 @@ server <- function(input, output, session) {
       # print(paste("rasters length =", length(rasters)))
       gps$rasters <- rasters
       # print(paste("gps$rasters length =", length(gps$rasters)))
-
+      
       # Now show the save output UI
       shinyjs::show("save_files")
     }
     
-    print(paste("replot_mkde =", replot_mkde()))
+    base::print(paste("replot_mkde =", replot_mkde()))
     if(replot_mkde()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
@@ -937,9 +968,9 @@ server <- function(input, output, session) {
         message <- paste("Creating contour...")
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
-        results <- createContour(raster, probs, input$zone, input$datum)
+        results <- createContour(raster, probs, input$zone, input$datum, input$mkde_buffer)
         showNotification(paste(message, "done"), id = mid, type = "message",
-                         duration = 2, session = session)
+                         duration = 3, session = session)
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
@@ -954,16 +985,27 @@ server <- function(input, output, session) {
           output$mkde_plot <- renderPlot({results[[1]]$map})
         } else {
           cont <- results[[1]]$contour
+          sf_contour <- terraToContour(results[[1]]$raster, levels = results[[1]]$contour$threshold, crsstr = "+proj=longlat")  
           output$mkde_plot <- renderPlot({
-            plot(results[[1]]$cut)
-            contour_display <- contour(results[[1]]$raster, add = T,
-                                       levels = cont$threshold, lwd = 1.0,
-                                       drawlabels = FALSE)
-            })
+            ggplot(data = sf_contour) +
+              geom_sf(aes(color = base::as.factor(level)), size = 1.0) + 
+              scale_color_viridis_d() + 
+              labs(title = "Contour Plot by Level",
+                   x = "Longitude", y = "Latitude", color = "Level") +
+              theme_minimal() +
+              theme(legend.position = "right")
+          })
+          #output$mkde_plot <- renderPlot({
+          #  par(mar = c(4, 4, 4, 1)) 
+          #  base::plot(sf_contour, lwd = 1.0, asp = 1, axes = TRUE, main = "Contour Plot by Level")
+          #  box()
+          #  title(xlab = "Longitude", ylab = "Latitude", line = 2) 
+          #})
+          
         }
       },
       error = function(error_message) {
-        # print(paste("error message =", error_message))
+        base::print(paste("error message =", error_message))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
                          duration = NULL, type = "error", session = session)
       },
@@ -972,7 +1014,7 @@ server <- function(input, output, session) {
       })
     }
   })
-
+  
   observeEvent(input$reset_parameters, {
     shinyjs::reset("sig2obs")
     shinyjs::reset("tmax")
@@ -989,7 +1031,7 @@ server <- function(input, output, session) {
       summary <- gps$summary
       id <- summary$id[input$table_summary_rows_selected]
     }
-
+    
     mid <- "save_output"
     message <- paste("Saving output files to ", path_home(), "/", input$basename,
                      "* ...", sep = "")
