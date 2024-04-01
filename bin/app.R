@@ -473,7 +473,7 @@ server <- function(input, output, session) {
   # Setup & display Data tab's gateway browser & selected file
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
   #               getVolumes()())
-  gateway_volumes <- c (Home = fs::path_home())
+  gateway_volumes <- c (Home = fs::path_home(), "Projects" = "/data/projects")
   shinyFileChoose (input, "gateway_browse", roots = gateway_volumes,
                    session = session)
   output$gateway_file <-
