@@ -396,21 +396,18 @@ server <- function(input, output, session) {
   replot_mkde <- reactiveVal(TRUE)
   
   gateway_volumes <- c(Home = fs::path_home())
-  if (dir.exists("/data/projects")) {
-    showNotification("/data/projects 1 exists!", duration = NULL, type = "message",
-                     session = session)
-    gateway_volumes <- append(gateway_volumes, "/data/projects")
-    showNotification(paste("gateway_volumes 1 :", gateway_volumes, collapse = " "), duration = NULL,
+  projects_path <- "/data/projects"
+  if (dir.exists(projects_path)) {
+    showNotification("dir exists!", duration = NULL, type = "message", session = session)
+    projects_volume <- c(Projects = projects_path)
+    # gateway_volumes <- append(gateway_volumes, "Projects" = "/data/projects")
+    gateway_volumes <- c(gateway_volumes, projects_volume)
+    showNotification(paste("new gateway_volumes:", names(gateway_volumes),
+                           gateway_volumes, collapse = " "), duration = NULL,
                      type = "message", session = session)
-  } else if (dir.exists("/data/projects")) {
-    showNotification("/data/projects 2 exists!", duration = NULL, type = "message",
-                     session = session)
-  } else {
-    showNotification("no /data/projects!", duration = NULL, type = "message",
-                     session = session)
   }
-  showNotification(paste("gateway_volumes:", gateway_volumes, collapse = " "), duration = NULL,
-                   type = "message", session = session)
+  # showNotification(paste("gateway_volumes:", gateway_volumes, collapse = " "), duration = NULL,
+  #                  type = "message", session = session)
 
   
   ############################################################################
