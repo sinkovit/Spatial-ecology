@@ -399,7 +399,7 @@ server <- function(input, output, session) {
   if (dir.exists(file.path("/data/projects"))) {
     showNotification("/data/projects 1 exists!", duration = NULL, type = "message",
                      session = session)
-    append(gateway_volumes, "/data/projects")
+    gateway_volumes <- append(gateway_volumes, "/data/projects")
     showNotification(paste("gateway_volumes 1 :", gateway_volumes), duration = NULL,
                      type = "message", session = session)
   } else if (dir.exists("/data/projects")) {
