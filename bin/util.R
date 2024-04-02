@@ -31,8 +31,6 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-library(terra)
-
 # function - determine if the given haystack contains the needle
 # haystack - can be a single variable or a vector
 # needle - value to look for in the haystack

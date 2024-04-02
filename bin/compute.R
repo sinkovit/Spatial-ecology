@@ -31,17 +31,6 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-
-library(adehabitatHR)
-library(scales)
-library(ggmap)
-library(fs)
-library(broom)
-library(terra)
-library(sf)
-library(dplyr)
-
-
 # From Bob's code
 # @ https://github.com/sinkovit/Spatial-ecology/blob/Bob/code-snippets/animal_stats.R
 # The following code snippet shows how to list the stats for each

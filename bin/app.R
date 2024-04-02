@@ -38,22 +38,35 @@ library(mkde)
 library(R.utils)
 library(shinyjs)
 library(shinycssloaders)
-library(move)
 library(DT)
-library(ggplot2)
 library(stringr)
+library(ggplot2)
 library(shinyBS)
 library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
+library(tools)
+library(ggmap)
+library(terra)
+library(sf)
+
+# TBD
+library(move)
+
+
+#library(adehabitatHR)
+#library(scales)
+#library(fs)
+#library(broom)
+#library(dplyr)
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
+
 library("readr")
 
 source("compute.R")
 source("loadDataframe.R")
 source("processDataframe.R")
 source("util.R")
-
 
 sessionInfo()
 

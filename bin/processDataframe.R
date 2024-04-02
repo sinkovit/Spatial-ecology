@@ -55,6 +55,7 @@
 # Returns a list where first item is the data and second item is the error
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
+
 preprocessDataframe <- function(gpsdata) {
   
   #### Rename column names to conform to canonical names

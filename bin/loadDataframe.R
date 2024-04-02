@@ -31,14 +31,12 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-library(move)
-library(tools)
-
 # Parse a plain text (whitespace separate values) or csv file containing
 # biotelemetry data
 # Returns a list where first item is the data and second item is the error
 # message; if successful, the error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
+
 loadDataframeFromFile <- function(file) {
   ext <- file_ext(file)
   # print(paste("ext =", ext))
@@ -118,6 +116,7 @@ loadDataframeFromMB <- function(study, username, password) {
       return(list(NULL,
                   "Empty reply from movebank.org server. Please wait a few minutes and try again..."))
     }
+    stop()
     return(list(NULL, error_message))
   })
 }
