@@ -167,6 +167,11 @@ ui <- dashboardPage(
                 actionButton("save_movebank_data_button", label = "Save data to gateway"),
                 bsTooltip(id = "save_movebank_data_button", placement = "right",
                           title = "Save data to the above filename in your gateway home directory; overwrite if file already exists"),
+                shinyDirButton("shinydirbutton", label = "shinyDirButton label",
+                               title = "shinyDirButton title"),
+                shinySaveButton("shinysavebutton", label = "shinySaveButton label",
+                                title = "shinySaveButton title",
+                                filename = "foo.csv"),
                 downloadButton("download_movebank_data_button", "Download file")
               ),
             ),
@@ -389,6 +394,13 @@ server <- function(input, output, session) {
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_mkde <- reactiveVal(TRUE)
+  
+  gateway_volumes <- c(Home = fs::path_home())
+  if (dir.exists(file.path("/data/projects"))) {
+    append(gateway_volumes, "/data/projects")
+  }
+  showNotification(paste("gateway_volumes:", gateway_volumes), duration = NULL,
+                   type = "message", session = session)
 
   
   ############################################################################
@@ -473,7 +485,7 @@ server <- function(input, output, session) {
   # Setup & display Data tab's gateway browser & selected file
   # volumes <- c (Home = fs::path_home(), "R Installation" = R.home(),
   #               getVolumes()())
-  gateway_volumes <- c (Home = fs::path_home(), "Projects" = "/data/projects")
+  # gateway_volumes <- c (Home = fs::path_home(), "Projects" = "/data/projects")
   shinyFileChoose (input, "gateway_browse", roots = gateway_volumes,
                    session = session)
   output$gateway_file <-
@@ -652,6 +664,19 @@ server <- function(input, output, session) {
       updateTextInput(session, "save_movebank_filename",
                       value = paste("movebank-", input$movebank_studyid, ".csv",
                                     sep = ""))
+      
+      
+      # shinyDirButton("shinydirbutton", label = "shinyDirButton label",
+      #                title = "shinyDirButton title"),
+      # shinySaveButton("shinysavebutton", label = "shinySaveButton label",
+      #                 title = "shinySaveButton title",
+      #                 filename = "foo.csv"),
+      
+      shinyDirChoose (input, "shinydirbutton", session = session,
+                      roots = gateway_volumes)
+      shinyFileSave(input, "shinysavebutton", session = session,
+                    roots = gateway_volumes)
+      
       shinyjs::show("save_movebank_button")
       shinyjs::show("save_movebank_data_button")
       shinyjs::hide("download_movebank_data_button")
@@ -999,7 +1024,7 @@ server <- function(input, output, session) {
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         # print(paste("save_mkde_type:", input$save_mkde_type))
         mid <- "create_contour"
-        message <- paste("Creating contour...")
+        message <- paste("Calculating space use...")
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
         results <- createContour(raster, probs, input$zone, input$datum)
@@ -1028,7 +1053,7 @@ server <- function(input, output, session) {
         }
       },
       error = function(error_message) {
-        # print(paste("error message =", error_message))
+        print(paste("error message =", error_message))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
                          duration = NULL, type = "error", session = session)
       },
