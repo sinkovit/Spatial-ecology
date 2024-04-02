@@ -400,7 +400,7 @@ server <- function(input, output, session) {
     showNotification("/data/projects 1 exists!", duration = NULL, type = "message",
                      session = session)
     gateway_volumes <- append(gateway_volumes, "/data/projects")
-    showNotification(paste("gateway_volumes 1 :", gateway_volumes), duration = NULL,
+    showNotification(paste("gateway_volumes 1 :", gateway_volumes, collapse = " "), duration = NULL,
                      type = "message", session = session)
   } else if (dir.exists("/data/projects")) {
     showNotification("/data/projects 2 exists!", duration = NULL, type = "message",
@@ -409,7 +409,7 @@ server <- function(input, output, session) {
     showNotification("no /data/projects!", duration = NULL, type = "message",
                      session = session)
   }
-  showNotification(paste("gateway_volumes:", gateway_volumes), duration = NULL,
+  showNotification(paste("gateway_volumes:", gateway_volumes, collapse = " "), duration = NULL,
                    type = "message", session = session)
 
   
