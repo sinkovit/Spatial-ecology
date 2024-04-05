@@ -90,8 +90,8 @@ ui <- dashboardPage(
     .list = tagList(
 #     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
 # > Password"),style="font-weight: bold;color:white;")),
-      tags$li(class = "dropdown", actionLink("quit_button", "",
-                                             icon = icon("power-off"))),
+      # tags$li(class = "dropdown", actionLink("quit_button", "XX",
+      #                                        icon = icon("power-off"))),
     
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
     #                     href = "custom.css")),
@@ -99,7 +99,8 @@ ui <- dashboardPage(
       #           icon("power-off"), title = "Quit app"), class = "dropdown",
       #         id = "gateway_quit_button"),
     # See https://stackoverflow.com/questions/46943507/dynamically-add-remove-whole-ui-elements-in-shiny
-    tags$li(htmlOutput("gateway_quit_button", container = tags$a), class = "dropdown")
+    tags$li(htmlOutput("gateway_quit_button", inline = TRUE, container = tags$a),
+            class = "dropdown")
 
     # tags$li(
     #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
@@ -427,6 +428,11 @@ server <- function(input, output, session) {
     if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
       # shinyjs::hide("gateway_quit_button")
       print("here 1")
+      # output$gateway_quit_button <- renderUI({actionLink("quit_button", "X",
+      #                                                    icon = icon("power-off"))})
+      output$gateway_quit_button <-
+        renderUI({actionLink("quit_button", "", icon = icon("power-off"))})
+      print("here 2")
     } else {
       # shinyjs::hide("quit_button")
       pathname_parts <- str_split_1(client_data$url_pathname, "/")
@@ -1170,6 +1176,7 @@ server <- function(input, output, session) {
   # See https://shiny.posit.co/r/reference/shiny/latest/session.html
   # See https://github.com/daattali/advanced-shiny/tree/master/auto-kill-app
   observeEvent(input$quit_button, {
+    print("quit_button!")
     js$closeWindow()
     stopApp()
   })
