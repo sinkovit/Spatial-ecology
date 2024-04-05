@@ -402,8 +402,8 @@ server <- function(input, output, session) {
   replot_mkde <- reactiveVal(TRUE)
   
   gateway_volumes <- c(Home = fs::path_home())
-  # projects_path <- "/data/projects"
-  projects_path <- "/tmp"
+  projects_path <- "/data/projects"
+  # projects_path <- "/tmp"
   if (dir.exists(projects_path)) {
     # showNotification("dir exists!", duration = NULL, type = "message", session = session)
     projects_volume <- c(Projects = projects_path)
