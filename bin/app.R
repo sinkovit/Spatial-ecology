@@ -90,7 +90,8 @@ ui <- dashboardPage(
     .list = tagList(
 #     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
 # > Password"),style="font-weight: bold;color:white;")),
-      tags$li(class = "dropdown", actionLink("quit_button", "x", class = "dropdown")),
+      tags$li(class = "dropdown", actionLink("quit_button", "",
+                                             icon = icon("power-off"))),
     
     # tags$head(tags$link(rel = "stylesheet", type = "text/css",
     #                     href = "custom.css")),
@@ -156,24 +157,22 @@ ui <- dashboardPage(
               textInput("movebank_username", "Movebank username"),
               passwordInput("movebank_password", "Password"),
               textInput("movebank_studyid", "Study ID"),
-              checkboxInput("save_movebank_button",
-                "Save/download Movebank data"
-              ),
-              bsTooltip(id = "save_movebank_button", placement = "right",
-                title = "Save the loaded data to the gateway, then download"
-              ),
-              conditionalPanel(condition = "input.save_movebank_button == 1",
-                textInput("save_movebank_filename", "Filename"),
-                actionButton("save_movebank_data_button", label = "Save data to gateway"),
-                bsTooltip(id = "save_movebank_data_button", placement = "right",
-                          title = "Save data to the above filename in your gateway home directory; overwrite if file already exists"),
-                shinyDirButton("shinydirbutton", label = "shinyDirButton label",
-                               title = "shinyDirButton title"),
-                shinySaveButton("shinysavebutton", label = "shinySaveButton label",
-                                title = "shinySaveButton title",
-                                filename = "foo.csv"),
+              # checkboxInput("save_movebank_button",
+              #   "Save/download Movebank data"
+              # ),
+              # bsTooltip(id = "save_movebank_button", placement = "right",
+              #   title = "Save the loaded data to the gateway, then download"
+              # ),
+              # conditionalPanel(condition = "input.save_movebank_button == 1",
+                # textInput("save_movebank_filename", "Filename"),
+                # actionButton("old_save_movebank_data_button", label = "Save data to gateway"),
+                # bsTooltip(id = "old_save_movebank_data_button", placement = "right",
+                #           title = "Save data to the above filename in your gateway home directory; overwrite if file already exists"),
+                shinySaveButton("save_movebank_to_gateway_button",
+                                label = "Save data to gateway", title = "",
+                                filename = "movebank.csv"),
                 downloadButton("download_movebank_data_button", "Download file")
-              ),
+              # ),
             ),
             conditionalPanel(condition = "input.data_source === 'Your computer'",
               fileInput("local_file", label = NULL, multiple = FALSE,
@@ -204,6 +203,13 @@ ui <- dashboardPage(
             ),
             hr(style = "border-top: 2px solid grey;"),
             actionButton("load_data_button", label = "Load data"),
+            # doesn't work here
+            # conditionalPanel(condition = "input.data_source === 'Gateway",
+            #                  shinySaveButton("save_movebank_to_gateway_button",
+            #                                  label = "Save data to gateway",
+            #                                  title = "", filename = "movebank.csv"),
+            #                  downloadButton("download_movebank_data_button",
+            #                                 "Download file"))
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
@@ -396,15 +402,15 @@ server <- function(input, output, session) {
   replot_mkde <- reactiveVal(TRUE)
   
   gateway_volumes <- c(Home = fs::path_home())
-  projects_path <- "/data/projects"
+  # projects_path <- "/data/projects"
+  projects_path <- "/tmp"
   if (dir.exists(projects_path)) {
-    showNotification("dir exists!", duration = NULL, type = "message", session = session)
+    # showNotification("dir exists!", duration = NULL, type = "message", session = session)
     projects_volume <- c(Projects = projects_path)
-    # gateway_volumes <- append(gateway_volumes, "Projects" = "/data/projects")
     gateway_volumes <- c(gateway_volumes, projects_volume)
-    showNotification(paste("new gateway_volumes:", names(gateway_volumes),
-                           gateway_volumes, collapse = " "), duration = NULL,
-                     type = "message", session = session)
+    # showNotification(paste("new gateway_volumes:", names(gateway_volumes),
+    #                        gateway_volumes, collapse = " "), duration = NULL,
+    #                  type = "message", session = session)
   }
   # showNotification(paste("gateway_volumes:", gateway_volumes, collapse = " "), duration = NULL,
   #                  type = "message", session = session)
@@ -419,9 +425,10 @@ server <- function(input, output, session) {
     client_data <- session$clientData;
 
     if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
-      shinyjs::hide("gateway_quit_button")
+      # shinyjs::hide("gateway_quit_button")
+      print("here 1")
     } else {
-      shinyjs::hide("quit_button")
+      # shinyjs::hide("quit_button")
       pathname_parts <- str_split_1(client_data$url_pathname, "/")
       if (length(pathname_parts) >= 3) {
         gateway_quit_url <-
@@ -439,7 +446,8 @@ server <- function(input, output, session) {
   shinyjs::hide("mkde_plot")
   shinyjs::hide("tables")
   shinyjs::hide("save_files")
-  shinyjs::hide("save_movebank_button")
+  # shinyjs::hide("save_movebank_button")
+  shinyjs::hide("save_movebank_to_gateway_button")
   shinyjs::hide("download_movebank_data_button")
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
@@ -584,41 +592,92 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$save_movebank_data_button, {
-    id <- "save_mb_file"
-    message <- "Saving Movebank data..."
-    showNotification(message, id = id, type = "message", duration = NULL,
-                     session = session)
-    tryCatch({
-      # path_home()
-      path_filename <- paste(path_home(), "/", input$save_movebank_filename,
-                             sep = "")
-      # showNotification(paste("saving Movebank file to", path_filename),
-      #                  type = "message", duration = NULL, session = session)
-      result = saveDataframeFromMB(gps$original, path_filename)
-      if (is.null(result))
-        showNotification(paste(
-          message, "done; your file has been saved to your gateway home directory"),
-          duration = 3, id = id, type = "message", session = session)
-      else
-        showNotification(paste(message, "error:", result), duration = NULL,
-                         id = id, type = "error", session = session)
+  # observeEvent(input$old_save_movebank_data_button, {
+  #   print("old_save_movebank_data_button!")
+  #   id <- "save_mb_file"
+  #   message <- "Saving Movebank data..."
+  #   showNotification(message, id = id, type = "message", duration = NULL,
+  #                    session = session)
+  #   tryCatch({
+  #     # path_home()
+  #     path_filename <- paste(path_home(), "/", input$save_movebank_filename,
+  #                            sep = "")
+  #     # showNotification(paste("saving Movebank file to", path_filename),
+  #     #                  type = "message", duration = NULL, session = session)
+  #     result = saveDataframeFromMB(gps$original, path_filename)
+  #     if (is.null(result))
+  #       showNotification(paste(
+  #         message, "done; your file has been saved to your gateway home directory"),
+  #         duration = 3, id = id, type = "message", session = session)
+  #     else
+  #       showNotification(paste(message, "error:", result), duration = NULL,
+  #                        id = id, type = "error", session = session)
+  #     
+  #     # now download the saved file
+  #     output$download_movebank_data_button <-
+  #       downloadHandler(filename = input$save_movebank_filename,
+  #                       content = function(path_filename) {
+  #                         write.csv(gps$original, path_filename)
+  #                       },
+  #                       contentType="text/csv")
+  #   },
+  #   error = function(e) {
+  #     showNotification(paste("Error :", e$message), id = id,
+  #                      duration = NULL, type = "error", session = session)
+  #   })
+  # 
+  #   shinyjs::hide("old_save_movebank_data_button")
+  #   shinyjs::show("download_movebank_data_button")
+  # })
+  
+  # This event will be called when the user clicks on the button AND when the
+  # user clicks on the Save button in the dialog
+  observeEvent(input$save_movebank_to_gateway_button, {
+    # print("save_movebank_to_gateway_button!")
+    file_info <- parseSavePath(gateway_volumes, input$save_movebank_to_gateway_button)
+    # print(paste("file_info =", file_info))
+    
+    # This test will ensure we will only handle event when the user clicks on
+    # the Save button in the dialog which means file_info will not be empty.
+    # From https://stackoverflow.com/a/39519425
+    if (nrow(file_info) > 0 ) {
+      # print(paste("datapath =", file_info$datapath))
+      # print(paste("name =", file_info$name))
+      id <- "save_mb_file"
+      message <- "Saving Movebank data..."
+      showNotification(message, id = id, type = "message", duration = NULL,
+                       session = session)
+      tryCatch({
+        path_filename <- file_info$datapath
+        # showNotification(paste("saving Movebank file to", path_filename),
+        #                  type = "message", duration = NULL, session = session)
+        result = saveDataframeFromMB(gps$original, path_filename)
+        if (is.null(result))
+          showNotification(paste(message,
+                                 "done; your file has been saved to the gateway"),
+                           duration = 3, id = id, type = "message",
+                           session = session)
+        else
+          showNotification(paste(message, "error:", result), duration = NULL,
+                           id = id, type = "error", session = session)
+        
+        # now download the saved file
+        output$download_movebank_data_button <-
+          downloadHandler(filename = file_info$name,
+                          content = function(path_filename) {
+                            write.csv(gps$original, path_filename)
+                          },
+                          contentType="text/csv")
+      },
+      error = function(e) {
+        showNotification(paste("Error :", e$message), id = id,
+                         duration = NULL, type = "error", session = session)
+      })
       
-      # now download the saved file
-      output$download_movebank_data_button <-
-        downloadHandler(filename = input$save_movebank_filename,
-                        content = function(path_filename) {
-                          write.csv(gps$original, path_filename)
-                        },
-                        contentType="text/csv")
-    },
-    error = function(e) {
-      showNotification(paste("Error :", e$message), id = id,
-                       duration = NULL, type = "error", session = session)
-    })
-
-    shinyjs::hide("save_movebank_data_button")
-    shinyjs::show("download_movebank_data_button")
+      # shinyjs::hide("old_save_movebank_data_button")
+      shinyjs::hide("save_movebank_to_gateway_button")
+      shinyjs::show("download_movebank_data_button")
+    }
   })
   
   # Handle Data tab "Load data" button click...
@@ -649,7 +708,9 @@ server <- function(input, output, session) {
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
     } else if (input$data_source == 'Movebank') {
-      # First, save the info entered by user and then load data from Movebank
+      shinyjs::hide("download_movebank_data_button")
+      
+      # Save the info entered by user and then load data from Movebank
       write_file(paste("MovebankUsername=", input$movebank_username,
                        "\nMovebankPassword=", input$movebank_password,
                        "\nMovebankStudyID=", input$movebank_studyid, "\n",
@@ -667,26 +728,17 @@ server <- function(input, output, session) {
                                      password = input$movebank_password,
                                      study = input$movebank_studyid)
       basename <- input$movebank_studyid
-      
-      updateTextInput(session, "save_movebank_filename",
-                      value = paste("movebank-", input$movebank_studyid, ".csv",
-                                    sep = ""))
-      
-      
-      # shinyDirButton("shinydirbutton", label = "shinyDirButton label",
-      #                title = "shinyDirButton title"),
-      # shinySaveButton("shinysavebutton", label = "shinySaveButton label",
-      #                 title = "shinySaveButton title",
-      #                 filename = "foo.csv"),
-      
-      shinyDirChoose (input, "shinydirbutton", session = session,
-                      roots = gateway_volumes)
-      shinyFileSave(input, "shinysavebutton", session = session,
+      # updateTextInput(session, "save_movebank_filename",
+      #                 value = paste("movebank-", input$movebank_studyid, ".csv",
+      #                               sep = ""))
+      shinyFileSave(input, "save_movebank_to_gateway_button", session = session,
                     roots = gateway_volumes)
       
-      shinyjs::show("save_movebank_button")
-      shinyjs::show("save_movebank_data_button")
-      shinyjs::hide("download_movebank_data_button")
+      # even though we've updated the Filename field above, it doesn't update
+      # UI until later so we can't show these buttons now or else the Filename
+      # is blank
+      # shinyjs::show("save_movebank_button")
+      # shinyjs::show("old_save_movebank_data_button")
     } else if (input$data_source == 'Your computer') {
       # print(paste("input$local_file$name =", input$local_file$name))
       # print(paste("input$local_file$size =", input$local_file$size))
@@ -734,7 +786,7 @@ server <- function(input, output, session) {
                          type = "error", session = session)
         shiny::validate(need(is.null(results[[2]]), results[[2]]))
       }
-
+      
       data <- results[[1]]
       gps$data <- results[[1]]
       gps$original <- results[[1]]
@@ -759,6 +811,23 @@ server <- function(input, output, session) {
       })
       gps$summary <- data
       shinyjs::show("tables")
+      
+      if (input$data_source == 'Movebank') {
+        # print(paste("save_movebank_filename =", input$save_movebank_filename))
+        # print(paste("basename =", basename))
+        # tmp <- paste("movebank-", input$movebank_studyid, ".csv", sep = "")
+        # print(paste("tmp = ", tmp))
+        #js$updateSaveMovebankFilename(tmp)
+        # runjs(sprintf("
+        #   var saveButton = $('#save_movebank_to_gateway_button');
+        #   saveButton.attr('nwsaveas', '%s');", tmp))
+        # shinyjs::show("save_movebank_button")
+        # shinyjs::show("old_save_movebank_data_button")
+        shinyjs::show("save_movebank_to_gateway_button")
+        shinyjs::hide("download_movebank_data_button")
+        # paste("movebank-", input$movebank_studyid, ".csv",
+        #       sep = "")
+      }
       
       if (continue) {
         # Upate UI elements
@@ -1107,7 +1176,24 @@ server <- function(input, output, session) {
   
   observeEvent(input$gateway_quit_button, {
     js$closeWindow()
+    stopApp()
   })
+  
+  # js <- c(
+  #   updateSaveMovebankFilename = sprintf("function(newFilename) {
+  #     var saveButton = $('#save_movebank_to_gateway_button');
+  #     saveButton.attr('nwsaveas', newFilename);
+  #   }")
+  # )
+  
+  # js <- reactive({
+  #   list(
+  #     updateSaveMovebankFilename = sprintf("function(newFilename) {
+  #       var saveButton = $('#save_movebank_to_gateway_button');
+  #       saveButton.attr('nwsaveas', newFilename);
+  #     }")
+  #   )
+  # })
 }
 
 shinyApp(
