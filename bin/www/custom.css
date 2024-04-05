@@ -120,6 +120,10 @@
   background-color: transparent;
 }
 
+#quit_button {
+  color: white;
+}
+
 #shiny-notification-panel {
   bottom: auto;
   font-weight: bold;
