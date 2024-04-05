@@ -50,6 +50,10 @@
   float: left;
 }
 
+.fa-power-off:before {
+  color: white;
+}
+
 /*
 #gateway_browse_button {
   padding:0px;
@@ -118,10 +122,6 @@
   display: none;
   color: transparent!important;
   background-color: transparent;
-}
-
-#quit_button {
-  color: white;
 }
 
 #shiny-notification-panel {
