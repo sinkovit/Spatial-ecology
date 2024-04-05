@@ -88,26 +88,24 @@ ui <- dashboardPage(
     title = a(href = "https://uccommunityhub.hubzero.org/groups/spaceuseecology",
               img(src = "logo.png")),
     .list = tagList(
-#     tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
-# > Password"),style="font-weight: bold;color:white;")),
-      # tags$li(class = "dropdown", actionLink("quit_button", "XX",
-      #                                        icon = icon("power-off"))),
-    
-    # tags$head(tags$link(rel = "stylesheet", type = "text/css",
-    #                     href = "custom.css")),
+      # tags$li(class = "dropdown",tags$a("Change password",actionLink("ChangePassword","Change
+      # > Password"),style="font-weight: bold;color:white;")),
+      # tags$head(tags$link(rel = "stylesheet", type = "text/css",
+      #                     href = "custom.css")),
       # tags$li(a(href = 'https://uccommunityhub.hubzero.org/tools/mkde/stop?sess=',
       #           icon("power-off"), title = "Quit app"), class = "dropdown",
       #         id = "gateway_quit_button"),
-    # See https://stackoverflow.com/questions/46943507/dynamically-add-remove-whole-ui-elements-in-shiny
-    tags$li(htmlOutput("gateway_quit_button", inline = TRUE, container = tags$a),
-            class = "dropdown")
+      
+      # See https://stackoverflow.com/questions/46943507/dynamically-add-remove-whole-ui-elements-in-shiny
+      tags$li(htmlOutput("quit_button", inline = TRUE, container = tags$a),
+              class = "dropdown")
 
-    # tags$li(
-    #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
-    #     img(src = 'logo.png', title = "Space Use Ecology Gateway",
-    #         #height = "52px"), style = "padding: 0px"),
-    #         )),
-    #   class = "dropdown")
+      # tags$li(
+      #   a(href = 'https://uccommunityhub.hubzero.org/groups/spaceuseecology',
+      #     img(src = 'logo.png', title = "Space Use Ecology Gateway",
+      #         #height = "52px"), style = "padding: 0px"),
+      #         )),
+      #   class = "dropdown")
     )
   ),
   dashboardSidebar(disable = TRUE),
@@ -165,14 +163,14 @@ ui <- dashboardPage(
               #   title = "Save the loaded data to the gateway, then download"
               # ),
               # conditionalPanel(condition = "input.save_movebank_button == 1",
-                # textInput("save_movebank_filename", "Filename"),
-                # actionButton("old_save_movebank_data_button", label = "Save data to gateway"),
-                # bsTooltip(id = "old_save_movebank_data_button", placement = "right",
-                #           title = "Save data to the above filename in your gateway home directory; overwrite if file already exists"),
-                shinySaveButton("save_movebank_to_gateway_button",
-                                label = "Save data to gateway", title = "",
-                                filename = "movebank.csv"),
-                downloadButton("download_movebank_data_button", "Download file")
+              # textInput("save_movebank_filename", "Filename"),
+              # actionButton("old_save_movebank_data_button", label = "Save data to gateway"),
+              # bsTooltip(id = "old_save_movebank_data_button", placement = "right",
+              #           title = "Save data to the above filename in your gateway home directory; overwrite if file already exists"),
+              shinySaveButton("save_movebank_to_gateway_button",
+                              label = "Save data to gateway", title = "",
+                              filename = "movebank.csv"),
+              downloadButton("download_movebank_data_button", "Download file")
               # ),
             ),
             conditionalPanel(condition = "input.data_source === 'Your computer'",
@@ -426,24 +424,17 @@ server <- function(input, output, session) {
     client_data <- session$clientData;
 
     if (is.na(str_extract(client_data$url_hostname, "uccommunityhub"))) {
-      # shinyjs::hide("gateway_quit_button")
-      print("here 1")
-      # output$gateway_quit_button <- renderUI({actionLink("quit_button", "X",
-      #                                                    icon = icon("power-off"))})
-      output$gateway_quit_button <-
-        renderUI({actionLink("quit_button", "", icon = icon("power-off"))})
-      print("here 2")
+      output$quit_button <- renderUI({actionLink("quit_button", "",
+                                                 icon = icon("power-off"))})
     } else {
-      # shinyjs::hide("quit_button")
       pathname_parts <- str_split_1(client_data$url_pathname, "/")
       if (length(pathname_parts) >= 3) {
         gateway_quit_url <-
           paste(client_data$url_protocol, "//",
                 "uccommunityhub.hubzero.org/tools/mkde/stop?sess=",
                 pathname_parts[3], sep = "")
-        output$gateway_quit_button <- renderUI({a(href=gateway_quit_url,
-                                                  icon("power-off"),
-                                                  title = "Quit app")})
+        output$quit_button <- renderUI({a(href=gateway_quit_url, icon("power-off"),
+                                          title = "Quit app")})
       }
     }
   })
@@ -452,7 +443,6 @@ server <- function(input, output, session) {
   shinyjs::hide("mkde_plot")
   shinyjs::hide("tables")
   shinyjs::hide("save_files")
-  # shinyjs::hide("save_movebank_button")
   shinyjs::hide("save_movebank_to_gateway_button")
   shinyjs::hide("download_movebank_data_button")
   shinyjs::disable(selector = "[type=radio][value=25D]")
@@ -1176,31 +1166,9 @@ server <- function(input, output, session) {
   # See https://shiny.posit.co/r/reference/shiny/latest/session.html
   # See https://github.com/daattali/advanced-shiny/tree/master/auto-kill-app
   observeEvent(input$quit_button, {
-    print("quit_button!")
     js$closeWindow()
     stopApp()
   })
-  
-  observeEvent(input$gateway_quit_button, {
-    js$closeWindow()
-    stopApp()
-  })
-  
-  # js <- c(
-  #   updateSaveMovebankFilename = sprintf("function(newFilename) {
-  #     var saveButton = $('#save_movebank_to_gateway_button');
-  #     saveButton.attr('nwsaveas', newFilename);
-  #   }")
-  # )
-  
-  # js <- reactive({
-  #   list(
-  #     updateSaveMovebankFilename = sprintf("function(newFilename) {
-  #       var saveButton = $('#save_movebank_to_gateway_button');
-  #       saveButton.attr('nwsaveas', newFilename);
-  #     }")
-  #   )
-  # })
 }
 
 shinyApp(
