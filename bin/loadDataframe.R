@@ -116,7 +116,6 @@ loadDataframeFromMB <- function(study, username, password) {
       return(list(NULL,
                   "Empty reply from movebank.org server. Please wait a few minutes and try again..."))
     }
-    stop()
     return(list(NULL, error_message))
   })
 }

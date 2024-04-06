@@ -242,11 +242,25 @@ mkdeToTerra <- function(mkde.obj) {
 # terraToContour converts a SpatRaster to lat long
 terraToContour <- function(terra.obj, levels, crsstr) {
   
-  # Create contours from mkde_terra and set it's CRS
+  # Check if terra.obj is NULL or empty
+  if (is.null(terra.obj)|| sum(!is.na(values(terra.obj))) == 0) {
+    
+    stop("SpatRaster object is empty or NULL.")
+    
+  }
+  
+  if (is.null(levels) || is.null(crsstr))
+  {
+    
+    stop("Proper input must be provided.")
+    
+  }
+  
+  # Create contours from mkde_terra and set its CRS
   terra_contour <- terra::as.contour(terra.obj, levels = levels)
   terra::crs(terra_contour) <- crsstr
   
-  # Transform it to an sf object and set it's CRS to longlat
+  # Transform it to an sf object and set its CRS to longlat
   sf_contour <- sf::st_as_sf(terra_contour)
   sf_contour <- sf::st_transform(sf_contour, crs="+proj=longlat")
   

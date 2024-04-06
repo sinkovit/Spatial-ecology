@@ -48,16 +48,8 @@ library(tools)
 library(ggmap)
 library(terra)
 library(sf)
+library(move2)
 
-# TBD
-library(move)
-
-
-#library(adehabitatHR)
-#library(scales)
-#library(fs)
-#library(broom)
-#library(dplyr)
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 
@@ -67,6 +59,7 @@ source("compute.R")
 source("loadDataframe.R")
 source("processDataframe.R")
 source("util.R")
+source("tests.R")
 
 sessionInfo()
 
@@ -369,6 +362,14 @@ server <- function(input, output, session) {
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
   # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
+  
+  
+  ############################################################################
+  # TESTS
+  ############################################################################
+  #test_results <- test_file("tests.R")
+  #print(test_results)
+  
   options(shiny.maxRequestSize=100*1024^2)
   
   pdf(file = NULL)
