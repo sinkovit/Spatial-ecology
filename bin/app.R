@@ -222,24 +222,24 @@ ui <- dashboardPage(
             actionButton("mcp_plot_btn", label = "Plot"),
           ),
           tabPanel(title = "MKDE", value = "MKDE", tags$br(),
-            tags$strong(id = "modelabel", "Mode:"),
-            bsTooltip(id = "modelabel", placement = "right",
+            tags$strong(id = "dimensions_label", "Dimensions:"),
+            bsTooltip(id = "dimensions_label", placement = "right",
               title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"
             ),
-            radioButtons("mode", label = NULL, inline = TRUE,
+            radioButtons("dimensions", label = NULL, inline = TRUE,
               choices = list("2D" = '2D', "2.5D" = '25D', "3D" = '3D')
             ),
-            tags$strong(id = "sig2obslabel", "sig2obs (meters):"),
-            bsTooltip(id = "sig2obslabel", placement = "right",
+            tags$strong(id = "variance_label", "Variance (meters):"),
+            bsTooltip(id = "variance_label", placement = "right",
               title = "Location error / variance"
             ),
-            numericInput("sig2obs", label = NULL, value = 25.0, width = "50%"),
-            tags$strong(id = "tmaxlabel", "Time max (minutes):"),
-            bsTooltip(id = "tmaxlabel", placement = "right",
+            numericInput("variance", label = NULL, value = 25.0, width = "50%"),
+            tags$strong(id = "max_time_label", "Max time (minutes):"),
+            bsTooltip(id = "max_time_label", placement = "right",
               title = "Maximum time threshold between consecutive locations"
             ),
-            numericInput("tmax", label = NULL, value = 185.0, width = "50%"),
-            #bsPopover(id = "tmax", title = "title", content = "content"),
+            numericInput("max_time", label = NULL, value = 185.0, width = "50%"),
+            #bsPopover(id = "max_time", title = "title", content = "content"),
             numericInput("cellsize", label = "Cell size (meters):", value = 0,
               min = 1, width = "75%"
             ),
@@ -877,20 +877,20 @@ server <- function(input, output, session) {
     runjs (paste0 ("document.getElementById('mcp_zoom').style.border ='", color,
                    "'"))
     
-    if (!is.numeric (input$sig2obs) || input$sig2obs <= 0) {
+    if (!is.numeric (input$variance) || input$variance <= 0) {
       color <- "solid #FF0000"
     } else {
       color <- ""
     }
-    runjs (paste0 ("document.getElementById('sig2obs').style.border ='", color,
+    runjs (paste0 ("document.getElementById('variance').style.border ='", color,
                    "'"))
 
-    if (!is.numeric (input$tmax) || input$tmax <= 0) {
+    if (!is.numeric (input$max_time) || input$max_time <= 0) {
       color <- "solid #FF0000"
     } else {
       color <- ""
     }
-    runjs (paste0 ("document.getElementById('tmax').style.border ='", color,
+    runjs (paste0 ("document.getElementById('max_time').style.border ='", color,
                    "'"))
 
     if (!is.numeric (input$cellsize) || input$cellsize <= 0) {
@@ -945,8 +945,8 @@ server <- function(input, output, session) {
   
   # Handle events that should enable/disable MKDE plot button
   observe ({
-    if ((is.numeric(input$sig2obs) && input$sig2obs < 0) ||
-        (is.numeric(input$tmax) && input$tmax < 0) ||
+    if ((is.numeric(input$variance) && input$variance < 0) ||
+        (is.numeric(input$max_time) && input$max_time < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
         (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0)) {
       shinyjs::disable("mkde_plot_btn")
@@ -1068,7 +1068,7 @@ server <- function(input, output, session) {
       message <- paste("Calculating 2D raster...")
       showNotification(message, id = mid, type = "message", duration = NULL,
                        session = session)
-      raster <- calculateRaster2D(data, id, input$sig2obs, input$tmax,
+      raster <- calculateRaster2D(data, id, input$variance, input$max_time,
                                   input$cellsize, input$mkde_buffer)
       showNotification(paste(message, "done"), id = mid, type = "message",
                        duration = 3, session = session)
@@ -1136,8 +1136,8 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$reset_parameters, {
-    shinyjs::reset("sig2obs")
-    shinyjs::reset("tmax")
+    shinyjs::reset("variance")
+    shinyjs::reset("max_time")
     shinyjs::reset("cellsize")
     shinyjs::reset("mkde_buffer")
     shinyjs::reset("probability")
