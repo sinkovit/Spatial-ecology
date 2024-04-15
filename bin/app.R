@@ -212,7 +212,8 @@ ui <- dashboardPage(
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
-                         choices = list("Polygons & Points", "Points only")),
+                         choices = list("MCP polygon & telemetry points",
+                                        "Telemetry points only")),
             tags$strong(id = "mcp_zoom_label", "Display zoom (meters):"),
             bsTooltip(id = "mcp_zoom_label", placement = "right",
                       title = "Brownian Bridge buffer"),
@@ -221,7 +222,7 @@ ui <- dashboardPage(
             hr(style = "border-top: 2px solid grey;"),
             actionButton("mcp_plot_btn", label = "Plot"),
           ),
-          tabPanel(title = "MKDE", value = "MKDE", tags$br(),
+          tabPanel(title = "BBMM", value = "BBMM", tags$br(),
             tags$strong(id = "dimensions_label", "Dimensions:"),
             bsTooltip(id = "dimensions_label", placement = "right",
               title = "Currently only 2D is supported but we are planning on adding 2.5 and 3D"
@@ -243,11 +244,11 @@ ui <- dashboardPage(
             numericInput("cellsize", label = "Cell size (meters):", value = 0,
               min = 1, width = "75%"
             ),
-            tags$strong(id = "mkde_buffer_label", "Buffer (meters):"),
-            bsTooltip(id = "mkde_buffer_label", placement = "right",
+            tags$strong(id = "bbmm_buffer_label", "Buffer (meters):"),
+            bsTooltip(id = "bbmm_buffer_label", placement = "right",
               title = "Brownian Bridge buffer"
             ),
-            numericInput("mkde_buffer", label = NULL, value = 1000.0,
+            numericInput("bbmm_buffer", label = NULL, value = 1000.0,
               width = "50%"
             ),
             tags$strong(id = "probabilitylabel", "Cumulative probabilities:"),
@@ -264,7 +265,7 @@ ui <- dashboardPage(
                 tags$strong(id = "maplabel", "Show map background")),
             hr(style = "border-top: 2px solid grey;"),
 
-            actionButton("mkde_plot_btn", label = "Plot"),
+            actionButton("bbmm_plot_btn", label = "Plot"),
             actionButton("reset_parameters", "Reset parameters"),
             
             hr(style = "border-top: 2px solid black;"),
@@ -274,10 +275,10 @@ ui <- dashboardPage(
             #              choices = list("Save" = 1)),
             conditionalPanel(
               condition = "input.save_files == 1",
-              checkboxGroupInput("save_mkde_type", "Type:",
+              checkboxGroupInput("save_bbmm_type", "Type:",
                                  inline = TRUE,
                                  c("Raster" = "raster", "Shape" = "shape")),
-              radioButtons("save_mkde_data", label = "Data:",
+              radioButtons("save_bbmm_data", label = "Data:",
                            choices = list("Current selected" = 'current',
                                           "All calculated" = 'calculated')),
               tags$strong(id = "save_raster_label", "Basename:"),
@@ -289,7 +290,7 @@ ui <- dashboardPage(
                          tags$span(style="color:red",
                                    "and existing file(s) will be overwritten!"))),
               hr(style = "border-top: 2px solid grey;"),
-              actionButton("save_mkde_btn", label = "Save"),
+              actionButton("save_bbmm_btn", label = "Save"),
             ),
             
             # tags$strong("Save output files..."),
@@ -323,9 +324,9 @@ ui <- dashboardPage(
         htmlOutput("instructions"),
         # https://github.com/daattali/shinycssloaders/
         # shinycssloaders::withSpinner(plotOutput("mcp_plot" ), type = 1),
-        # shinycssloaders::withSpinner(plotOutput("mkde_plot" ), type = 4),
+        # shinycssloaders::withSpinner(plotOutput("bbmm_plot" ), type = 4),
         plotOutput("mcp_plot" ),
-        plotOutput("mkde_plot"),
+        plotOutput("bbmm_plot"),
 
         tabsetPanel(
           id = "tables",
@@ -398,7 +399,7 @@ server <- function(input, output, session) {
   # gateway_quit_url <- reactiveVal("")
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
-  replot_mkde <- reactiveVal(TRUE)
+  replot_bbmm <- reactiveVal(TRUE)
   
   gateway_volumes <- c(Home = fs::path_home())
   projects_path <- "/data/projects"
@@ -440,7 +441,7 @@ server <- function(input, output, session) {
   })
   
   shinyjs::hide("mcp_plot")
-  shinyjs::hide("mkde_plot")
+  shinyjs::hide("bbmm_plot")
   shinyjs::hide("tables")
   shinyjs::hide("save_files")
   shinyjs::hide("save_movebank_to_gateway_button")
@@ -448,9 +449,9 @@ server <- function(input, output, session) {
   shinyjs::disable(selector = "[type=radio][value=25D]")
   shinyjs::disable(selector = "[type=radio][value=3D]")
  
-  # Hide the MCP & MKDE control tabs until data is loaded
+  # Hide the MCP & BBMM control tabs until data is loaded
   hideTab(inputId = "controls", target = "MCP")
-  hideTab(inputId = "controls", target = "MKDE")
+  hideTab(inputId = "controls", target = "BBMM")
   
   # Hide the table elements
   shinyjs::hide("areaUnitsDiv")
@@ -543,7 +544,7 @@ server <- function(input, output, session) {
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
         })
-        # shinyjs::click("mkde_plot_btn")
+        # shinyjs::click("bbmm_plot_btn")
       }
     } else if (input$controls == "MCP") {
       output$instructions <- renderUI({
@@ -555,10 +556,10 @@ server <- function(input, output, session) {
                 tags$hr(style = "border-top: 2px solid #000000;")
         )
       })
-      shinyjs::hide("mkde_plot")
+      shinyjs::hide("bbmm_plot")
       shinyjs::show("mcp_plot")
       current_table_selection("multiple")
-    } else if (input$controls == "MKDE") {
+    } else if (input$controls == "BBMM") {
       output$instructions <- renderUI({
         tagList(h4("To plot movement-based kernel density estimator:"),
                 tags$ol(tags$li("Set parameters (left)"),
@@ -569,7 +570,7 @@ server <- function(input, output, session) {
         )
       })
       shinyjs::hide("mcp_plot")
-      shinyjs::show("mkde_plot")
+      shinyjs::show("bbmm_plot")
       current_table_selection("single")
     }
   })
@@ -681,10 +682,10 @@ server <- function(input, output, session) {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
 
-    output$mkde_plot <- renderPlot({plot.new()})
+    output$bbmm_plot <- renderPlot({plot.new()})
     output$mcp_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
-    shinyjs::hide("mkde_plot")
+    shinyjs::hide("bbmm_plot")
 
     gps$data <- NULL
     # print(paste("gps$data =", gps$data))
@@ -828,11 +829,11 @@ server <- function(input, output, session) {
       if (continue) {
         # Upate UI elements
         showTab(inputId = "controls", target = "MCP", session = session)
-        showTab(inputId = "controls", target = "MKDE", session = session)
+        showTab(inputId = "controls", target = "BBMM", session = session)
         output$instructions <- renderUI(
           tagList(h4("Next, select the plot type you want..."),
                   tags$ul(tags$li("MCP = Minimum Convex Polygon"),
-                          tags$li("MKDE = Movement-based Kernel Density Estimator")
+                          tags$li("BBMM = Brownian Bridge Movement Model")
                   ),
                   tags$br(),
                   tags$br(),
@@ -848,16 +849,16 @@ server <- function(input, output, session) {
     }
   })
   
-  # Handle MKDE tab events...
+  # Handle BBMM tab events...
   
   # The following observe serves 2 purposes:
-  # 1. any of the MKDE parameters involved with raster calculation changes, set
+  # 1. any of the BBMM parameters involved with raster calculation changes, set
   #    flag to clear rasters
-  # 2. check MKDE parameters, if invalid will turn border to red, otherwise no
+  # 2. check BBMM parameters, if invalid will turn border to red, otherwise no
   #   color
   observe ({
     recalculate_raster(TRUE)
-    replot_mkde(TRUE)
+    replot_bbmm(TRUE)
     
     if (!is.numeric (input$zone) || input$zone < 1 || input$zone > 60) {
       color <- "solid #FF0000"
@@ -901,12 +902,12 @@ server <- function(input, output, session) {
     runjs (paste0 ("document.getElementById('cellsize').style.border ='", color,
                    "'"))
 
-    if (!is.numeric (input$mkde_buffer) || input$mkde_buffer < 0) {
+    if (!is.numeric (input$bbmm_buffer) || input$bbmm_buffer < 0) {
       color <- "solid #FF0000"
     } else {
       color <- ""
     }
-    runjs (paste0 ("document.getElementById('mkde_buffer').style.border ='", color,
+    runjs (paste0 ("document.getElementById('bbmm_buffer').style.border ='", color,
                    "'"))
     
     if (isEmpty(input$basename)) {
@@ -919,11 +920,11 @@ server <- function(input, output, session) {
   })
   
   # The following observe serves 2 purposes:
-  # 1. if probability changes, set flag to replot using MKDE
+  # 1. if probability changes, set flag to replot using BBMM
   # 2. check probability parameter, if invalid will turn border to red,
   # otherwise no color
   observeEvent(input$probability, {
-    replot_mkde(TRUE)
+    replot_bbmm(TRUE)
     
     # following test doesn't seem to work for the entire probability string
     # regexpr("[:alpha:]", input$probability) != -1)
@@ -943,24 +944,24 @@ server <- function(input, output, session) {
                    color, "'"))
   })
   
-  # Handle events that should enable/disable MKDE plot button
+  # Handle events that should enable/disable BBMM plot button
   observe ({
     if ((is.numeric(input$variance) && input$variance < 0) ||
         (is.numeric(input$max_time) && input$max_time < 0) ||
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
-        (is.numeric(input$mkde_buffer) && input$mkde_buffer < 0)) {
-      shinyjs::disable("mkde_plot_btn")
+        (is.numeric(input$bbmm_buffer) && input$bbmm_buffer < 0)) {
+      shinyjs::disable("bbmm_plot_btn")
     }
     else
-      shinyjs::enable("mkde_plot_btn")
+      shinyjs::enable("bbmm_plot_btn")
   })
 
-  # If no basename nor save mkde type, then disable save mkde button
+  # If no basename nor save bbmm type, then disable save bbmm button
   observe ({
-    if (isEmpty(input$basename) || isEmpty(input$save_mkde_type)) {
-      shinyjs::disable("save_mkde_btn")
+    if (isEmpty(input$basename) || isEmpty(input$save_bbmm_type)) {
+      shinyjs::disable("save_bbmm_btn")
     } else {
-      shinyjs::enable("save_mkde_btn")
+      shinyjs::enable("save_bbmm_btn")
     }
   })
   
@@ -970,12 +971,12 @@ server <- function(input, output, session) {
   # Handle no data or no table row selected...
   observe ({
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
-      shinyjs::disable("mkde_plot_btn")
+      shinyjs::disable("bbmm_plot_btn")
       shinyjs::disable("mcp_plot_btn")
     }
   })
 
-  # Change table_all_data when input$control changes between MCP and MKDE
+  # Change table_all_data when input$control changes between MCP and BBMM
   # code from https://stackoverflow.com/a/34590704/1769758
   table_all_data <- reactive({
     DT::datatable(
@@ -1047,7 +1048,7 @@ server <- function(input, output, session) {
                      duration = 3, session = session)
   })
   
-  observeEvent(input$mkde_plot_btn, {
+  observeEvent(input$bbmm_plot_btn, {
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
 
@@ -1069,7 +1070,7 @@ server <- function(input, output, session) {
       showNotification(message, id = mid, type = "message", duration = NULL,
                        session = session)
       raster <- calculateRaster2D(data, id, input$variance, input$max_time,
-                                  input$cellsize, input$mkde_buffer)
+                                  input$cellsize, input$bbmm_buffer)
       showNotification(paste(message, "done"), id = mid, type = "message",
                        duration = 3, session = session)
       
@@ -1090,11 +1091,11 @@ server <- function(input, output, session) {
       shinyjs::show("save_files")
     }
     
-    print(paste("replot_mkde =", replot_mkde()))
-    if(replot_mkde()) {
+    #print(paste("replot_bbmm =", replot_bbmm()))
+    if(replot_bbmm()) {
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
-        # print(paste("save_mkde_type:", input$save_mkde_type))
+        # print(paste("save_bbmm_type:", input$save_bbmm_type))
         mid <- "create_contour"
         message <- paste("Calculating space use...")
         showNotification(message, id = mid, type = "message", duration = NULL,
@@ -1113,10 +1114,10 @@ server <- function(input, output, session) {
             showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                              duration = NULL, type = "warning", session = session)
           }
-          output$mkde_plot <- renderPlot({results[[1]]$map})
+          output$bbmm_plot <- renderPlot({results[[1]]$map})
         } else {
           cont <- results[[1]]$contour
-          output$mkde_plot <- renderPlot({
+          output$bbmm_plot <- renderPlot({
             plot(results[[1]]$cut)
             contour_display <- contour(results[[1]]$raster, add = T,
                                        levels = cont$threshold, lwd = 1.0,
@@ -1139,15 +1140,15 @@ server <- function(input, output, session) {
     shinyjs::reset("variance")
     shinyjs::reset("max_time")
     shinyjs::reset("cellsize")
-    shinyjs::reset("mkde_buffer")
+    shinyjs::reset("bbmm_buffer")
     shinyjs::reset("probability")
   })
   
-  observeEvent(input$save_mkde_btn, {
-    # print("save mkde output button!")
-    # print(paste("save_mkde_data =", input$save_mkde_data))
+  observeEvent(input$save_bbmm_btn, {
+    # print("save bbmm output button!")
+    # print(paste("save_bbmm_data =", input$save_bbmm_data))
     id <- NULL
-    if (input$save_mkde_data == "current") {
+    if (input$save_bbmm_data == "current") {
       summary <- gps$summary
       id <- summary$id[input$table_summary_rows_selected]
     }
@@ -1157,7 +1158,7 @@ server <- function(input, output, session) {
                      "* ...", sep = "")
     showNotification(message, id = mid, type = "message", duration = NULL,
                      session = session)
-    save_output(input$save_mkde_type, gps$rasters, id, input$zone, input$datum,
+    save_output(input$save_bbmm_type, gps$rasters, id, input$zone, input$datum,
                 input$basename)
     showNotification(paste(message, "done"), id = mid, type = "message",
                      duration = NULL, session = session)
