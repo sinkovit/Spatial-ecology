@@ -69,7 +69,7 @@ animalAttributes <- function(data_df, areaUnits) {
 
   animals <- as.list(sort(unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
-  areaString <- paste("Area (", areaUnits, ")", sep="")
+  areaString <- paste("MCP Area (", areaUnits, ")", sep="")
 
   result <- data.frame(id = numeric())
   result[ , 'Easting (min)'] <- numeric()
@@ -125,7 +125,6 @@ animalAttributes <- function(data_df, areaUnits) {
     print(paste("error_message =", error_message))
     return(NULL)
   })
-  print("leaving animalAttributes()")
 }
 
 
