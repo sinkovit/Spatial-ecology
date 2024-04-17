@@ -50,6 +50,15 @@
   float: left;
 }
 
+.dataTables_scrollHeadInner {
+  /*
+  box-sizing: content-box;
+  padding-right: 0px;
+  width: 290px;
+  */
+  margin: auto;
+}
+
 .fa-power-off:before {
   color: white;
 }

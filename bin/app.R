@@ -991,10 +991,12 @@ server <- function(input, output, session) {
 
   # Change table_all_data when input$control changes between MCP and BBMM
   # code from https://stackoverflow.com/a/34590704/1769758
+  # See https://datatables.net/reference/option/ for options
+  # See https://datatables.net/reference/option/dom for dom options
   table_all_data <- reactive({
     DT::datatable(
       gps$original[], extensions = 'Buttons',
-      #caption="You can do multi-column sorting by shift clicking the columns\n\nm = meters",
+      caption="Tip: you can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list(autoWidth = TRUE, buttons = c(''), dom = 'Bfrtip',
                      pagingType = "full_numbers", processing = TRUE,
                      scrollX = TRUE,
@@ -1008,7 +1010,7 @@ server <- function(input, output, session) {
   table_summary_data <- reactive({
     shinyjs::show ("tables")
 
-    DT::datatable (
+    DT::datatable(
       gps$summary[], extension = "Buttons",
       caption="Tip: you can do multi-column sorting by shift clicking on the columns",
       #caption = tagList(h1("Caption")),
