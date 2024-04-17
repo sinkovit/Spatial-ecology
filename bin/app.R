@@ -395,25 +395,37 @@ server <- function(input, output, session) {
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
   current_table_selection <- reactiveVal("single")
+  gateway_projects_root_path <- "/data/projects"
+  #gateway_projects_root_path <- "/tmp/mona"
   # https://stackoverflow.com/questions/62741646/how-to-update-url-in-shiny-r
   # gateway_quit_url <- reactiveVal("")
+  gateway_volumes <- c(Home = fs::path_home())
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_bbmm <- reactiveVal(TRUE)
   
-  gateway_volumes <- c(Home = fs::path_home())
-  projects_path <- "/data/projects"
-  # projects_path <- "/tmp"
-  if (dir.exists(projects_path)) {
+  project_paths <- GetProjects(gateway_projects_root_path, session)
+  if (! is.null(project_paths)) {
     # showNotification("dir exists!", duration = NULL, type = "message", session = session)
-    projects_volume <- c(Projects = projects_path)
-    gateway_volumes <- c(gateway_volumes, projects_volume)
+    # showNotification(paste("project_paths = ", unlist(project_paths), collapse = ""),
+    #                        duration = NULL, type = "message", session = session)
+    project_volumes <- project_paths
+    # print(paste("project_volumes has", length(project_volumes), "items :"))
+    # print(project_volumes)
+    # print(paste("gateway_volumes 1 has", length(gateway_volumes), "items :"))
+    # print(gateway_volumes)
+    gateway_volumes <- c(gateway_volumes, project_volumes)
+    # print(paste("gateway_volumes 2 has", length(gateway_volumes), "items :"))
+    # print(gateway_volumes)
+    # showNotification(paste("gateway_volumes length =", length(gateway_volumes)),
+    #                  duration = NULL, type = "message", session = session)
     # showNotification(paste("new gateway_volumes:", names(gateway_volumes),
     #                        gateway_volumes, collapse = " "), duration = NULL,
     #                  type = "message", session = session)
   }
-  # showNotification(paste("gateway_volumes:", gateway_volumes, collapse = " "), duration = NULL,
-  #                  type = "message", session = session)
+  # showNotification(paste("gateway_volumes final:", gateway_volumes,
+  #                        collapse = " "), duration = NULL, type = "message",
+  #                  session = session)
 
   
   ############################################################################
@@ -505,7 +517,7 @@ server <- function(input, output, session) {
       if (is.integer (input$gateway_browse)) {
         HTML ("No file selected")
       } else {
-        tmp <- parseFilePaths (gateway_volumes, input$gateway_browse)
+        tmp <- parseFilePaths(gateway_volumes, input$gateway_browse)
         HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
   
@@ -628,11 +640,12 @@ server <- function(input, output, session) {
   # })
   
   # This event will be called when the user clicks on the button AND when the
-  # user clicks on the Save button in the dialog
+  # user clicks on the dialog's Save button
   observeEvent(input$save_movebank_to_gateway_button, {
     # print("save_movebank_to_gateway_button!")
+    # print(paste("gateway_volumes =", unlist(gateway_volumes), collapse = " "))
     file_info <- parseSavePath(gateway_volumes, input$save_movebank_to_gateway_button)
-    # print(paste("file_info =", file_info))
+    # print(paste("file_info = ", file_info, " has length = ", nrow(file_info)))
     
     # This test will ensure we will only handle event when the user clicks on
     # the Save button in the dialog which means file_info will not be empty.
@@ -695,7 +708,7 @@ server <- function(input, output, session) {
     shinyjs::show("instructions")
 
     if (input$data_source == 'Gateway') {
-      file <- parseFilePaths (gateway_volumes, input$gateway_browse)
+      file <- parseFilePaths(gateway_volumes, input$gateway_browse)
       filename <- file$name
       id <- "load_gateway"
       message <- paste("Loading gateway file", filename, "...")
