@@ -55,204 +55,198 @@
 # Returns a list where first item is the data and second item is the error
 # message; if successful, there error message = NULL and data will be
 # populated; if there is an error message, then data = NULL
+
 preprocessDataframe <- function(gpsdata) {
-      library(sp)
-
-      #### Rename column names to conform to canonical names
-
-      # Horizontal coordinates (canonical name: x and y)
-      names(gpsdata)[names(gpsdata) == 'X'] <- 'x'
-      names(gpsdata)[names(gpsdata) == 'Y'] <- 'y'
-
-      # Horizontal UTM coordinates (canonical name: utm.[easting|northing])
-      names(gpsdata)[names(gpsdata) == 'utm-easting'] <- 'utm.easting'
-      names(gpsdata)[names(gpsdata) == 'utm_easting'] <- 'utm.easting'
-      names(gpsdata)[names(gpsdata) == 'easting'] <- 'utm.easting'
-      names(gpsdata)[names(gpsdata) == 'Easting'] <- 'utm.easting'
-      names(gpsdata)[names(gpsdata) == 'utm-northing'] <- 'utm.northing'
-      names(gpsdata)[names(gpsdata) == 'utm_northing'] <- 'utm.northing'
-      names(gpsdata)[names(gpsdata) == 'northing'] <- 'utm.northing'
-      names(gpsdata)[names(gpsdata) == 'Northing'] <- 'utm.northing'
-
-      # UTM zone (canonical name: utm.zone)
-      options <- c('utm-zone', 'utm_zone', 'utmzone', 'zone')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'utm.zone'
-      }
-
-      # Vertical location (canonical name: zdata)
-      options <- c('Zdata', 'ZDATA', 'z', 'Z', 'height-raw', 'height_raw', 'height.raw')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'zdata'
-      }
-
-      # Latitude (canonical name: lat)
-      options <- c('Lat', 'LAT', 'location_lat', 'Location_lat', 'LOCATION_LAT',
-      	      	   'location-lat', 'Location-lat', 'LOCATION-LAT', 'location.lat',
-		   'Location.lat', 'LOCATION.LAT', 'latitude', 'Latitude', 'LATITUDE')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'lat'
-      }
-
-      # Longitude (canonical name: long)
-      options <- c('Long', 'LONG', 'location_long', 'Location_long',
-                  'LOCATION_LONG', 'location-long', 'Location-long', 'LOCATION-LONG',
-	   	  'location.long', 'Location.long', 'LOCATION.LONG', 'longitude',
-	    	  'Longitude', 'LONGITUDE')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'long'
-      }
-
-      # Time (canonical name: time)
-      options <- c('t', 'T',
-      	      	   'Time', 'TIME',
-                   'timestamp', 'Timestamp', 'TIMESTAMP',
-		   'date', 'Date', 'DATE',
-		   'datetime', 'DateTime', 'DATETIME',
-		   'date_time', 'Date_Time', 'DATE_TIME')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'time'
-      }
-
-      # Cummulative time (canonical name: cummultime)
-      options <- c('CummulTime', 'CUMMULTIME')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'cummultime'
-      }
-
-      # animal identifier (canonical name: id)
-      options <- c('Id', 'ID',
-      	           'identifier', 'Identifier', 'IDENTIFIER',
-		   'individual-local-identifier', 'individual_local_identifier', 'individual.local.identifier',
-		   'local-identifier', 'local_identifier', 'local.identifier')
-      for (opt in options) {
-      	  names(gpsdata)[names(gpsdata) == opt] <- 'id'
-      }
-
-      #### If cummultime and time are both present, delete time and rename cummultime to time
-      #### If cummultime is present and time absent, just rename cummultime to time
-
-      if ("cummultime" %in% colnames(gpsdata)) {
-      	 if ("time" %in% colnames(gpsdata)) {
-	    # Not sure why "gpsdata['time'] <- NULL" doesn't work here
-	    # Therefore have to use following bit of code
-     	    gpsdata <- gpsdata[ , !(names(gpsdata) %in% c("time"))]
-	 }
-	 names(gpsdata)[names(gpsdata) == 'cummultime'] <- 'time'
-      }
-
-      #### Test that data set has the required columns - time plus complete spatial coordinates
-      #### No longer testing for UTM zone since it's entered from GUI
-
-      if ("time" %in% colnames(gpsdata) &&
-      	  ( ("x" %in% colnames(gpsdata) && "y" %in% colnames(gpsdata)) ||
-      	    ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) ||
-      	    ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
-	 # All is good
-      } else {
-      	 return(list(NULL,
-      	             "Missing required columns; must have time and lat-long, x-y or UTM",
-      	             NULL))
-      }
-
-      #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
-      #### Set timezone to UTC to avoid daylight savings time ambiguities
-
-      if (!is.numeric(gpsdata$time)) {
-        gpsdata$time <- unclass(as.POSIXct(gpsdata$time,
-		     tryFormats = c("%m/%e/%y %H:%M", "%Y-%m-%d %H:%M:%S"),
-		     tz="UTC")) / 60
-      }
-
-      #### Add an 'id' column if it doesn't already exist and convert to string
-      #### Handing as string adds flexibility since not all data sets will use
-      #### integers to label animals
-
-      if (!"id" %in% colnames(gpsdata)) {
-      	 gpsdata['id'] <- 1
-      }
-      gpsdata$id <- as.character(gpsdata$id)
-
-      #### Generate UTM coordinates from lat-long
-
-      # If we have lat-long data without UTM data, do conversion to
-      # UTM using sp package. Note that call to proj4string() gives
-      # warning message: In showSRID(uprojargs, format = "PROJ",
-      # multiline = "NO", prefer_proj = prefer_proj) : Discarded datum
-      # Unknown based on WGS84 ellipsoid in Proj4 definition
-
-      if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
-      	 (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata))) {
-
-	 # Determine the UTM zone
-	 # See https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
-	 utm <- ceiling((180 + min(gpsdata$long))/6)
-
-	 # Conversion using sp package
-	 gpsdata.latlong <- gpsdata[c("lat", "long")]
-	 sp::coordinates(gpsdata.latlong) <- ~long+lat
-	 sp::proj4string(gpsdata.latlong) <- CRS("+proj=longlat")
-	 crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
-	 gpsdata.latlong <- sp::spTransform(gpsdata.latlong, CRSobj=crs.str)
-
-         # Note that kludge below needed so that code works everywhere
-
-	 if ('long' %in% colnames(coordinates(gpsdata.latlong))) {
-	    gpsdata$utm.easting <- gpsdata.latlong$long
-	 } else {
-	    gpsdata$utm.easting <- gpsdata.latlong$coords.x1
-	 }
-
-	 if ('lat' %in% colnames(coordinates(gpsdata.latlong))) {
-	    gpsdata$utm.northing <- gpsdata.latlong$lat
-	 } else {
-	    gpsdata$utm.northing <- gpsdata.latlong$coords.x2
-	 }
-
-	 rm(gpsdata.latlong)
-
-	 # Add N/S to UTM zone. This has to be done after conversion
-         # since sp package expects an integer value for zone
-	 
-	 if (mean(gpsdata$lat) > 0.0) {
-	    utm <- paste(utm, "N", sep="")
-	 } else {
-	    utm <- paste(utm, "S", sep="")
-	 }	 
-	 gpsdata$utm.zone <- utm
-      }
-
-      #### Generate list of UTM zones found in data file
-      found.zones <- unique(gpsdata$utm.zone)
-
-      #### Delete the column names that we don't need
-
-      # This isn't strictly necessary and we may decide to revisit
-      # later, but it can eliminate some confusion over which columns
-      # to subsequently use.
-
-      canonical <- c('x', 'y', 'xdata', 'ydata', 'zdata', 'id', 'time', 'lat', 'long',
-                      'utm.easting', 'utm.northing', 'utm.zone')
-      for (name in colnames(gpsdata)) {
-      	  if (!name %in% canonical) {
-	    gpsdata[name] <- NULL
-     	  }
-      }
-
-      #### Rename UTM or x-y data to xdata and ydata
-
-      # Having columns named [xy]data simplifies the rest of the data
-      # processing since the we won't need to do tests to see which
-      # columns are available (e.g., do we have UTM or xy?). Use UTM
-      # data if we have it, otherwise use xy
-
-      if ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) {
-      	 names(gpsdata)[names(gpsdata) == 'utm.easting'] <- 'xdata'
-      	 names(gpsdata)[names(gpsdata) == 'utm.northing'] <- 'ydata'
-      } else {
-      	 names(gpsdata)[names(gpsdata) == 'x'] <- 'xdata'
-      	 names(gpsdata)[names(gpsdata) == 'y'] <- 'ydata'
-      }
-
-      return(list(gpsdata, NULL, found.zones))
+  
+  #### Rename column names to conform to canonical names
+  
+  # Horizontal coordinates (canonical name: x and y)
+  names(gpsdata)[names(gpsdata) == 'X'] <- 'x'
+  names(gpsdata)[names(gpsdata) == 'Y'] <- 'y'
+  
+  # Horizontal UTM coordinates (canonical name: utm.[easting|northing])
+  names(gpsdata)[names(gpsdata) == 'utm-easting'] <- 'utm.easting'
+  names(gpsdata)[names(gpsdata) == 'utm_easting'] <- 'utm.easting'
+  names(gpsdata)[names(gpsdata) == 'easting'] <- 'utm.easting'
+  names(gpsdata)[names(gpsdata) == 'Easting'] <- 'utm.easting'
+  names(gpsdata)[names(gpsdata) == 'utm-northing'] <- 'utm.northing'
+  names(gpsdata)[names(gpsdata) == 'utm_northing'] <- 'utm.northing'
+  names(gpsdata)[names(gpsdata) == 'northing'] <- 'utm.northing'
+  names(gpsdata)[names(gpsdata) == 'Northing'] <- 'utm.northing'
+  
+  # UTM zone (canonical name: utm.zone)
+  options <- c('utm-zone', 'utm_zone', 'utmzone', 'zone')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'utm.zone'
+  }
+  
+  # Vertical location (canonical name: zdata)
+  options <- c('Zdata', 'ZDATA', 'z', 'Z', 'height-raw', 'height_raw', 'height.raw')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'zdata'
+  }
+  
+  # Latitude (canonical name: lat)
+  options <- c('Lat', 'LAT', 'location_lat', 'Location_lat', 'LOCATION_LAT',
+               'location-lat', 'Location-lat', 'LOCATION-LAT', 'location.lat',
+               'Location.lat', 'LOCATION.LAT', 'latitude', 'Latitude', 'LATITUDE')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'lat'
+  }
+  
+  # Longitude (canonical name: long)
+  options <- c('Long', 'LONG', 'location_long', 'Location_long',
+               'LOCATION_LONG', 'location-long', 'Location-long', 'LOCATION-LONG',
+               'location.long', 'Location.long', 'LOCATION.LONG', 'longitude',
+               'Longitude', 'LONGITUDE')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'long'
+  }
+  
+  # Time (canonical name: time)
+  options <- c('t', 'T',
+               'Time', 'TIME',
+               'timestamp', 'Timestamp', 'TIMESTAMP',
+               'date', 'Date', 'DATE',
+               'datetime', 'DateTime', 'DATETIME',
+               'date_time', 'Date_Time', 'DATE_TIME')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'time'
+  }
+  
+  # Cummulative time (canonical name: cummultime)
+  options <- c('CummulTime', 'CUMMULTIME')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'cummultime'
+  }
+  
+  # animal identifier (canonical name: id)
+  options <- c('Id', 'ID',
+               'identifier', 'Identifier', 'IDENTIFIER',
+               'individual-local-identifier', 'individual_local_identifier', 'individual.local.identifier',
+               'local-identifier', 'local_identifier', 'local.identifier')
+  for (opt in options) {
+    names(gpsdata)[names(gpsdata) == opt] <- 'id'
+  }
+  
+  #### If cummultime and time are both present, delete time and rename cummultime to time
+  #### If cummultime is present and time absent, just rename cummultime to time
+  
+  if ("cummultime" %in% colnames(gpsdata)) {
+    if ("time" %in% colnames(gpsdata)) {
+      # Not sure why "gpsdata['time'] <- NULL" doesn't work here
+      # Therefore have to use following bit of code
+      gpsdata <- gpsdata[ , !(names(gpsdata) %in% c("time"))]
+    }
+    names(gpsdata)[names(gpsdata) == 'cummultime'] <- 'time'
+  }
+  
+  #### Test that data set has the required columns - time plus complete spatial coordinates
+  #### No longer testing for UTM zone since it's entered from GUI
+  
+  if ("time" %in% colnames(gpsdata) &&
+      ( ("x" %in% colnames(gpsdata) && "y" %in% colnames(gpsdata)) ||
+        ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) ||
+        ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
+    # All is good
+  } else {
+    return(list(NULL,
+                "Missing required columns; must have time and lat-long, x-y or UTM",
+                NULL))
+  }
+  
+  #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
+  #### Set timezone to UTC to avoid daylight savings time ambiguities
+  
+  if (!is.numeric(gpsdata$time)) {
+    gpsdata$time <- unclass(as.POSIXct(gpsdata$time,
+                                       tryFormats = c("%m/%e/%y %H:%M", "%Y-%m-%d %H:%M:%S"),
+                                       tz="UTC")) / 60
+  }
+  
+  #### Add an 'id' column if it doesn't already exist and convert to string
+  #### Handing as string adds flexibility since not all data sets will use
+  #### integers to label animals
+  
+  if (!"id" %in% colnames(gpsdata)) {
+    gpsdata['id'] <- 1
+  }
+  gpsdata$id <- as.character(gpsdata$id)
+  
+  #### Generate UTM coordinates from lat-long
+  
+  # If we have lat-long data without UTM data, do conversion to
+  # UTM using sp package. Note that call to proj4string() gives
+  # warning message: In showSRID(uprojargs, format = "PROJ",
+  # multiline = "NO", prefer_proj = prefer_proj) : Discarded datum
+  # Unknown based on WGS84 ellipsoid in Proj4 definition
+  
+  if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
+     (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata))) {
+    
+    # Determine the UTM zone
+    # See https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
+    utm <- ceiling((180 + min(gpsdata$long))/6)
+    
+    # Extracting latitude and longitude data
+    gpsdata.latlong <- gpsdata[c("lat", "long")]
+    gpsdata.sf <- sf::st_as_sf(gpsdata.latlong, coords = c("long", "lat"), crs = 4326)
+    
+    # Transforming coordinates to UTM
+    crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
+    gpsdata.latlong <- sf::st_transform(gpsdata.sf, crs = crs.str)
+    
+    if ('long' %in% colnames(sf::st_coordinates(gpsdata.latlong))) {
+      gpsdata$utm.easting <- sf::st_coordinates(gpsdata.latlong)[,1]
+    } else {
+      gpsdata$utm.easting <- sf::st_coordinates(gpsdata.latlong)[,1]
+    }
+    
+    if ('lat' %in% colnames(sf::st_coordinates(gpsdata.latlong))) {
+      gpsdata$utm.northing <- sf::st_coordinates(gpsdata.latlong)[,2]
+    } else {
+      gpsdata$utm.northing <- sf::st_coordinates(gpsdata.latlong)[,2]
+    }
+    
+    rm(gpsdata.latlong)
+  
+    utm <- ifelse(base::mean(gpsdata$lat) > 0.0, paste(utm, "N", sep=""), paste(utm, "S", sep=""))
+    gpsdata$utm.zone <- utm
+    
+  }
+  
+  #### Generate list of UTM zones found in data file
+  found.zones <- base::unique(gpsdata$utm.zone)
+  
+  #### Delete the column names that we don't need
+  
+  # This isn't strictly necessary and we may decide to revisit
+  # later, but it can eliminate some confusion over which columns
+  # to subsequently use.
+  
+  canonical <- c('x', 'y', 'xdata', 'ydata', 'zdata', 'id', 'time', 'lat', 'long',
+                 'utm.easting', 'utm.northing', 'utm.zone')
+  for (name in colnames(gpsdata)) {
+    if (!name %in% canonical) {
+      gpsdata[name] <- NULL
+    }
+  }
+  
+  #### Rename UTM or x-y data to xdata and ydata
+  
+  # Having columns named [xy]data simplifies the rest of the data
+  # processing since the we won't need to do tests to see which
+  # columns are available (e.g., do we have UTM or xy?). Use UTM
+  # data if we have it, otherwise use xy
+  
+  if ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) {
+    names(gpsdata)[names(gpsdata) == 'utm.easting'] <- 'xdata'
+    names(gpsdata)[names(gpsdata) == 'utm.northing'] <- 'ydata'
+  } else {
+    names(gpsdata)[names(gpsdata) == 'x'] <- 'xdata'
+    names(gpsdata)[names(gpsdata) == 'y'] <- 'ydata'
+  }
+  
+  #print(summary(gpsdata))
+  return(list(gpsdata, NULL, found.zones))
 }

@@ -35,26 +35,31 @@
 
 library(shiny)
 library(mkde)
-library(raster)
 library(R.utils)
 library(shinyjs)
 library(shinycssloaders)
-library(move)
 library(DT)
-library(ggplot2)
 library(stringr)
+library(ggplot2)
 library(shinyBS)
 library(shinydashboard) # https://rstudio.github.io/shinydashboard/index.html
 library(shinyFiles) # server-side file browser; see https://rdrr.io/cran/shinyFiles/
+library(tools)
+library(ggmap)
+library(terra)
+library(sf)
+library(move2)
+
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
+
 library("readr")
 
 source("compute.R")
 source("loadDataframe.R")
 source("processDataframe.R")
 source("util.R")
-
+source("tests.R")
 
 sessionInfo()
 
@@ -113,7 +118,7 @@ ui <- dashboardPage(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
     ),
-  
+    
     # tags$head(
     #   tags$style(HTML("
     #     .shiny-output-error-validation {
@@ -130,13 +135,13 @@ ui <- dashboardPage(
     
     useShinyjs(), # include shinyjs
     extendShinyjs(text = jscode, functions = c("closeWindow")),
-  
+    
     # titlePanel ( h3 ("Welcome to the Space Use Ecology Gateway!",
     #                  align = "center" )),
     
     # Sidebar layout with input and output definitions ----
     sidebarLayout(
-
+      
       # Sidebar panel for inputs ----
       sidebarPanel(id = "inputs",
         tabsetPanel(id = "controls", type = "tabs",
@@ -318,7 +323,7 @@ ui <- dashboardPage(
         # tags$head(tags$style("#status_log{color:red; font-size:12px; font-style:italic; overflow-y:scroll; max-height: 50px; background: ghostwhite;}"))
         # tags$head(tags$style("#status_log{overflow-y:scroll; max-height: 50px;}"))
       ),
-
+      
       # Main panel for displaying outputs ----
       mainPanel(
         htmlOutput("instructions"),
@@ -334,11 +339,11 @@ ui <- dashboardPage(
           # header = tagList(h1("HEADER")),
           # tabPanel("All", value = 1,
           tabPanel("All",
-            # shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
-            #                              type = 5)
-            DT::dataTableOutput('table_all')
-            ),
-            # tabPanel("Summary", value = 2,
+                   # shinycssloaders::withSpinner(DT::dataTableOutput('table_all'),
+                   #                              type = 5)
+                   DT::dataTableOutput('table_all')
+          ),
+          # tabPanel("Summary", value = 2,
           tabPanel("Summary",
                    # Choose/update units for animal areas
                    # hr(style = "border-top: 1px solid #000000;"),
@@ -373,6 +378,14 @@ server <- function(input, output, session) {
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
   # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
+  
+  
+  ############################################################################
+  # TESTS
+  ############################################################################
+  #test_results <- test_file("tests.R")
+  #print(test_results)
+  
   options(shiny.maxRequestSize=100*1024^2)
   
   pdf(file = NULL)
@@ -394,6 +407,8 @@ server <- function(input, output, session) {
   
   # Global variables
   app_env_path_filename <- paste(Sys.getenv("HOME"), "/.mkde", sep = "")
+  # showNotification(paste("app_env_path_filename =", app_env_path_filename),
+  #                  type = "message", duration = NULL, session = session)
   current_table_selection <- reactiveVal("single")
   gateway_projects_root_path <- "/data/projects"
   #gateway_projects_root_path <- "/tmp/mona"
@@ -427,7 +442,6 @@ server <- function(input, output, session) {
   #                        collapse = " "), duration = NULL, type = "message",
   #                  session = session)
 
-  
   ############################################################################
   # Initialize UI
   
@@ -521,7 +535,7 @@ server <- function(input, output, session) {
         HTML (paste ("<font color=\"#545454\">", tmp$name, "</font>"))
       }})
   
-
+  
   ############################################################################
   # Handle UI events
   
@@ -694,7 +708,6 @@ server <- function(input, output, session) {
   observeEvent(input$load_data_button, {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
-
     output$bbmm_plot <- renderPlot({plot.new()})
     output$mcp_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
@@ -706,7 +719,7 @@ server <- function(input, output, session) {
     gps$rasters <- NULL
     gps$summary <- NULL
     shinyjs::show("instructions")
-
+    
     if (input$data_source == 'Gateway') {
       file <- parseFilePaths(gateway_volumes, input$gateway_browse)
       filename <- file$name
@@ -763,7 +776,7 @@ server <- function(input, output, session) {
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
     }
-
+    
     data <- results[[1]]
     # print(paste("filename =", filename))
     # print(paste("id = ", id))
@@ -782,7 +795,7 @@ server <- function(input, output, session) {
       rm(results)
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
-
+      
       id <- "preprocessing"
       message <- "Preprocessing data..."
       showNotification(message, id = id, type = "message", duration = NULL,
@@ -906,7 +919,7 @@ server <- function(input, output, session) {
     }
     runjs (paste0 ("document.getElementById('max_time').style.border ='", color,
                    "'"))
-
+    
     if (!is.numeric (input$cellsize) || input$cellsize <= 0) {
       color <- "solid #FF0000"
     } else {
@@ -1009,7 +1022,6 @@ server <- function(input, output, session) {
   # table_summary_data <- eventReactive (gps$summary, {
   table_summary_data <- reactive({
     shinyjs::show ("tables")
-
     DT::datatable(
       gps$summary[], extension = "Buttons",
       caption="Tip: you can do multi-column sorting by shift clicking on the columns",
@@ -1066,7 +1078,7 @@ server <- function(input, output, session) {
   observeEvent(input$bbmm_plot_btn, {
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
-
+    
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     raster <- NULL
@@ -1101,7 +1113,7 @@ server <- function(input, output, session) {
       # print(paste("rasters length =", length(rasters)))
       gps$rasters <- rasters
       # print(paste("gps$rasters length =", length(gps$rasters)))
-
+      
       # Now show the save output UI
       shinyjs::show("save_files")
     }
@@ -1115,7 +1127,7 @@ server <- function(input, output, session) {
         message <- paste("Calculating space use...")
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
-        results <- createContour(raster, probs, input$zone, input$datum)
+        results <- createContour(raster, probs, input$zone, input$datum, input$mkde_buffer)
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 3, session = session)
         
@@ -1132,16 +1144,20 @@ server <- function(input, output, session) {
           output$bbmm_plot <- renderPlot({results[[1]]$map})
         } else {
           cont <- results[[1]]$contour
+          sf_contour <- terraToContour(results[[1]]$raster, levels = results[[1]]$contour$threshold, crsstr = "+proj=longlat")  
           output$bbmm_plot <- renderPlot({
-            plot(results[[1]]$cut)
-            contour_display <- contour(results[[1]]$raster, add = T,
-                                       levels = cont$threshold, lwd = 1.0,
-                                       drawlabels = FALSE)
+            ggplot(data = sf_contour) +
+              geom_sf(aes(color = base::as.factor(level)), size = 1.0) + 
+              scale_color_viridis_d() + 
+              labs(title = "Contour Plot by Level",
+                   x = "Longitude", y = "Latitude", color = "Level") +
+              theme_minimal() +
+              theme(legend.position = "right")            
             })
         }
       },
       error = function(error_message) {
-        print(paste("error message =", error_message))
+        base::print(paste("error message =", error_message))
         showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
                          duration = NULL, type = "error", session = session)
       },
@@ -1150,7 +1166,7 @@ server <- function(input, output, session) {
       })
     }
   })
-
+  
   observeEvent(input$reset_parameters, {
     shinyjs::reset("variance")
     shinyjs::reset("max_time")
@@ -1167,7 +1183,7 @@ server <- function(input, output, session) {
       summary <- gps$summary
       id <- summary$id[input$table_summary_rows_selected]
     }
-
+    
     mid <- "save_output"
     message <- paste("Saving output files to ", path_home(), "/", input$basename,
                      "* ...", sep = "")
