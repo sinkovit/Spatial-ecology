@@ -59,6 +59,25 @@ contains <- function(haystack, needle) {
 }
 
 
+# Get all the projects from the given root and append "/files" since that's how
+# Hubzero store the files for each project
+GetProjects <- function(root, session) {
+  if (dir.exists(root)) {
+    dirs <- list.dirs(root, full.names = FALSE, recursive = FALSE)
+    projects = c()
+    for (i in 1:length(dirs)) {
+      volume_name <- dirs[i]
+      files_path <- paste(root, "/", dirs[i], "/files", sep = "")
+      if (dir.exists(files_path)) {
+        projects[volume_name] = files_path
+        # print(projects)
+      }
+    }
+    return (projects)
+  } else
+    return(NULL)
+}
+
 # Returns TRUE of the parameter is NULL, a string with no non-space characters,
 # or length < 1; otherwise returns FALSE
 isEmpty <- function(x) {
@@ -121,9 +140,9 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
 
 # Read the Stadia map API key file, remove newline if any is present, and setup
 # session with the key. Unfortunately there is no way to test if the api key is
-# valid or not.  If the key is not valid, the error
-# "Error in curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input to a URL function"
-# will be caught at plot run-time
+# valid or not.  If the key is not valid, the error "Error in
+# curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input
+# to a URL function" will be caught at plot run-time
 setupAPIkey <- function() {
   filename <- "api.key"
   key <- read_file(filename)

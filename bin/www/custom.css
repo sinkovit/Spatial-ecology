@@ -50,6 +50,19 @@
   float: left;
 }
 
+.dataTables_scrollHeadInner {
+  /*
+  box-sizing: content-box;
+  padding-right: 0px;
+  width: 290px;
+  */
+  margin: auto;
+}
+
+.fa-power-off:before {
+  color: white;
+}
+
 /*
 #gateway_browse_button {
   padding:0px;
@@ -124,7 +137,7 @@
   bottom: auto;
   font-weight: bold;
   position: absolute;
-  top: 120px;
+  top: 100px;
   width: 60%;
 }
 

@@ -83,8 +83,8 @@ animalAttributes <- function(data_df, areaUnits) {
   
   animals <- base::as.list(sort(base::unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
-  areaString <- paste("Area (", areaUnits, ")", sep="")
-  
+  areaString <- paste("MCP Area (", areaUnits, ")", sep="")
+
   result <- data.frame(id = numeric())
   result[, 'Easting (min)'] <- numeric()
   result[, 'Easting (max)'] <- numeric()
@@ -155,10 +155,6 @@ animalAttributes <- function(data_df, areaUnits) {
     return(NULL)
     
   })
-  
-  base::print("leaving animalAttributes()")
-  return(result)
-  
 }
 
 # Calculate rasters for each indivdual in a dataframe using mkde
