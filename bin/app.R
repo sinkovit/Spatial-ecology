@@ -217,8 +217,8 @@ ui <- dashboardPage(
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
             radioButtons("display", label = "Display",
-                         choices = list("MCP polygon & telemetry points",
-                                        "Telemetry points only")),
+                         choices = list("MCP polygon & telemetry points" = "both",
+                                        "Telemetry points only" = "points")),
             tags$strong(id = "mcp_zoom_label", "Display zoom (meters):"),
             bsTooltip(id = "mcp_zoom_label", placement = "right",
                       title = "Brownian Bridge buffer"),
@@ -401,7 +401,7 @@ server <- function(input, output, session) {
                      duration = 3, session = session)
   },
   error = function(e) {
-    showNotification(paste(message, "system error: unable to plot!"),
+    showNotification(paste(message, "system error: unable to find API key!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
   
@@ -1061,7 +1061,7 @@ server <- function(input, output, session) {
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     mode <- TRUE
-    if (input$display == "Points only")
+    if (input$display == "points")
       mode <- FALSE
     
     mid <- "plot_mcp"
