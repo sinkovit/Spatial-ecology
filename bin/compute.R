@@ -155,6 +155,9 @@ animalAttributes <- function(data_df, areaUnits) {
     return(NULL)
     
   })
+  
+  base::print("leaving animalAttributes()")
+  return(result)
 }
 
 # Calculate rasters for each indivdual in a dataframe using mkde
