@@ -1127,7 +1127,7 @@ server <- function(input, output, session) {
         message <- paste("Calculating space use...")
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
-        results <- createContour(raster, probs, input$zone, input$datum, input$mkde_buffer)
+        results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 3, session = session)
         
