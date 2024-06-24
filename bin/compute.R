@@ -74,7 +74,7 @@ animalAttributes <- function(data_df, areaUnits) {
   
   convertArea <- function(area, units) {
     switch(units,
-           "km" = area / (10^6),    
+           "km2" = area / (10^6),    
            "m" = area,              
            "ha" = area / (10^4),    
            area                     
@@ -108,7 +108,6 @@ animalAttributes <- function(data_df, areaUnits) {
       y_range <- y_minmax[2] - y_minmax[1]
       t_range <- t_minmax[2] - t_minmax[1]
       
- 
       area <- area.convexhull(hull.points)
       
       if (is.na(area)) {
@@ -118,7 +117,6 @@ animalAttributes <- function(data_df, areaUnits) {
       }
       
       area <- convertArea(area, areaUnits)
-      
       area.str <- as.character(area)  
       
       row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area.str)
@@ -156,7 +154,7 @@ animalAttributes <- function(data_df, areaUnits) {
     
   })
   
-  base::print("leaving animalAttributes()")
+  #base::print("leaving animalAttributes()")
   return(result)
 }
 
