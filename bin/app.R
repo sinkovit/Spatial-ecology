@@ -49,6 +49,7 @@ library(ggmap)
 library(terra)
 library(sf)
 library(move2)
+library(keyring)  # used by move2
 
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
@@ -161,6 +162,10 @@ ui <- dashboardPage(
               textInput("movebank_username", "Movebank username"),
               passwordInput("movebank_password", "Password"),
               textInput("movebank_studyid", "Study ID"),
+              div(style = "display: inline-block;vertical-align:sub;",
+                  checkboxInput("movebank_outliers", NULL, value=TRUE)),
+              div(style = "display: inline-block;",
+                  tags$strong(id = "movebank_outlierslabel", "Remove outliers")),
               # checkboxInput("save_movebank_button",
               #   "Save/download Movebank data"
               # ),
@@ -732,7 +737,7 @@ server <- function(input, output, session) {
       basename <- basename[1]
     } else if (input$data_source == 'Movebank') {
       shinyjs::hide("download_movebank_data_button")
-      
+
       # Save the info entered by user and then load data from Movebank
       write_file(paste("MovebankUsername=", input$movebank_username,
                        "\nMovebankPassword=", input$movebank_password,
@@ -741,7 +746,7 @@ server <- function(input, output, session) {
                  app_env_path_filename)
       showNotification("Saved your Movebank credential", type = "message",
                        duration = 3, session = session)
-      
+
       filename <- input$movebank_studyid
       id <- "load_movebank"
       message <- "Accessing Movebank..."
@@ -749,14 +754,15 @@ server <- function(input, output, session) {
                        session = session)
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
-                                     study = input$movebank_studyid)
+                                     study = input$movebank_studyid,
+                                     remove_outliers = input$movebank_outliers)
       basename <- input$movebank_studyid
       # updateTextInput(session, "save_movebank_filename",
       #                 value = paste("movebank-", input$movebank_studyid, ".csv",
       #                               sep = ""))
       shinyFileSave(input, "save_movebank_to_gateway_button", session = session,
                     roots = gateway_volumes)
-      
+
       # even though we've updated the Filename field above, it doesn't update
       # UI until later so we can't show these buttons now or else the Filename
       # is blank
@@ -776,101 +782,125 @@ server <- function(input, output, session) {
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
     }
-    
+
     data <- results[[1]]
+    # print(paste("data dim :", dim(data)))
+    # print(paste("data row names :", rownames(data)))
+    # print(paste("data column names :", colnames(data)))
+    # print(paste("data summary =", summary(data)))
+    # print(paste("data class =", class(data)))
+    # print(paste("data str =", str(data)))
     # print(paste("filename =", filename))
     # print(paste("id = ", id))
     # print(paste("data nrow =", nrow(data)))
     # print(paste("basename = ", basename))
+    # print(paste("results[1] =", results[[1]]))
     # print(paste("results[2] =", results[[2]]))
-    if (length(results[[2]] > 0)) {
+    if (isEmpty(data)) {
       removeNotification(id = id, session = session)
       showNotification(paste("Error", filename, ":", results[[2]]),
                        duration = NULL, type = "error", session = session)
     } else {
       showNotification(paste(message, "done"), duration = 3, id = id,
                        type = "message", session = session)
+      if (length(results[[2]] > 0 )) {
+        showNotification(results[[2]], duration = 3, type = "message",
+                         session = session)
+      }
       updateTextInput(session, "basename", value = basename)
       
       rm(results)
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
-      
+
       id <- "preprocessing"
       message <- "Preprocessing data..."
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
-      results <- preprocessDataframe(data)
-      showNotification(paste(message, "done"), id = id, type = "message", 
-                       duration = 3, session = session)
-      # shiny::validate(need(is.null(results[[2]]), results[[2]]))
-      if (! is.null(results[[2]])) {
-        showNotification(paste("Error :", results[[2]]), duration = NULL,
-                         type = "error", session = session)
-        shiny::validate(need(is.null(results[[2]]), results[[2]]))
-      }
-      
-      data <- results[[1]]
-      gps$data <- results[[1]]
-      gps$original <- results[[1]]
-      
+
       continue <- TRUE
-      
-      # printf("Calculating spatial attributes...")
-      # display_log("* Calculating spatial attributes...", FALSE)
-      id <- "attributes"
-      message <- "Calculating spatial attributes..."
+      results <- NULL
       tryCatch({
-        showNotification(message, id = id, type = "message", duration = NULL,
-                         session = session)
-        data <- animalAttributes(data, input$areaUnits)
-        showNotification(paste(message, "done"), id = id, type = "message",
+        results <- preprocessDataframe(data)
+        showNotification(paste(message, "done"), id = id, type = "message", 
                          duration = 3, session = session)
       },
       error = function(e) {
-        showNotification(paste("Error :", e$message), id = id,
-                         duration = NULL, type = "error", session = session)
-        continue <<- FALSE
+        showNotification(paste(message, e), id = id, type = "error",
+                         duration = NULL, session = session)
+        continue <- FALSE
       })
-      gps$summary <- data
-      shinyjs::show("tables")
-      
-      if (input$data_source == 'Movebank') {
-        # print(paste("save_movebank_filename =", input$save_movebank_filename))
-        # print(paste("basename =", basename))
-        # tmp <- paste("movebank-", input$movebank_studyid, ".csv", sep = "")
-        # print(paste("tmp = ", tmp))
-        #js$updateSaveMovebankFilename(tmp)
-        # runjs(sprintf("
-        #   var saveButton = $('#save_movebank_to_gateway_button');
-        #   saveButton.attr('nwsaveas', '%s');", tmp))
-        # shinyjs::show("save_movebank_button")
-        # shinyjs::show("old_save_movebank_data_button")
-        shinyjs::show("save_movebank_to_gateway_button")
-        shinyjs::hide("download_movebank_data_button")
-        # paste("movebank-", input$movebank_studyid, ".csv",
-        #       sep = "")
-      }
-      
+
       if (continue) {
-        # Upate UI elements
-        showTab(inputId = "controls", target = "MCP", session = session)
-        showTab(inputId = "controls", target = "BBMM", session = session)
-        output$instructions <- renderUI(
-          tagList(h4("Next, select the plot type you want..."),
-                  tags$ul(tags$li("MCP = Minimum Convex Polygon"),
-                          tags$li("BBMM = Brownian Bridge Movement Model")
-                  ),
-                  tags$br(),
-                  tags$br(),
-                  tags$br(),
-                  # tags$hr(style = "border-top: 2px solid #000000;")
+
+        # shiny::validate(need(is.null(results[[2]]), results[[2]]))
+        if (! is.null(results[[2]])) {
+          showNotification(paste("Error :", results[[2]]), duration = NULL,
+                           type = "error", session = session)
+          shiny::validate(need(is.null(results[[2]]), results[[2]]))
+        }
+
+        data <- results[[1]]
+        gps$data <- results[[1]]
+        gps$original <- results[[1]]
+        
+        continue <- TRUE
+        
+        # display_log("* Calculating spatial attributes...", FALSE)
+        id <- "attributes"
+        message <- "Calculating spatial attributes..."
+        tryCatch({
+          showNotification(message, id = id, type = "message", duration = NULL,
+                           session = session)
+          data <- animalAttributes(data, input$areaUnits)
+          showNotification(paste(message, "done"), id = id, type = "message",
+                           duration = 3, session = session)
+        },
+        error = function(e) {
+          showNotification(paste("Error :", e$message), id = id,
+                           duration = NULL, type = "error", session = session)
+          continue <<- FALSE
+        })
+        gps$summary <- data
+        shinyjs::show("tables")
+        
+        if (input$data_source == 'Movebank') {
+          # print(paste("save_movebank_filename =", input$save_movebank_filename))
+          # print(paste("basename =", basename))
+          # tmp <- paste("movebank-", input$movebank_studyid, ".csv", sep = "")
+          # print(paste("tmp = ", tmp))
+          #js$updateSaveMovebankFilename(tmp)
+          # runjs(sprintf("
+          #   var saveButton = $('#save_movebank_to_gateway_button');
+          #   saveButton.attr('nwsaveas', '%s');", tmp))
+          # shinyjs::show("save_movebank_button")
+          # shinyjs::show("old_save_movebank_data_button")
+          shinyjs::show("save_movebank_to_gateway_button")
+          shinyjs::hide("download_movebank_data_button")
+          # paste("movebank-", input$movebank_studyid, ".csv",
+          #       sep = "")
+        }
+        
+        if (continue) {
+          # Upate UI elements
+          showTab(inputId = "controls", target = "MCP", session = session)
+          showTab(inputId = "controls", target = "BBMM", session = session)
+          output$instructions <- renderUI(
+            tagList(h4("Next, select the plot type you want..."),
+                    tags$ul(tags$li("MCP = Minimum Convex Polygon"),
+                            tags$li("BBMM = Brownian Bridge Movement Model")
+                    ),
+                    tags$br(),
+                    tags$br(),
+                    tags$br(),
+                    # tags$hr(style = "border-top: 2px solid #000000;")
+            )
           )
-        )
-        showTab("tables", target = "All", session = session)
-        shinyjs::show("areaUnitsDiv")
-        updateTabsetPanel(session, "tables", selected = "Summary")
-        # shinyjs::show("tables")
+          showTab("tables", target = "All", session = session)
+          shinyjs::show("areaUnitsDiv")
+          updateTabsetPanel(session, "tables", selected = "Summary")
+          # shinyjs::show("tables")
+        }
       }
     }
   })
@@ -1068,9 +1098,14 @@ server <- function(input, output, session) {
     message <- paste("Creating MCP...")
     showNotification(message, id = mid, type = "message", duration = NULL,
                      session = session)
-    output$mcp_plot <-
-      renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
-                                   id, mode)})
+    # break the following line into 2 calls to minimize duration betwee "done"
+    # message and the plot showing up
+    # output$mcp_plot <-
+    #   renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
+    #                                id, mode)})
+    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
+                            id, mode)
+    output$mcp_plot <- renderPlot(map)
     showNotification(paste(message, "done"), id = mid, type = "message",
                      duration = 3, session = session)
   })
@@ -1128,6 +1163,7 @@ server <- function(input, output, session) {
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
         results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
+        #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 3, session = session)
         

@@ -52,9 +52,13 @@
 # --------------------------------------------------------------------
 
 animalAttributes <- function(data_df, areaUnits) {
+  # print("entered animalAttributes()")
+  # print(paste("data_df =", summary(data_df)))
+  # print(paste("areadUnits =", areaUnits))
   printf <- function(...) cat(sprintf(...))
   
   gpsdata <- data_df[, c("xdata", "ydata")]
+  # print(paste("gpsdata =", summary(gpsdata)))
   
   area.convexhull <- function(points) {
     
@@ -80,7 +84,7 @@ animalAttributes <- function(data_df, areaUnits) {
            area                     
     )
   }
-  
+
   animals <- base::as.list(sort(base::unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
   areaString <- paste("MCP Area (", areaUnits, ")", sep="")
@@ -92,24 +96,29 @@ animalAttributes <- function(data_df, areaUnits) {
   result[, 'Northing (max)'] <- character()
   result[, areaString] <- numeric()
   row.index <- 1
-  
+
   tryCatch({
     for (local_id in animals) {
+      # print(paste("local_id =", local_id))
 
       animal.data <- gpsdata[which(data_df$id == local_id), ]
+      # print(paste("animal.data length =", length(animal.data)))
+      # print(paste("animal.data class =", class(animal.data)))
+      # print(paste("head 1 =", head(animal.data[,1])))
+      # print(paste("head 2 =", head(animal.data[,2])))
       
       hull.indices <- chull(animal.data[, 1], animal.data[, 2])
       hull.points <- animal.data[hull.indices, ]
-      
+
       x_minmax <- range(animal.data[, 1])
       y_minmax <- range(animal.data[, 2])
       t_minmax <- range(data_df[which(data_df$id == local_id), "time"])
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
       t_range <- t_minmax[2] - t_minmax[1]
-      
+
       area <- area.convexhull(hull.points)
-      
+
       if (is.na(area)) {
         
         area <- 0  
@@ -117,8 +126,8 @@ animalAttributes <- function(data_df, areaUnits) {
       }
       
       area <- convertArea(area, areaUnits)
-      area.str <- as.character(area)  
-      
+      area.str <- as.character(area)
+
       row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area.str)
       row.tail = c()
       
@@ -444,10 +453,10 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
     zoom = 8
   }
   
-  printf(paste("x:", xmin, ",", xmax, "\n"))
-  printf(paste("y:", ymin, ",", ymax, "\n"))
-  printf(paste("area:", area, "\n"))
-  printf(paste("zoom:", zoom, "\n"))
+  # printf(paste("x:", xmin, ",", xmax, "\n"))
+  # printf(paste("y:", ymin, ",", ymax, "\n"))
+  # printf(paste("area:", area, "\n"))
+  # printf(paste("zoom:", zoom, "\n"))
   gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymin)
   gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmin, ymax)
   gpsdata.sf[base::nrow(gpsdata.sf)+1,] = list("dummy", xmax, ymin)
@@ -460,10 +469,10 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   # Transform the coordinate reference system (CRS)
   gpsdata.sfgeo <- st_transform(gpsdata.sf, crs = "+proj=longlat") 
   
-  base::print(min(st_coordinates(gpsdata.sfgeo)[, 1]))
-  base::print(min(st_coordinates(gpsdata.sfgeo)[, 2]))
-  base::print(max(st_coordinates(gpsdata.sfgeo)[, 1]))
-  base::print(max(st_coordinates(gpsdata.sfgeo)[, 2]))
+  # base::print(min(st_coordinates(gpsdata.sfgeo)[, 1]))
+  # base::print(min(st_coordinates(gpsdata.sfgeo)[, 2]))
+  # base::print(max(st_coordinates(gpsdata.sfgeo)[, 1]))
+  # base::print(max(st_coordinates(gpsdata.sfgeo)[, 2]))
   
   # Get the base map
   mybasemap <- get_stadiamap(bbox = c(left = min(st_coordinates(gpsdata.sfgeo)[, 1]),
