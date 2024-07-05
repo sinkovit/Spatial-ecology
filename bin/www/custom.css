@@ -145,6 +145,10 @@
   background-color: transparent;
 }
 
+#save_to_gateway_panel {
+  display: inline;
+}
+
 #shiny-notification-panel {
   bottom: auto;
   font-weight: bold;
