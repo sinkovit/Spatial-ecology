@@ -57,13 +57,13 @@
 # populated; if there is an error message, then data = NULL
 
 preprocessDataframe <- function(gpsdata) {
-  
+
   #### Rename column names to conform to canonical names
   
   # Horizontal coordinates (canonical name: x and y)
   names(gpsdata)[names(gpsdata) == 'X'] <- 'x'
   names(gpsdata)[names(gpsdata) == 'Y'] <- 'y'
-  
+
   # Horizontal UTM coordinates (canonical name: utm.[easting|northing])
   names(gpsdata)[names(gpsdata) == 'utm-easting'] <- 'utm.easting'
   names(gpsdata)[names(gpsdata) == 'utm_easting'] <- 'utm.easting'
@@ -140,12 +140,13 @@ preprocessDataframe <- function(gpsdata) {
     }
     names(gpsdata)[names(gpsdata) == 'cummultime'] <- 'time'
   }
-  
+
   #### Test that data set has the required columns - time plus complete spatial coordinates
   #### No longer testing for UTM zone since it's entered from GUI
   
   if ("time" %in% colnames(gpsdata) &&
       ( ("x" %in% colnames(gpsdata) && "y" %in% colnames(gpsdata)) ||
+        ("xdata" %in% colnames(gpsdata) && "ydata" %in% colnames(gpsdata)) ||
         ("utm.easting" %in% colnames(gpsdata) && "utm.northing" %in% colnames(gpsdata)) ||
         ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
     # All is good
@@ -154,7 +155,7 @@ preprocessDataframe <- function(gpsdata) {
                 "Missing required columns; must have time and lat-long, x-y or UTM",
                 NULL))
   }
-  
+
   #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
   #### Set timezone to UTC to avoid daylight savings time ambiguities
   
@@ -214,7 +215,7 @@ preprocessDataframe <- function(gpsdata) {
     gpsdata$utm.zone <- utm
     
   }
-  
+
   #### Generate list of UTM zones found in data file
   found.zones <- base::unique(gpsdata$utm.zone)
   
@@ -231,7 +232,7 @@ preprocessDataframe <- function(gpsdata) {
       gpsdata[name] <- NULL
     }
   }
-  
+
   #### Rename UTM or x-y data to xdata and ydata
   
   # Having columns named [xy]data simplifies the rest of the data

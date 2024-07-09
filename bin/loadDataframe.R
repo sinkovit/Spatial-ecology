@@ -39,21 +39,21 @@
 
 loadDataframeFromFile <- function(file) {
   ext <- file_ext(file)
-  # print(paste("ext =", ext))
-  
+
   if (ext != "csv" && ext != "txt") {
     return(list(NULL,
                 paste("Unknown file extension .", ext,
                       "; only files with .csv or .txt are accepted", sep = "")))
   }
   else if (ext == "csv") { 
-    gpsdata <- read.csv(file, header=TRUE)
+    gpsdata <- read.csv(file, header = TRUE, row.names = 1)
   } else if (ext == "txt") {
     gpsdata <- read.table(file, header=TRUE)
   }
   # print(paste("gpsdata :", summary(gpsdata)))
-  # print(paste("length =", length(gpsdata)))
-  # print(paste("nrow =", nrow(gpsdata)))
+  # print(paste("gpsdata length =", length(gpsdata)))
+  # print(paste("gpsdata nrow =", nrow(gpsdata)))
+  # print(paste("gpsdata colnames =", colnames(gpsdata)))
   
   if (base::nrow(gpsdata) < 1) {
     return(list(NULL, paste("No data found in file")))
