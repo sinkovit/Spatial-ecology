@@ -396,8 +396,8 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
     x1 <-  coords$Y[which(coords$L1 == gname)]
     y1 <-  coords$X[which(coords$L1 == gname)]
     if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
-      print(abs(x1[1] - x1[length(x1)]))
-      print(abs(y1[1] - y1[length(y1)]))
+      # print(abs(x1[1] - x1[length(x1)]))
+      # print(abs(y1[1] - y1[length(y1)]))
       fits <- FALSE # Contour does not fit on map
     }
   }

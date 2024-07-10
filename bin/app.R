@@ -207,8 +207,8 @@ ui <- dashboardPage(
               condition = "input.data_source_button === 'Your computer' || input.data_source_button === 'Movebank'",
               id = "save_to_gateway_panel",
               shinySaveButton("save_data_to_gateway_button",
-                              label = "Save to gateway", title = "",
-                              filename = "movebank.csv", inline = TRUE)),
+                              label = "Save to gateway", title = "")),
+                              # filename = "movebank.csv", inline = TRUE)),
             conditionalPanel(
               condition = "input.data_source_button === 'Movebank'",
               downloadButton("download_movebank_data_button", "Download file")
@@ -612,7 +612,7 @@ server <- function(input, output, session) {
          (isEmpty(input$movebank_username) || isEmpty(input$movebank_password) ||
           isEmpty(input$movebank_studyid)))) {
       shinyjs::disable("load_data_button")
-      # shinyjs::hide("save_data_to_gateway_button")
+      shinyjs::hide("save_data_to_gateway_button")
     } else {
       shinyjs::enable("load_data_button")
       tmp <- current_data_source()
@@ -628,6 +628,10 @@ server <- function(input, output, session) {
   # user clicks on the dialog's Save button
   observeEvent(input$save_data_to_gateway_button, {
     # print("save_data_to_gateway_button!")
+    # print(paste("save_data_to_gateway_button =", input$save_data_to_gateway_button))
+    # print(paste("class =", class(input$save_data_to_gateway_button)))
+    # print(paste("length =", length(input$save_data_to_gateway_button)))
+    # print(paste("summary =", summary(input$save_data_to_gateway_button)))
     # print(paste("gateway_volumes =", unlist(gateway_volumes), collapse = " "))
     file_info <- parseSavePath(gateway_volumes, input$save_data_to_gateway_button)
     # print(paste("file_info = ", file_info, " has length = ", nrow(file_info)))
@@ -636,17 +640,19 @@ server <- function(input, output, session) {
     # the Save button in the dialog which means file_info will not be empty.
     # From https://stackoverflow.com/a/39519425
     if (nrow(file_info) > 0 ) {
-      # print(paste("datapath =", file_info$datapath))
-      # print(paste("name =", file_info$name))
+      print(paste("datapath =", file_info$datapath))
+      print(paste("name =", file_info$name))
       id <- "save_mb_file"
-      message <- "Saving Movebank data..."
+      message <- "Saving data to gateway..."
       showNotification(message, id = id, type = "message", duration = NULL,
                        session = session)
       tryCatch({
-        path_filename <- file_info$datapath
+        print("here 1")
+        # path_filename <- file_info$datapath
+        # print(paste("path_filename =", path_filename))
         # showNotification(paste("saving Movebank file to", path_filename),
         #                  type = "message", duration = NULL, session = session)
-        result = saveDataframeFromMB(gps$original, path_filename)
+        result = saveDataframe(gps$original, path_filename)
         if (is.null(result))
           showNotification(paste(message,
                                  "done; your file has been saved to the gateway"),
@@ -655,7 +661,7 @@ server <- function(input, output, session) {
         else
           showNotification(paste(message, "error:", result), duration = NULL,
                            id = id, type = "error", session = session)
-        
+
         # now download the saved file
         output$download_movebank_data_button <-
           downloadHandler(filename = file_info$name,
@@ -668,9 +674,10 @@ server <- function(input, output, session) {
         showNotification(paste("Error :", e$message), id = id,
                          duration = NULL, type = "error", session = session)
       })
-      
+
       shinyjs::hide("save_data_to_gateway_button")
-      shinyjs::show("download_movebank_data_button")
+      if (current_data_source() == "Movebank")
+        shinyjs::show("download_movebank_data_button")
     }
   })
   
@@ -745,6 +752,8 @@ server <- function(input, output, session) {
       results = loadDataframeFromFile(input$local_file$datapath)
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
+      shinyFileSave(input, "save_data_to_gateway_button", session = session,
+                    roots = gateway_volumes)
     }
 
     data <- results[[1]]
@@ -774,8 +783,7 @@ server <- function(input, output, session) {
       }
       updateTextInput(session, "basename", value = basename)
       current_data_source(input$data_source_button)
-      print(paste("** current_data_source =", current_data_source()))
-      
+
       rm(results)
       # printf(paste("loaded data # rows =", nrow(data), "; columns :"))
       # print(names(data))
@@ -793,7 +801,11 @@ server <- function(input, output, session) {
                          duration = 3, session = session)
       },
       error = function(e) {
-        showNotification(paste(message, e), id = id, type = "error",
+        error_message <- e[1]
+        if (str_detect(error_message, "missing values in coordinates not allowed")) {
+            error_message <- "Error: data file missing coordinate values!"
+        }
+        showNotification(paste(message, error_message), id = id, type = "error",
                          duration = NULL, session = session)
         continue <- FALSE
       })
@@ -813,7 +825,6 @@ server <- function(input, output, session) {
         
         continue <- TRUE
         
-        # display_log("* Calculating spatial attributes...", FALSE)
         id <- "attributes"
         message <- "Calculating spatial attributes..."
         tryCatch({
@@ -832,7 +843,6 @@ server <- function(input, output, session) {
         shinyjs::show("tables")
         
         if (input$data_source_button == 'Movebank' || input$data_source_button == 'Your computer') {
-          print(paste("save_movebank_filename =", input$save_movebank_filename))
           # print(paste("basename =", basename))
           # tmp <- paste("movebank-", input$movebank_studyid, ".csv", sep = "")
           # print(paste("tmp = ", tmp))
@@ -865,7 +875,6 @@ server <- function(input, output, session) {
           showTab("tables", target = "All", session = session)
           shinyjs::show("areaUnitsDiv")
           updateTabsetPanel(session, "tables", selected = "Summary")
-          # shinyjs::show("tables")
         }
       }
     }
@@ -1129,6 +1138,7 @@ server <- function(input, output, session) {
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
         results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
+        #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 3, session = session)
         

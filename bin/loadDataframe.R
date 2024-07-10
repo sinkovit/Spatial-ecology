@@ -147,12 +147,12 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
 # param data - data frame
 # param filename - local file name
 # return NULL if no problem; otherwise return a user-friendly error message
-saveDataframeFromMB <- function(data, filename) {
+saveDataframe <- function(data, filename) {
   if(!is.data.frame(data))
-    return("Invalid data frame to save!")
+    return("Error: invalid data frame!")
   
   if(isEmpty(filename))
-    return("Invalid filename!")
+    return("Error: invalid filename!")
   
   write.csv(data, filename, row.names = FALSE)
   return(NULL)
