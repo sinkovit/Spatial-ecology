@@ -5,11 +5,13 @@ Space use software deployed in the Spatial Ecology Gateway
 requirement (see Nano Hub's template @
 https://github.com/nanohub-apps/hubtooljupytertemplate).
 * Previous code is in the "Bob" branch.
+* We aim to follow the Tidyverse style guide @ https://style.tidyverse.org/index.html
 
 ### The following R packages are required for this app
 1. DT
 2. ggmap
 3. ggplot2
+3. keyring
 4. mkde
 5. move2
 6. R.utils
