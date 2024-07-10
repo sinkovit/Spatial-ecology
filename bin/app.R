@@ -1129,7 +1129,6 @@ server <- function(input, output, session) {
         showNotification(message, id = mid, type = "message", duration = NULL,
                          session = session)
         results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
-        #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, type = "message",
                          duration = 3, session = session)
         

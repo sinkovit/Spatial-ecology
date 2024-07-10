@@ -389,6 +389,19 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
     geom_polygon(aes(x = X, y = Y, group = paste(L2, L1, sep = "_")), data = coords,
                  alpha = 0.25, linewidth = 0.1, color = "black", fill = "blue")
   
+  tolerance = 0.1
+  
+  # Check to see if contour fits on map
+  for (gname in unique(coords$L1)) {
+    x1 <-  coords$Y[which(coords$L1 == gname)]
+    y1 <-  coords$X[which(coords$L1 == gname)]
+    if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
+      print(abs(x1[1] - x1[length(x1)]))
+      print(abs(y1[1] - y1[length(y1)]))
+      fits <- FALSE # Contour does not fit on map
+    }
+  }
+  
   results <- list(raster = mkde_terra, contour = cont, cut = terra.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
