@@ -393,14 +393,13 @@ server <- function(input, output, session) {
   id <- "api_key"
   message <- "Setting up API key..."
   tryCatch ({
-    showNotification(message, id = id, type = "message", duration = NULL,
-                     session = session)
+    showNotification(message, id = id, duration = NULL, session = session)
     setupAPIkey()
-    showNotification(paste(message, "done"), id = id, type = "message",
-                     duration = 3, session = session)
+    showNotification(paste(message, "done"), id = id, duration = 3,
+                     session = session)
   },
   error = function(e) {
-    showNotification(paste(message, "system error: unable to find API key!"),
+    showNotification(paste(message, "System error: unable to find API key!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
   
@@ -501,8 +500,8 @@ server <- function(input, output, session) {
         else if (s[1] == "MovebankStudyID")
           updateTextInput(session, "movebank_studyid", value = s[2])
       }
-      showNotification("Retrieved your Movebank credential", type = "message",
-                       duration = 3, session = session)
+      showNotification("Retrieved your Movebank credential", duration = 3,
+                       session = session)
     } else {
       file.create(app_env_path_filename)
     }
@@ -640,24 +639,22 @@ server <- function(input, output, session) {
     # the Save button in the dialog which means file_info will not be empty.
     # From https://stackoverflow.com/a/39519425
     if (nrow(file_info) > 0 ) {
-      print(paste("datapath =", file_info$datapath))
-      print(paste("name =", file_info$name))
+      # print(paste("datapath =", file_info$datapath))
+      # print(paste("name =", file_info$name))
       id <- "save_mb_file"
       message <- "Saving data to gateway..."
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
+      showNotification(message, id = id, duration = NULL, session = session)
       tryCatch({
-        print("here 1")
-        # path_filename <- file_info$datapath
+        path_filename <- file_info$datapath
         # print(paste("path_filename =", path_filename))
-        # showNotification(paste("saving Movebank file to", path_filename),
-        #                  type = "message", duration = NULL, session = session)
+        # showNotification(paste(message, path_filename), type = "message",
+        #                  id = id, duration = NULL, session = session)
         result = saveDataframe(gps$original, path_filename)
         if (is.null(result))
-          showNotification(paste(message,
-                                 "done; your file has been saved to the gateway"),
-                           duration = 3, id = id, type = "message",
-                           session = session)
+          showNotification(
+            paste(message, "done; your file has been saved to the gateway at",
+                  path_filename),
+            duration = NULL, id = id, type = "message", session = session)
         else
           showNotification(paste(message, "error:", result), duration = NULL,
                            id = id, type = "error", session = session)
@@ -702,8 +699,7 @@ server <- function(input, output, session) {
       filename <- file$name
       id <- "load_gateway"
       message <- paste("Loading gateway file", filename, "...")
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
+      showNotification(message, id = id, duration = NULL, session = session)
       results = loadDataframeFromFile (file$datapath)
       basename <- strsplit(filename, "\\.")[[1]]
       basename <- basename[1]
@@ -716,14 +712,13 @@ server <- function(input, output, session) {
                        "\nMovebankStudyID=", input$movebank_studyid, "\n",
                        sep = ""),
                  app_env_path_filename)
-      showNotification("Saved your Movebank credential", type = "message",
-                       duration = 3, session = session)
+      showNotification("Saved your Movebank credential", duration = 3,
+                       session = session)
 
       filename <- input$movebank_studyid
       id <- "load_movebank"
       message <- "Accessing Movebank..."
-      showNotification(message, duration = NULL, id = id, type = "message",
-                       session = session)
+      showNotification(message, duration = NULL, id = id, session = session)
       results <- loadDataframeFromMB(username = input$movebank_username,
                                      password = input$movebank_password,
                                      study = input$movebank_studyid,
@@ -747,8 +742,7 @@ server <- function(input, output, session) {
       filename <- input$local_file$name
       id <- "load_your_computer"
       message <- paste("Loading local file", filename, "...")
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
+      showNotification(message, id = id, duration = NULL, session = session)
       results = loadDataframeFromFile(input$local_file$datapath)
       basename <- strsplit(input$local_file$name, "\\.")[[1]]
       basename <- basename[1]
@@ -776,10 +770,9 @@ server <- function(input, output, session) {
       current_data_source(NULL)
     } else {
       showNotification(paste(message, "done"), duration = 3, id = id,
-                       type = "message", session = session)
+                       session = session)
       if (length(results[[2]] > 0 )) {
-        showNotification(results[[2]], duration = 3, type = "message",
-                         session = session)
+        showNotification(results[[2]], duration = 3, session = session)
       }
       updateTextInput(session, "basename", value = basename)
       current_data_source(input$data_source_button)
@@ -790,15 +783,14 @@ server <- function(input, output, session) {
 
       id <- "preprocessing"
       message <- "Preprocessing data..."
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
+      showNotification(message, id = id, duration = NULL, session = session)
 
       continue <- TRUE
       results <- NULL
       tryCatch({
         results <- preprocessDataframe(data)
-        showNotification(paste(message, "done"), id = id, type = "message", 
-                         duration = 3, session = session)
+        showNotification(paste(message, "done"), id = id, duration = 3,
+                         session = session)
       },
       error = function(e) {
         error_message <- e[1]
@@ -828,11 +820,10 @@ server <- function(input, output, session) {
         id <- "attributes"
         message <- "Calculating spatial attributes..."
         tryCatch({
-          showNotification(message, id = id, type = "message", duration = NULL,
-                           session = session)
+          showNotification(message, id = id, duration = NULL, session = session)
           data <- animalAttributes(data, input$areaUnits)
-          showNotification(paste(message, "done"), id = id, type = "message",
-                           duration = 3, session = session)
+          showNotification(paste(message, "done"), id = id, duration = 3,
+                           session = session)
         },
         error = function(e) {
           showNotification(paste("Error :", e$message), id = id,
@@ -1047,12 +1038,11 @@ server <- function(input, output, session) {
     if (!is.null(gps$original)) {
       id <- "recalc"
       message <- "Re-calculating spatial attributes..."
-      showNotification(message, id = id, type = "message", duration = NULL,
-                       session = session)
+      showNotification(message, id = id, duration = NULL, session = session)
       data <- animalAttributes(gps$original, input$areaUnits)
       # printf(paste("data =", data, "\n"))
       showNotification(paste(message, "done"), duration = 3, id = id,
-                       type = "message", session = session)
+                       session = session)
       gps$summary <- data
     }
   })
@@ -1071,8 +1061,7 @@ server <- function(input, output, session) {
     
     mid <- "plot_mcp"
     message <- paste("Creating MCP...")
-    showNotification(message, id = mid, type = "message", duration = NULL,
-                     session = session)
+    showNotification(message, id = mid, duration = NULL, session = session)
     # break the following line into 2 calls to minimize duration betwee "done"
     # message and the plot showing up
     # output$mcp_plot <-
@@ -1081,8 +1070,8 @@ server <- function(input, output, session) {
     map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
                             id, mode)
     output$mcp_plot <- renderPlot(map)
-    showNotification(paste(message, "done"), id = mid, type = "message",
-                     duration = 3, session = session)
+    showNotification(paste(message, "done"), id = mid, duration = 3,
+                     session = session)
   })
   
   observeEvent(input$bbmm_plot_button, {
@@ -1104,12 +1093,11 @@ server <- function(input, output, session) {
       
       mid <- "calculate_raster2d"
       message <- paste("Calculating 2D raster...")
-      showNotification(message, id = mid, type = "message", duration = NULL,
-                       session = session)
+      showNotification(message, id = mid, duration = NULL, session = session)
       raster <- calculateRaster2D(data, id, input$variance, input$max_time,
                                   input$cellsize, input$bbmm_buffer)
-      showNotification(paste(message, "done"), id = mid, type = "message",
-                       duration = 3, session = session)
+      showNotification(paste(message, "done"), id = mid, duration = 3,
+                       session = session)
       
       recalculate_raster(FALSE)
       # print(paste("raster class =", class(raster)))
@@ -1135,12 +1123,11 @@ server <- function(input, output, session) {
         # print(paste("save_bbmm_type:", input$save_bbmm_type))
         mid <- "create_contour"
         message <- paste("Calculating space use...")
-        showNotification(message, id = mid, type = "message", duration = NULL,
-                         session = session)
+        showNotification(message, id = mid, duration = NULL, session = session)
         results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
         #print(paste("results fits =", results[[1]]$fits))
-        showNotification(paste(message, "done"), id = mid, type = "message",
-                         duration = 3, session = session)
+        showNotification(paste(message, "done"), id = mid, duration = 3,
+                         session = session)
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
@@ -1198,12 +1185,11 @@ server <- function(input, output, session) {
     mid <- "save_output"
     message <- paste("Saving output files to ", path_home(), "/", input$basename,
                      "* ...", sep = "")
-    showNotification(message, id = mid, type = "message", duration = NULL,
-                     session = session)
+    showNotification(message, id = mid, duration = NULL, session = session)
     save_output(input$save_bbmm_type, gps$rasters, id, input$zone, input$datum,
                 input$basename)
-    showNotification(paste(message, "done"), id = mid, type = "message",
-                     duration = NULL, session = session)
+    showNotification(paste(message, "done"), id = mid, duration = NULL,
+                     session = session)
   })
   
   # See https://shiny.posit.co/r/reference/shiny/latest/session.html
