@@ -45,8 +45,9 @@ loadDataframeFromFile <- function(file) {
                 paste("Unknown file extension .", ext,
                       "; only files with .csv or .txt are accepted", sep = "")))
   }
-  else if (ext == "csv") { 
-    gpsdata <- read.csv(file, header = TRUE, row.names = 1)
+  else if (ext == "csv") {
+    gpsdata <- read.csv(file, header = TRUE)
+    # gpsdata <- read.csv(file, header = TRUE, row.names = 1)
   } else if (ext == "txt") {
     gpsdata <- read.table(file, header=TRUE)
   }
@@ -153,7 +154,7 @@ saveDataframeFromMB <- function(data, filename) {
   if(isEmpty(filename))
     return("Invalid filename!")
   
-  write.csv(data, filename)
+  write.csv(data, filename, row.names = FALSE)
   return(NULL)
 }
 
