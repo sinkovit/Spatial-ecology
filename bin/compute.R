@@ -158,7 +158,7 @@ animalAttributes <- function(data_df, areaUnits) {
   },
   error = function(error_message) {
     
-    base::print(paste("error_message =", error_message))
+    # base::print(paste("error_message =", error_message))
     return(NULL)
     
   })
@@ -176,11 +176,18 @@ animalAttributes <- function(data_df, areaUnits) {
 # cell.sz - cell size
 # xmin, xmax - min/max x coordinate
 # ymin, ymax - min/max y coordinate
+#
+# returns string if there is an error or a list of rasters if successful
 calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
 
   x <- gpsdata[which(gpsdata$id == id), "xdata"]
   y <- gpsdata[which(gpsdata$id == id), "ydata"]
   t <- gpsdata[which(gpsdata$id == id), "time"]
+  
+  # determine if max time is big enough...
+  min_maxt <- find_minimum_maxt(t)
+  if (min_maxt > t.max)
+    return(paste("Max time must be >=", min_maxt, "for animal id", id))
 
   xmin = min(x) - buffer
   xmax = max(x) + buffer 
@@ -193,13 +200,13 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   nx <- as.integer(xrange/cell.sz)
   ny <- as.integer(yrange/cell.sz)
   
-  base::print(paste("identifier =", id))
-  base::print("Home range dimensions (pixels/voxels)")
-  base::print(paste("nx =", nx, "ny =", ny))
-  base::print("Home range dimensions (meters)")
-  base::print(paste("xrange =", xrange, "yrange =", yrange))
-  base::print(paste("cell size =", cell.sz))
-  base::print("---------------------------------------")
+  # base::print(paste("identifier =", id))
+  # base::print("Home range dimensions (pixels/voxels)")
+  # base::print(paste("nx =", nx, "ny =", ny))
+  # base::print("Home range dimensions (meters)")
+  # base::print(paste("xrange =", xrange, "yrange =", yrange))
+  # base::print(paste("cell size =", cell.sz))
+  # base::print("---------------------------------------")
   
   mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = t.max)
   mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
@@ -291,7 +298,7 @@ terraToContour <- function(terra.obj, levels, crsstr) {
 #
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE) {
-  
+
   # Setting bounds for map and zoom level
   xmin <- min(mkde2d.obj$x)
   ymin <- min(mkde2d.obj$y)
@@ -365,7 +372,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
   
   # Call terraToContour to convert SpatRaster to lat long
   sf_contour <- terraToContour(mkde_terra, cont$threshold, crsstr)
-  
+
   # St_Cast is called to avoid using sfc_GEOMETRY
   gpsdata.sfgeo <- st_cast(st_geometry(sf_contour))
   
@@ -424,6 +431,32 @@ adjustLongByMeters <- function(lon, lat, buffer_meters) {
   buffer_deg_long <- buffer_meters / width_deg_long
   return(lon + buffer_deg_long)
   
+}
+
+# Function to check if there is a run of at least min_rl less than the specified value
+has_consecutive_run <- function(dt, specified_value) {
+  logical_vector <- dt < specified_value
+  rle_result <- rle(logical_vector)
+  min_rl <- 4
+  any(rle_result$values & rle_result$lengths >= min_rl)
+}
+
+# Binary search to find the minimum specified value
+find_minimum_maxt <- function(t) {
+  dt <- diff(t)
+  low <- min(dt)
+  high <- max(dt)
+  
+  while (low+1 < high) {
+    mid <- (low + high) / 2
+    if (has_consecutive_run(dt, mid)) {
+      high <- mid
+    } else {
+      low <- mid + .Machine$double.eps
+    }
+  }
+  
+  return(ceiling(low))
 }
 
 # Input
@@ -534,7 +567,6 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
     # Add the combined convex hull polygons to the map
     mymap <- mymap +
       geom_polygon(data = all_hulls, aes(x = X, y = Y, fill = factor(id), colour = factor(id)), alpha = 0.5)
-    
   }
   
   return(mymap)

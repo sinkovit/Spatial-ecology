@@ -652,7 +652,7 @@ server <- function(input, output, session) {
         result = saveDataframe(gps$original, path_filename)
         if (is.null(result))
           showNotification(
-            paste(message, "done; your file has been saved to the gateway at",
+            paste(message, "done; your file has been saved on the gateway at",
                   path_filename),
             duration = NULL, id = id, type = "message", session = session)
         else
@@ -1082,7 +1082,6 @@ server <- function(input, output, session) {
     id <- summary$id[input$table_summary_rows_selected]
     raster <- NULL
     rasters <- gps$rasters
-    # print(paste("recalculate_raster =", recalculate_raster()))
     if(recalculate_raster())
       rasters <- NULL
     
@@ -1090,40 +1089,47 @@ server <- function(input, output, session) {
       raster <- rasters[[id]]$raster
     } else {
       data <- gps$data
-      
       mid <- "calculate_raster2d"
       message <- paste("Calculating 2D raster...")
       showNotification(message, id = mid, duration = NULL, session = session)
-      raster <- calculateRaster2D(data, id, input$variance, input$max_time,
+      result <- calculateRaster2D(data, id, input$variance, input$max_time,
                                   input$cellsize, input$bbmm_buffer)
-      showNotification(paste(message, "done"), id = mid, duration = 3,
-                       session = session)
-      
-      recalculate_raster(FALSE)
-      # print(paste("raster class =", class(raster)))
-      # print(paste("nrow =", raster::nrow(raster), "; ncol =",
-      #             raster::ncol(raster), "; ncell =", raster::ncell(raster),
-      #             "dim =", dim(raster)))
-      # print(paste("columns :", names(raster)))
-      # print(paste("rasters id =", id))
-      rasters[[id]]$raster <- raster
-      rasters[[id]]$id <- id
-      # print(paste("rasters length =", length(rasters)))
-      gps$rasters <- rasters
-      # print(paste("gps$rasters length =", length(gps$rasters)))
-      
-      # Now show the save output UI
-      shinyjs::show("save_files")
+      if (is.character(result)) {
+        showNotification(paste("Error:", result), id = mid, duration = NULL,
+                         type = "error", session = session)
+        replot_bbmm(FALSE)
+      } else {
+        showNotification(paste(message, "done"), id = mid, duration = 3,
+                         session = session)
+        
+        raster <- result
+        recalculate_raster(FALSE)
+        # print(paste("raster class =", class(raster)))
+        # print(paste("nrow =", raster::nrow(raster), "; ncol =",
+        #             raster::ncol(raster), "; ncell =", raster::ncell(raster),
+        #             "dim =", dim(raster)))
+        # print(paste("columns :", names(raster)))
+        # print(paste("rasters id =", id))
+        rasters[[id]]$raster <- raster
+        rasters[[id]]$id <- id
+        # print(paste("rasters length =", length(rasters)))
+        gps$rasters <- rasters
+        # print(paste("gps$rasters length =", length(gps$rasters)))
+        
+        # Now show the save output UI
+        shinyjs::show("save_files")
+      }
     }
     
     #print(paste("replot_bbmm =", replot_bbmm()))
     if(replot_bbmm()) {
+      mid <- "create_contour"
+      message <- paste("Calculating space use...")
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         # print(paste("save_bbmm_type:", input$save_bbmm_type))
-        mid <- "create_contour"
-        message <- paste("Calculating space use...")
         showNotification(message, id = mid, duration = NULL, session = session)
+        # print(paste("raster :", summary(raster)))
         results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
         #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, duration = 3,
@@ -1156,8 +1162,10 @@ server <- function(input, output, session) {
       },
       error = function(error_message) {
         base::print(paste("error message =", error_message))
-        showNotification("Error: unable to plot; please try adjusting the parameter(s) and Plot again...",
-                         duration = NULL, type = "error", session = session)
+        showNotification(
+          paste(message,
+                "error: unable to plot; please try adjusting the parameter(s)"),
+          id = mid, duration = NULL, type = "error", session = session)
       },
       finally = {
         shinyjs::enable("controls")
