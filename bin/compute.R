@@ -437,7 +437,7 @@ adjustLongByMeters <- function(lon, lat, buffer_meters) {
 has_consecutive_run <- function(dt, specified_value) {
   logical_vector <- dt < specified_value
   rle_result <- rle(logical_vector)
-  min_rl <- 4
+  min_rl <- 5
   any(rle_result$values & rle_result$lengths >= min_rl)
 }
 

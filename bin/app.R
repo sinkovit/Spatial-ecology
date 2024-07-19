@@ -418,6 +418,7 @@ server <- function(input, output, session) {
   gps <- reactiveValues()
   recalculate_raster <- reactiveVal(TRUE)
   replot_bbmm <- reactiveVal(TRUE)
+  set_min_maxt <- reactiveVal(TRUE)
   
   project_paths <- GetProjects(gateway_projects_root_path, session)
   if (! is.null(project_paths)) {
@@ -682,6 +683,7 @@ server <- function(input, output, session) {
   observeEvent(input$load_data_button, {
     # print(paste("gps =", gps))
     # print(paste("gps$rasters =", gps$rasters))
+    set_min_maxt(TRUE)
     output$bbmm_plot <- renderPlot({plot.new()})
     output$mcp_plot <- renderPlot({plot.new()})
     shinyjs::hide("mcp_plot")
@@ -995,6 +997,9 @@ server <- function(input, output, session) {
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
       shinyjs::disable("bbmm_plot_button")
       shinyjs::disable("mcp_plot_button")
+    } else {
+      shinyjs::enable("bbmm_plot_button")
+      shinyjs::enable("mcp_plot_button")
     }
   })
 
@@ -1015,7 +1020,6 @@ server <- function(input, output, session) {
       selection = list(mode = current_table_selection(), target = 'row'))
   })
   
-  # table_summary_data <- eventReactive (gps$summary, {
   table_summary_data <- reactive({
     shinyjs::show ("tables")
     DT::datatable(
@@ -1198,6 +1202,26 @@ server <- function(input, output, session) {
                 input$basename)
     showNotification(paste(message, "done"), id = mid, duration = NULL,
                      session = session)
+  })
+  
+  # If table row selection changed, recalculate the min max t parameter
+  observeEvent(input$table_summary_rows_selected, {
+    if (input$controls == "BBMM" || set_min_maxt()) {
+      summary <- gps$summary
+      id <- summary$id[input$table_summary_rows_selected]
+      data <- gps$data
+      t <- data[which(data$id == id), "time"]
+      min_maxt <- find_minimum_maxt(t)
+      if (input$max_time < min_maxt) {
+        updateNumericInput(session = session, "max_time", value = min_maxt,
+                           min = min_maxt);
+        if (input$controls == "BBMM")
+          showNotification(paste("Updated Max time parameter to the minimum value",
+                                 min_maxt, "for animal ", id), duration = NULL, 
+                           type = "warning", session = session)
+      }
+      set_min_maxt(FALSE)
+    }
   })
   
   # See https://shiny.posit.co/r/reference/shiny/latest/session.html
