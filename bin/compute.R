@@ -239,6 +239,9 @@ mkdeToTerra <- function(mkde.obj) {
     # Assign the flipped matrix to the raster
     terra::values(rst) <- d_flipped
     
+    # print(paste("str =", str(rst)))
+    # print(paste("typeof =", typeof(rst)))
+    # print(paste("attributes =", attributes(rst)))
     return(rst)
     
   } 
@@ -482,14 +485,24 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   
   # Generate the basemap using all data
   gpsdata.sf <- gpsdata[gpsdata$id %in% ids, c("id", "xdata", "ydata")]
-  
+
   # Add rows with buffering
   xmin <- min(gpsdata.sf$xdata) - buffer
   xmax <- max(gpsdata.sf$xdata) + buffer
   ymin <- min(gpsdata.sf$ydata) - buffer
   ymax <- max(gpsdata.sf$ydata) + buffer
-  area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
-  
+  # replacing following area calculation line with separate calculations and if
+  # test to avoid
+  # "NAs produced by integer overflow" error due to (xmax - xmin) * (ymax - ymin)
+  # which allows for larger areas to be calculated
+  # area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
+  x = xmax - xmin
+  y = ymax - ymin
+  if (x > y)
+    area = x / 1000000000.0 * y
+  else
+    area = y / 1000000000.0 * x
+
   # Choose the map zoom based on area
   if (area < 1.0) {
     zoom = 10
@@ -498,7 +511,7 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   } else {
     zoom = 8
   }
-  
+
   # printf(paste("x:", xmin, ",", xmax, "\n"))
   # printf(paste("y:", ymin, ",", ymax, "\n"))
   # printf(paste("area:", area, "\n"))
