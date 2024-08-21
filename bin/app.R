@@ -1145,16 +1145,37 @@ server <- function(input, output, session) {
           output$bbmm_plot <- renderPlot({results[[1]]$map})
         } else {
           cont <- results[[1]]$contour
-          sf_contour <- terraToContour(results[[1]]$raster, levels = results[[1]]$contour$threshold, crsstr = "+proj=longlat")  
+          sf_contour <- terraToContour(results[[1]]$raster, levels = results[[1]]$contour$threshold, crsstr = "+proj=longlat")
+
+          buffer = input$bbmm_buffer
+          gpsdata.sfgeo <- st_cast(st_geometry(sf_contour))
+          coords <- as.data.frame(sf::st_coordinates(gpsdata.sfgeo))
+          
+          coords_split <- split(coords, coords$L2)
+          coords_split <- rev(coords_split)
+          print(names(coords_split))
+          
+          mymap <- ggplot() +
+            theme_minimal() +
+            theme(legend.position = "right",
+                  axis.title.x = element_blank(),  
+                  axis.title.y = element_blank())  
+          
+          for (level in names(coords_split)) {
+            mymap <- mymap +
+              geom_polygon(data = coords_split[[level]],
+                           aes(x = X, y = Y, group = paste(L2, L1, sep = "_"), fill = as.factor(L2)),
+                           alpha = 0.5, linewidth = 0.1, color = "black")
+          }
+          
+          mymap <- mymap +
+            scale_fill_viridis_d() + 
+            labs(fill = "Level") + 
+            coord_fixed()
+          
           output$bbmm_plot <- renderPlot({
-            ggplot(data = sf_contour) +
-              geom_sf(aes(color = base::as.factor(level)), size = 1.0) + 
-              scale_color_viridis_d() + 
-              labs(title = "Contour Plot by Level",
-                   x = "Longitude", y = "Latitude", color = "Level") +
-              theme_minimal() +
-              theme(legend.position = "right")            
-            })
+            mymap
+          })
         }
       },
       error = function(error_message) {
