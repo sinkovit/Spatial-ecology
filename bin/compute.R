@@ -214,7 +214,6 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   mkde.obj <- dens.res$mkde.obj
   
   return (mkde.obj)
-  
 }
 
 # mkdeToTerra converts an mkde object to a SpatRaster
@@ -244,9 +243,7 @@ mkdeToTerra <- function(mkde.obj) {
     # print(paste("attributes =", attributes(rst)))
     return(rst)
     
-  } 
-  
-  else {
+  } else {
     
     # Not able to test this
     stop("Only 2D and 2.5D MKDE objects are supported")
@@ -406,12 +403,10 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
     x1 <-  coords$Y[which(coords$L1 == gname)]
     y1 <-  coords$X[which(coords$L1 == gname)]
     if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
-      # print(abs(x1[1] - x1[length(x1)]))
-      # print(abs(y1[1] - y1[length(y1)]))
       fits <- FALSE # Contour does not fit on map
     }
   }
-  
+
   results <- list(raster = mkde_terra, contour = cont, cut = terra.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
@@ -498,10 +493,11 @@ minConvexPolygon <- function(gpsdata, utm.zone, datum, buffer, ids, include_mcp)
   # area = (xmax-xmin)*(ymax-ymin) / 1000000000.0
   x = xmax - xmin
   y = ymax - ymin
-  if (x > y)
+  if (x > y) {
     area = x / 1000000000.0 * y
-  else
+  } else {
     area = y / 1000000000.0 * x
+  }
 
   # Choose the map zoom based on area
   if (area < 1.0) {

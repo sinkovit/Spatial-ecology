@@ -74,8 +74,9 @@ GetProjects <- function(root, session) {
       }
     }
     return (projects)
-  } else
+  } else {
     return(NULL)
+  }
 }
 
 # Returns TRUE of the parameter is NULL, a string with no non-space characters,

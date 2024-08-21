@@ -44,8 +44,7 @@ loadDataframeFromFile <- function(file) {
     return(list(NULL,
                 paste("Unknown file extension .", ext,
                       "; only files with .csv or .txt are accepted", sep = "")))
-  }
-  else if (ext == "csv") {
+  } else if (ext == "csv") {
     gpsdata <- read.csv(file, header = TRUE)
     # gpsdata <- read.csv(file, header = TRUE, row.names = 1)
   } else if (ext == "txt") {
