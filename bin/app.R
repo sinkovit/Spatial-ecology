@@ -54,7 +54,10 @@ library(keyring)  # used by move2
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 
-library("readr")
+library(readr)
+library(fs)
+library(rayshader)
+library(rgl)
 
 source("compute.R")
 source("loadDataframe.R")
@@ -62,7 +65,7 @@ source("processDataframe.R")
 source("util.R")
 source("tests.R")
 
-sessionInfo()
+#sessionInfo()
 
 # Used to disable
 callback <- c(
@@ -81,6 +84,10 @@ callback <- c(
 
 # Javascript used to close window when user quits app
 jscode <- "shinyjs.closeWindow = function() { window.close(); }"
+
+# # Must be executed BEFORE rgl is loaded on headless devices.
+# # from https://gist.github.com/rpodcast/1a7552d5c6269d2fe488ef072ce64cfb?permalink_comment_id=3083507#gistcomment-3083507
+# options(rgl.useNULL=TRUE)
 
 # Define UI for app
 ui <- dashboardPage(
@@ -152,7 +159,7 @@ ui <- dashboardPage(
             ),
             conditionalPanel(
               condition = "input.data_source_button === 'Gateway'",
-              shinyFilesButton('gateway_browse', label='Browse',
+              shinyFilesButton('gateway_browse', label = 'Browse',
                                title = 'Select your GPS data file',
                                multiple = FALSE, viewtype = "detail"
                                ),
@@ -202,20 +209,23 @@ ui <- dashboardPage(
               ),
             ),
             hr(style = "border-top: 2px solid grey;"),
-            actionButton("load_data_button", label = "Load data", inline = TRUE),
+            actionButton("load_data_button", label = "Load", inline = TRUE),
+            bsTooltip(id = "load_data_button", title = "Load data"),
             conditionalPanel(
               condition = "input.data_source_button === 'Your computer' || input.data_source_button === 'Movebank'",
               id = "save_to_gateway_panel",
-              shinySaveButton("save_data_to_gateway_button",
-                              label = "Save to gateway", title = "")),
+              shinySaveButton("save_data_to_gateway_button", label = "Save",
+                              title = "")),
                               # filename = "movebank.csv", inline = TRUE)),
+            bsTooltip(id = "save_data_to_gateway_button",
+                      title = "Save data to gateway"),
             conditionalPanel(
               condition = "input.data_source_button === 'Movebank'",
               downloadButton("download_movebank_data_button", "Download file")
             )
           ),
           tabPanel(title = "MCP", value = "MCP", tags$br(),
-            radioButtons("display", label = "Display",
+            radioButtons("mcp_show", label = "Show:",
                          choices = list("MCP polygon & telemetry points" = "both",
                                         "Telemetry points only" = "points")),
             tags$strong(id = "mcp_zoom_label", "Display zoom (meters):"),
@@ -223,8 +233,19 @@ ui <- dashboardPage(
                       title = "Brownian Bridge buffer"),
             numericInput("mcp_zoom", label = NULL, value = 100, min = 0,
                          width = "50%"),
+            # tags$strong(id = "mcp_save_label", "Output"),
+            # # textInput("mcp_save_filename", "Filename"),
+            # actionButton("mcp_save_filename", label = NULL),
+            radioButtons("mcp_save_format", label = "Format:", inline = TRUE,
+                         choices = list("BMP" = "bmp", "JPEG" = "jpg",
+                                        "PDF" = "pdf", "PNG" = "png",
+                                        "Postscript" = "ps", "SVG" = "svg",
+                                        "TIFF" = "tiff")),
             hr(style = "border-top: 2px solid grey;"),
             actionButton("mcp_plot_button", label = "Plot"),
+            actionButton("mcp_save_button", label = "Save"),
+            bsTooltip(id = "mcp_save_button",
+                      title = "Save current plot in above output format to your computer"),
           ),
           tabPanel(title = "BBMM", value = "BBMM", tags$br(),
             tags$strong(id = "dimensions_label", "Dimensions:"),
@@ -270,7 +291,15 @@ ui <- dashboardPage(
             hr(style = "border-top: 2px solid grey;"),
 
             actionButton("bbmm_plot_button", label = "Plot"),
-            actionButton("reset_parameters", "Reset parameters"),
+            actionButton("bbmm_submit_button", label = "Submit"),
+            bsTooltip(id = "bbmm_submit_button",
+                      title = "Submit computation to supercomputer"),
+            actionButton("bbmm_save_button", label = "Save"),
+            bsTooltip(id = "bbmm_save_button", placement = "right",
+                      title = "Save current plot to your computer"),
+            actionButton("reset_parameters", "Reset"),
+            bsTooltip(id = "reset_parameters", placement = "right",
+                      title = "Reset above parameters"),
             
             hr(style = "border-top: 2px solid black;"),
             
@@ -331,6 +360,7 @@ ui <- dashboardPage(
         # shinycssloaders::withSpinner(plotOutput("bbmm_plot" ), type = 4),
         plotOutput("mcp_plot" ),
         plotOutput("bbmm_plot"),
+        # rglwidgetOutput("threed_plot"),
 
         tabsetPanel(
           id = "tables",
@@ -399,6 +429,7 @@ server <- function(input, output, session) {
                      session = session)
   },
   error = function(e) {
+    print(paste("e =", e))
     showNotification(paste(message, "System error: unable to find API key!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
@@ -468,7 +499,10 @@ server <- function(input, output, session) {
   })
   
   shinyjs::hide("mcp_plot")
+  shinyjs::hide("mcp_save_format")
+  shinyjs::hide("mcp_save_button")
   shinyjs::hide("bbmm_plot")
+  shinyjs::hide("bbmm_save_button")
   shinyjs::hide("tables")
   shinyjs::hide("save_files")
   shinyjs::hide("save_data_to_gateway_button")
@@ -494,12 +528,13 @@ server <- function(input, output, session) {
                                  progress = TRUE)
       for (i in 1:length(file_content)) {
         s <- str_split_1(file_content[i], "=")
-        if (s[1] == "MovebankUsername")
+        if (s[1] == "MovebankUsername") {
           updateTextInput(session, "movebank_username", value = s[2])
-        else if (s[1] == "MovebankPassword")
+        } else if (s[1] == "MovebankPassword") {
           updateTextInput(session, "movebank_password", value = s[2])
-        else if (s[1] == "MovebankStudyID")
+        } else if (s[1] == "MovebankStudyID") {
           updateTextInput(session, "movebank_studyid", value = s[2])
+        }
       }
       showNotification("Retrieved your Movebank credential", duration = 3,
                        session = session)
@@ -651,14 +686,15 @@ server <- function(input, output, session) {
         # showNotification(paste(message, path_filename), type = "message",
         #                  id = id, duration = NULL, session = session)
         result = saveDataframe(gps$original, path_filename)
-        if (is.null(result))
+        if (is.null(result)) {
           showNotification(
             paste(message, "done; your file has been saved on the gateway at",
                   path_filename),
             duration = NULL, id = id, type = "message", session = session)
-        else
+        } else {
           showNotification(paste(message, "error:", result), duration = NULL,
                            id = id, type = "error", session = session)
+        }
 
         # now download the saved file
         output$download_movebank_data_button <-
@@ -767,7 +803,7 @@ server <- function(input, output, session) {
     # print(paste("results[2] =", results[[2]]))
     if (isEmpty(data)) {
       removeNotification(id = id, session = session)
-      showNotification(paste("Error", filename, ":", results[[2]]),
+      showNotification(paste("Error loading", filename, ":", results[[2]]),
                        duration = NULL, type = "error", session = session)
       current_data_source(NULL)
     } else {
@@ -868,6 +904,9 @@ server <- function(input, output, session) {
           showTab("tables", target = "All", session = session)
           shinyjs::show("areaUnitsDiv")
           updateTabsetPanel(session, "tables", selected = "Summary")
+          updateActionButton(session, "mcp_save_filename",
+                             label = paste(getwd(), basename, ".",
+                                           input$mcp_save_format, sep = ""))
         }
       }
     }
@@ -975,9 +1014,9 @@ server <- function(input, output, session) {
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
         (is.numeric(input$bbmm_buffer) && input$bbmm_buffer < 0)) {
       shinyjs::disable("bbmm_plot_button")
-    }
-    else
+    } else {
       shinyjs::enable("bbmm_plot_button")
+    }
   })
 
   # If no basename nor save bbmm type, then disable save bbmm button
@@ -995,11 +1034,17 @@ server <- function(input, output, session) {
   # Handle no data or no table row selected...
   observe ({
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
-      shinyjs::disable("bbmm_plot_button")
       shinyjs::disable("mcp_plot_button")
+      shinyjs::disable("mcp_save_format")
+      shinyjs::disable("mcp_save_button")
+      shinyjs::disable("bbmm_plot_button")
+      shinyjs::disable("bbmm_save_button")
     } else {
-      shinyjs::enable("bbmm_plot_button")
       shinyjs::enable("mcp_plot_button")
+      shinyjs::enable("mcp_save_format")
+      shinyjs::enable("mcp_save_button")
+      shinyjs::enable("bbmm_plot_button")
+      shinyjs::enable("bbmm_save_button")
     }
   })
 
@@ -1060,22 +1105,65 @@ server <- function(input, output, session) {
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
     mode <- TRUE
-    if (input$display == "points")
+    if (input$mcp_show == "points")
       mode <- FALSE
-    
+
     mid <- "plot_mcp"
     message <- paste("Creating MCP...")
     showNotification(message, id = mid, duration = NULL, session = session)
-    # break the following line into 2 calls to minimize duration betwee "done"
+    # break the following line into 2 calls to minimize duration between "done"
     # message and the plot showing up
     # output$mcp_plot <-
     #   renderPlot({minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
     #                                id, mode)})
-    map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom,
-                            id, mode)
-    output$mcp_plot <- renderPlot(map)
-    showNotification(paste(message, "done"), id = mid, duration = 3,
-                     session = session)
+    tryCatch({
+      map <- minConvexPolygon(data, input$zone, input$datum, input$mcp_zoom, id,
+                              mode)
+      #print(paste("map =", str(map)))
+      # print(paste("map typeof =", typeof(map)))
+      output$mcp_plot <- renderPlot(map)
+      # # ggplot_raster <- inset_ggmap(ggmap = map)
+      # # mat <- raster_to_matrix(ggplot_raster)
+      mat <- as.matrix(map$data)
+      # output$threed_plot <- renderRglwidget({
+      #   try(close3d())
+      #   mat %>%
+      #     height_shade() %>%
+      #     # sphere_shade() %>%
+      #     #sphere_shade(texture = "desert", colorintensity = 10, zscale = 10) %>%
+      #     #lamb_shade() %>%
+      #     #ambient_shade() %>%
+      #     #add_water(detect_water(mat)) %>%
+      #     plot_3d(mat)
+      #   #plot_map(mat) doesn't work, throws "Error in useSubscene3d: Subscene 0 not found."
+      #   #render_snapshot()
+      #   rglwidget()
+      # })
+      showNotification(paste(message, "done"), id = mid, duration = 3,
+                       session = session)
+      shinyjs::show("mcp_save_format")
+      shinyjs::show("mcp_save_button")
+      print("saving mcp plot")
+      pdf("mona_plot.pdf")
+      #plot(mat)
+      plot(map)
+      dev.off()
+    },
+    error = function(e) {
+      showNotification(paste(message,
+                             "error: unable to plot; please try adjusting the zoom parameter..."),
+                       id = mid, type = "error", duration = NULL, session = session)
+    })
+  })
+  
+  observeEvent(input$mcp_save_filename, {
+    print("save mcp save button!")
+    fname <- file.choose(new = TRUE)
+    print(paste("fname =", fname))
+  })
+  
+  observeEvent(input$mcp_save_button, {
+    print("save mcp plot button!")
   })
   
   observeEvent(input$bbmm_plot_button, {
@@ -1088,9 +1176,17 @@ server <- function(input, output, session) {
     rasters <- gps$rasters
     if(recalculate_raster())
       rasters <- NULL
+    print("here 1")
     
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
       raster <- rasters[[id]]$raster
+      # print(paste("raster summary =", summary(raster)))
+      # print(paste("str =", str(raster)))
+      # print(paste("typeof =", typeof(raster)))
+      # print(paste("attributes =", attributes(raster)))
+      # mat <- raster_to_matrix(raster)
+      # print(paste("mat summary =", summary(mat)))
+      # mat %>% height_shade() %>% plot_map()
     } else {
       data <- gps$data
       mid <- "calculate_raster2d"
@@ -1134,13 +1230,18 @@ server <- function(input, output, session) {
         # print(paste("save_bbmm_type:", input$save_bbmm_type))
         showNotification(message, id = mid, duration = NULL, session = session)
         # print(paste("raster :", summary(raster)))
-        results <- createContour(raster, probs, input$zone, input$datum, input$bbmm_buffer)
+        print("here 2")
+        results <- createContour(raster, probs, input$zone, input$datum,
+                                 input$bbmm_buffer)
+        print("here 3")
         #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, duration = 3,
                          session = session)
         
         # can't assign to gps$rasters directly
         rasters <- gps$rasters
+        # print(paste("str 1 =", str(results[[1]])))
+        # print(paste("str 2 =", str(results[[1]]$raster)))
         rasters[[id]]$contours <- results[[1]]
         gps$rasters <- rasters
         
@@ -1149,23 +1250,85 @@ server <- function(input, output, session) {
             showNotification("Warning: not all contours levels fit on the map. Either increase map size by using a larger buffer value or decrease the probability for the outermost contour",
                              duration = NULL, type = "warning", session = session)
           }
+          #print(paste("map =", str(results[[1]]$map)))
           output$bbmm_plot <- renderPlot({results[[1]]$map})
+
+          mat <- raster_to_matrix(results[[1]]$raster)
+          # print(paste("mat 1 =", str(mat)))
+          # print(paste("attributes 1 =", attributes(mat)))
+          
+          # # following doesn't work
+          # output$bbmm_plot <- renderPlot({mat %>% height_shade() %>% plot_map()})
+          # render_snapshot
+
+          # output$threed_plot <- renderRglwidget({
+          #   try(close3d())
+          #   mat %>%
+          #     height_shade() %>%
+          #     # sphere_shade() %>%
+          #     #sphere_shade(texture = "desert", colorintensity = 10, zscale = 10) %>%
+          #     #lamb_shade() %>%
+          #     #ambient_shade() %>%
+          #     #add_water(detect_water(mat)) %>%
+          #     plot_3d(mat)
+          #     #plot_map(mat) doesn't work, throws "Error in useSubscene3d: Subscene 0 not found."
+          #   #render_snapshot()
+          #   rglwidget()
+          # })
         } else {
           cont <- results[[1]]$contour
-          sf_contour <- terraToContour(results[[1]]$raster, levels = results[[1]]$contour$threshold, crsstr = "+proj=longlat")  
-          output$bbmm_plot <- renderPlot({
-            ggplot(data = sf_contour) +
-              geom_sf(aes(color = base::as.factor(level)), size = 1.0) + 
-              scale_color_viridis_d() + 
-              labs(title = "Contour Plot by Level",
-                   x = "Longitude", y = "Latitude", color = "Level") +
-              theme_minimal() +
-              theme(legend.position = "right")            
-            })
+          sf_contour <- terraToContour(results[[1]]$raster,
+                                       levels = results[[1]]$contour$threshold,
+                                       crsstr = "+proj=longlat")
+          # output$bbmm_plot <- renderPlot({
+          #   ggplot(data = sf_contour) +
+          #     geom_sf(aes(color = base::as.factor(level)), size = 1.0) +
+          #     scale_color_viridis_d() +
+          #     labs(title = "Contour Plot by Level",
+          #          x = "Longitude", y = "Latitude", color = "Level") +
+          #     theme_minimal() +
+          #     theme(legend.position = "right")
+          #   })
+          
+          buffer = input$bbmm_buffer
+          gpsdata.sfgeo <- st_cast(st_geometry(sf_contour))
+          coords <- as.data.frame(sf::st_coordinates(gpsdata.sfgeo))
+          
+          coords_split <- split(coords, coords$L2)
+          coords_split <- rev(coords_split)
+          print(names(coords_split))
+          
+          mymap <- ggplot() +
+            theme_minimal() +
+            theme(legend.position = "right",
+                  axis.title.x = element_blank(),  
+                  axis.title.y = element_blank())  
+          
+          for (level in names(coords_split)) {
+            mymap <- mymap +
+              geom_polygon(data = coords_split[[level]],
+                           aes(x = X, y = Y, group = paste(L2, L1, sep = "_"), fill = as.factor(L2)),
+                           alpha = 0.5, linewidth = 0.1, color = "black")
+          }
+          
+          mymap <- mymap +
+            scale_fill_viridis_d() + 
+            labs(fill = "Level") + 
+            coord_fixed()
+          
+          # gplot <- ggplot(data = sf_contour) +
+          #   geom_sf(aes(color = base::as.factor(level)), size = 1.0) +
+          #   scale_color_viridis_d() +
+          #   labs(title = "Contour Plot by Level",
+          #        x = "Longitude", y = "Latitude", color = "Level") +
+          #   theme_minimal() +
+          #   theme(legend.position = "right")
+          # output$bbmm_plot <- renderPlot({gplot})
+          output$bbmm_plot <- renderPlot({mymap})
         }
       },
       error = function(error_message) {
-        base::print(paste("error message =", error_message))
+        #base::print(paste("error message =", error_message))
         showNotification(
           paste(message,
                 "error: unable to plot; please try adjusting the parameter(s)"),
