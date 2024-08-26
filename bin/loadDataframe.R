@@ -94,17 +94,18 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     # # maybe try shiny::invalidateLater()?
     # # save(data, file=file.local)
     # data <- movebank_download_study(study_id=strtoi(study),
-                                    # attributes = c("location_long", "location_lat",
-                                    #                "timestamp"))
-                                    # remove_movebank_outliers=remove_outliers)
+    # attributes = c("location_long", "location_lat",
+    #                "timestamp"))
+    # remove_movebank_outliers=remove_outliers)
     data <- movebank_retrieve(entity_type = 'event', study_id = strtoi(study),
                               remove_movebank_outliers=remove_outliers)
+    print("post data")
     # converting tibble to data.frame
     results <- as.data.frame(data)
     return(list(results, "Your Movebank account info has been saved"))
   },
   error = function(error_message) {
-    # print(paste("error message =", error_message))
+    print(paste("error message =", error_message))
     # message(rlang::last_error()$error)
     # rlang::last_error()$url
     
@@ -113,27 +114,21 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
       # https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study<study_id>
       return(list(NULL,
                   "Please go to Movebank and accept the data license terms, then return here and try again..."))
-    }
-    if (str_detect(error_message[1],
+    } else if (str_detect(error_message[1],
                    "unable to find an inherited method for function ‘getMovebankLocationData’")) {
       return(list(NULL, "Invalid Movebank study ID. Do you have access to this dataset?  Did you agree to the licensing term on Movebank.org?  Is it a test study?"))
-    }
-    if (str_detect(error_message[1], "There are no valid credentials")) {
+    } else if (str_detect(error_message[1], "There are no valid credentials")) {
       return(list(NULL,
                   "Invalid login credential. Please check your username and password or go to Movebank.org and verify your account is valid."))
-    }
-    if (str_detect(error_message[1], "No data are available for download")) {
+    } else if (str_detect(error_message[1], "No data are available for download")) {
       return(list(NULL, "No data available for download."))
-    }
-    if (str_detect(error_message[1], "Timeout was reached")) {
+    } else if (str_detect(error_message[1], "Timeout was reached")) {
       return(list(NULL,
                   "Movebank.org timed out. Please wait a few minutes and try again..."))
-    }
-    if (str_detect(error_message[1], "Empty reply from server")) {
+    } else if (str_detect(error_message[1], "Empty reply from server")) {
       return(list(NULL,
                   "Empty reply from movebank.org server. Please wait a few minutes and try again..."))
-    }
-    if (str_detect(error_message[1], "too close to the limit")) {
+    } else if (str_detect(error_message[1], "too close to the limit")) {
       return(list(NULL, paste("System error (", error_message[1],
                               ").  Please wait a few minutes and try again...")))
     }
