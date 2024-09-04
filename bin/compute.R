@@ -69,7 +69,7 @@ animalAttributes <- function(data_df, areaUnits) {
     }
     
     points <- rbind(points, points[1, ])  
-
+    
     points <- apply(points, 2, as.numeric)
     shoelace.sum <- sum(points[1:(base::nrow(points)-1), 1] * points[2:(base::nrow(points)), 2] - 
                           points[2:(base::nrow(points)), 1] * points[1:(base::nrow(points)-1), 2])
@@ -84,11 +84,11 @@ animalAttributes <- function(data_df, areaUnits) {
            area                     
     )
   }
-
+  
   animals <- base::as.list(sort(base::unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
   areaString <- paste("MCP Area (", areaUnits, ")", sep="")
-
+  
   result <- data.frame(id = numeric())
   result[, 'Easting (min)'] <- numeric()
   result[, 'Easting (max)'] <- numeric()
@@ -96,11 +96,11 @@ animalAttributes <- function(data_df, areaUnits) {
   result[, 'Northing (max)'] <- character()
   result[, areaString] <- numeric()
   row.index <- 1
-
+  
   tryCatch({
     for (local_id in animals) {
       # print(paste("local_id =", local_id))
-
+      
       animal.data <- gpsdata[which(data_df$id == local_id), ]
       # print(paste("animal.data length =", length(animal.data)))
       # print(paste("animal.data class =", class(animal.data)))
@@ -109,16 +109,16 @@ animalAttributes <- function(data_df, areaUnits) {
       
       hull.indices <- chull(animal.data[, 1], animal.data[, 2])
       hull.points <- animal.data[hull.indices, ]
-
+      
       x_minmax <- range(animal.data[, 1])
       y_minmax <- range(animal.data[, 2])
       t_minmax <- range(data_df[which(data_df$id == local_id), "time"])
       x_range <- x_minmax[2] - x_minmax[1]
       y_range <- y_minmax[2] - y_minmax[1]
       t_range <- t_minmax[2] - t_minmax[1]
-
+      
       area <- area.convexhull(hull.points)
-
+      
       if (is.na(area)) {
         
         area <- 0  
@@ -127,7 +127,7 @@ animalAttributes <- function(data_df, areaUnits) {
       
       area <- convertArea(area, areaUnits)
       area.str <- as.character(area)
-
+      
       row <- c(local_id, round(x_minmax[1]), round(x_minmax[2]), round(y_minmax[1]), round(y_minmax[2]), area.str)
       row.tail = c()
       
@@ -166,6 +166,7 @@ animalAttributes <- function(data_df, areaUnits) {
   #base::print("leaving animalAttributes()")
   return(result)
 }
+
 
 # Calculate rasters for each indivdual in a dataframe using mkde
 # package and return the results as a list of rasters
@@ -363,6 +364,7 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
   gpsdata.sf[3,] = list("dummy", xmax, ymin)
   gpsdata.sf[4,] = list("dummy", xmax, ymax)
   
+  print(mkde_terra)
   # Call terraToContour to convert SpatRaster to lat long
   sf_contour <- terraToContour(mkde_terra, cont$threshold, crsstr)
   
@@ -371,6 +373,23 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
   
   # Convert the coordinate data to a dataframe
   coords <- as.data.frame(sf::st_coordinates(gpsdata.sfgeo))
+  
+  tolerance = 0
+  
+  # Create unique identifiers for combinations of L2 and L1
+  coords$group <- with(coords, paste(L2, L1, sep="_"))
+  
+  # Check to see if contour fits on map based on these combinations
+  for (group in unique(coords$group)) {
+    x1 <- coords$Y[coords$group == group]
+    y1 <- coords$X[coords$group == group]
+    
+    if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
+      #print(abs(x1[1] - x1[length(x1)]))  
+      #print(abs(y1[1] - y1[length(y1)]))  
+      fits <- FALSE  
+    }
+  }
   
   # Get the base map
   mean_lat <- base::mean(c(min(coords$Y), max(coords$Y)))
@@ -388,23 +407,12 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
   mymap <- ggmap(mybasemap) +
     geom_polygon(aes(x = X, y = Y, group = paste(L2, L1, sep = "_")), data = coords,
                  alpha = 0.25, linewidth = 0.1, color = "black", fill = "blue")
-  
-  tolerance = 0.1
-  
-  # Check to see if contour fits on map
-  for (gname in unique(coords$L1)) {
-    x1 <-  coords$Y[which(coords$L1 == gname)]
-    y1 <-  coords$X[which(coords$L1 == gname)]
-    if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
-      print(abs(x1[1] - x1[length(x1)]))
-      print(abs(y1[1] - y1[length(y1)]))
-      fits <- FALSE # Contour does not fit on map
-    }
-  }
+
   
   results <- list(raster = mkde_terra, contour = cont, cut = terra.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   
+
   return(list(results, fits))
 
 }
