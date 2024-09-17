@@ -104,8 +104,16 @@
   /*text-indent: 0px;*/
   /*position: relative;*/
   /*float: left;*/
-  width: 73%;
+  width: 60%;
   /*box-sizing: border-box;*/
+}
+
+#load_data_button {
+  margin-right: 10px;
+}
+
+#load_save_container {
+  display: flex;
 }
 
 #local_file_progress {
@@ -122,6 +130,10 @@
   border-bottom: 2px solid black;
 }
 
+.nav-tabs > li {
+  color: black;
+}
+
 .nav-tabs > li.active > a {
   border: 2px solid black;
   font-weight: bold;
@@ -131,6 +143,10 @@
   display: none;
   color: transparent!important;
   background-color: transparent;
+}
+
+#save_to_gateway_panel {
+  display: inline;
 }
 
 #shiny-notification-panel {
