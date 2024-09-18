@@ -419,6 +419,9 @@ server <- function(input, output, session) {
   
   pdf(file = NULL)
   
+  # for checking deployment
+  showNotification("This is a debug check...", duration = NULL, session = session)
+  
   # Setup the Stadiamap API key
   id <- "api_key"
   message <- "Setting up API key..."
@@ -429,7 +432,7 @@ server <- function(input, output, session) {
                      session = session)
   },
   error = function(e) {
-    print(paste("e =", e))
+    print(e)
     showNotification(paste(message, "System error: unable to find API key!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
