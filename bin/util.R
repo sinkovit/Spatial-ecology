@@ -147,9 +147,7 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
 # curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input
 # to a URL function" will be caught at plot run-time
 setupAPIkey <- function() {
-  filename <- "/secrets/mkde.txt"
-  key <- readr::read_file(filename)
-  key <- gsub("[\r\n]", "", key)
+  key <- Sys.getenv("STADIA_MAPS_API_KEY")
   register_stadiamaps(key = key, write = FALSE)
   return(TRUE)
 }

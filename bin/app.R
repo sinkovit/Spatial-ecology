@@ -55,15 +55,15 @@ library(keyring)  # used by move2
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 
 library(readr)
-library(fs)
-library(rayshader)
-library(rgl)
+#library(fs)
+#library(rayshader)
+#library(rgl)
 
 source("compute.R")
 source("loadDataframe.R")
 source("processDataframe.R")
 source("util.R")
-source("tests.R")
+#source("tests.R")
 
 #sessionInfo()
 
@@ -1176,7 +1176,6 @@ server <- function(input, output, session) {
     rasters <- gps$rasters
     if(recalculate_raster())
       rasters <- NULL
-    print("here 1")
     
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
       raster <- rasters[[id]]$raster
@@ -1230,10 +1229,8 @@ server <- function(input, output, session) {
         # print(paste("save_bbmm_type:", input$save_bbmm_type))
         showNotification(message, id = mid, duration = NULL, session = session)
         # print(paste("raster :", summary(raster)))
-        print("here 2")
         results <- createContour(raster, probs, input$zone, input$datum,
                                  input$bbmm_buffer)
-        print("here 3")
         #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, duration = 3,
                          session = session)
@@ -1253,7 +1250,7 @@ server <- function(input, output, session) {
           #print(paste("map =", str(results[[1]]$map)))
           output$bbmm_plot <- renderPlot({results[[1]]$map})
 
-          mat <- raster_to_matrix(results[[1]]$raster)
+          #mat <- raster_to_matrix(results[[1]]$raster)
           # print(paste("mat 1 =", str(mat)))
           # print(paste("attributes 1 =", attributes(mat)))
           
@@ -1296,7 +1293,7 @@ server <- function(input, output, session) {
           
           coords_split <- split(coords, coords$L2)
           coords_split <- rev(coords_split)
-          print(names(coords_split))
+          #print(names(coords_split))
           
           mymap <- ggplot() +
             theme_minimal() +

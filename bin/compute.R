@@ -229,7 +229,7 @@ mkdeToTerra <- function(mkde.obj) {
                 min(mkde.obj$y) - 0.5 * sy, max(mkde.obj$y) + 0.5 * sy)
     
     rst <- terra::rast(nrow = mkde.obj$ny, ncol = mkde.obj$nx, xmin = extent[1], xmax = extent[2],
-                ymin = extent[3], ymax = extent[4], crs = st_crs("+proj=longlat"))
+                ymin = extent[3], ymax = extent[4], crs = "+proj=longlat")
     
     # Transpose and then flip vertically by reversing rows
     d_matrix <- base::t(matrix(mkde.obj$d[,,1], nrow = mkde.obj$nx, ncol = mkde.obj$ny))
@@ -396,14 +396,20 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
     geom_polygon(aes(x = X, y = Y, group = paste(L2, L1, sep = "_")), data = coords,
                  alpha = 0.25, linewidth = 0.1, color = "black", fill = "blue")
   
-  tolerance = 0.1
+  tolerance = 0
   
-  # Check to see if contour fits on map
-  for (gname in unique(coords$L1)) {
-    x1 <-  coords$Y[which(coords$L1 == gname)]
-    y1 <-  coords$X[which(coords$L1 == gname)]
+  # Create unique identifiers for combinations of L2 and L1
+  coords$group <- with(coords, paste(L2, L1, sep="_"))
+  
+  # Check to see if contour fits on map based on these combinations
+  for (group in unique(coords$group)) {
+    x1 <- coords$Y[coords$group == group]
+    y1 <- coords$X[coords$group == group]
+    
     if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
-      fits <- FALSE # Contour does not fit on map
+      #print(abs(x1[1] - x1[length(x1)]))  
+      #print(abs(y1[1] - y1[length(y1)]))  
+      fits <- FALSE  
     }
   }
 
