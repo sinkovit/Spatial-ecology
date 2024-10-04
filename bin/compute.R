@@ -52,15 +52,25 @@
 # --------------------------------------------------------------------
 
 animalAttributes <- function(data_df, areaUnits) {
-  # print("entered animalAttributes()")
+  print("entered animalAttributes()")
   # print(paste("data_df =", summary(data_df)))
-  # print(paste("areadUnits =", areaUnits))
+  print(paste("areadUnits =", areaUnits))
+  print(paste("data_df class =", class(data_df)))
+  print(paste("data_df nrow =", nrow(data_df)))
+  print(paste("data_df length =", length(data_df)))
+  print(paste("data_df names =", names(data_df)))
+  
   printf <- function(...) cat(sprintf(...))
   
   gpsdata <- data_df[, c("xdata", "ydata")]
   # print(paste("gpsdata =", summary(gpsdata)))
+  print(paste("gpsdata class =", class(data_df)))
+  print(paste("gpsdata nrow =", nrow(data_df)))
+  print(paste("gpsdata length =", length(data_df)))
+  print(paste("gpsdata names =", names(data_df)))
   
   area.convexhull <- function(points) {
+    print(paste("points =", points))
     
     if(base::nrow(points) < 3) {  
       
@@ -75,8 +85,10 @@ animalAttributes <- function(data_df, areaUnits) {
                           points[2:(base::nrow(points)), 1] * points[1:(base::nrow(points)-1), 2])
     return(abs(shoelace.sum) / 2)
   }
+  print("here 20")
   
   convertArea <- function(area, units) {
+    print(paste("area =", area, "units =", units))
     switch(units,
            "km2" = area / (10^6),    
            "m" = area,              
@@ -84,6 +96,7 @@ animalAttributes <- function(data_df, areaUnits) {
            area                     
     )
   }
+  print("here 40")
 
   animals <- base::as.list(sort(base::unique(data_df$id)))
   max_pixels <- c(30, 60, 100, 300)
@@ -99,14 +112,20 @@ animalAttributes <- function(data_df, areaUnits) {
 
   tryCatch({
     for (local_id in animals) {
-      # print(paste("local_id =", local_id))
+      print(paste("local_id =", local_id))
 
       animal.data <- gpsdata[which(data_df$id == local_id), ]
-      # print(paste("animal.data length =", length(animal.data)))
-      # print(paste("animal.data class =", class(animal.data)))
+      print(paste("animal.data class =", class(animal.data)))
+      print(paste("animal.data length =", length(animal.data)))
+      print(paste("animal.data nrow =", nrow(animal.data)))
+      print(paste("animal.data names =", names(animal.data)))
       # print(paste("head 1 =", head(animal.data[,1])))
       # print(paste("head 2 =", head(animal.data[,2])))
       
+      print(paste("animal.data 1 class =", class(animal.data[, 1])))
+      print(paste("animal.data 1 is.list?", is.list(animal.data[, 1])))
+      print(paste("animal.data 2 class =", class(animal.data[, 2])))
+      print(paste("animal.data 2 is.list?", is.list(animal.data[, 2])))
       hull.indices <- chull(animal.data[, 1], animal.data[, 2])
       hull.points <- animal.data[hull.indices, ]
 
@@ -118,6 +137,7 @@ animalAttributes <- function(data_df, areaUnits) {
       t_range <- t_minmax[2] - t_minmax[1]
 
       area <- area.convexhull(hull.points)
+      print(paste("area =", area))
 
       if (is.na(area)) {
         
@@ -158,12 +178,16 @@ animalAttributes <- function(data_df, areaUnits) {
   },
   error = function(error_message) {
     
-    # base::print(paste("error_message =", error_message))
+    base::print(paste("error_message =", error_message))
     return(NULL)
     
   })
   
-  #base::print("leaving animalAttributes()")
+  print(paste("result class =", class(result)))
+  print(paste("result nrow =", nrow(result)))
+  print(paste("result length =", length(result)))
+  print(paste("result names =", names(result)))
+  base::print("leaving animalAttributes()")
   return(result)
 }
 
@@ -229,7 +253,7 @@ mkdeToTerra <- function(mkde.obj) {
                 min(mkde.obj$y) - 0.5 * sy, max(mkde.obj$y) + 0.5 * sy)
     
     rst <- terra::rast(nrow = mkde.obj$ny, ncol = mkde.obj$nx, xmin = extent[1], xmax = extent[2],
-                ymin = extent[3], ymax = extent[4], crs = st_crs("+proj=longlat"))
+                ymin = extent[3], ymax = extent[4], crs = "+proj=longlat")
     
     # Transpose and then flip vertically by reversing rows
     d_matrix <- base::t(matrix(mkde.obj$d[,,1], nrow = mkde.obj$nx, ncol = mkde.obj$ny))
@@ -299,6 +323,7 @@ terraToContour <- function(terra.obj, levels, crsstr) {
 # Note: see https://mhallwor.github.io/_pages/basics_SpatialPolygons
 createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE) {
 
+  print("entered createContour()")
   # Setting bounds for map and zoom level
   xmin <- min(mkde2d.obj$x)
   ymin <- min(mkde2d.obj$y)
@@ -373,8 +398,10 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
   # Call terraToContour to convert SpatRaster to lat long
   sf_contour <- terraToContour(mkde_terra, cont$threshold, crsstr)
 
+  print("here 1")
   # St_Cast is called to avoid using sfc_GEOMETRY
   gpsdata.sfgeo <- st_cast(st_geometry(sf_contour))
+  print("here 2")
   
   # Convert the coordinate data to a dataframe
   coords <- as.data.frame(sf::st_coordinates(gpsdata.sfgeo))
@@ -400,13 +427,17 @@ createContour <- function(mkde2d.obj, probs, utm.zone, datum, buffer, all = TRUE
   
   # Check to see if contour fits on map
   for (gname in unique(coords$L1)) {
+    print(paste("gname =", gname))
     x1 <-  coords$Y[which(coords$L1 == gname)]
     y1 <-  coords$X[which(coords$L1 == gname)]
+    print(paste("x :", x1[1], x1[length(x1)]))
+    print(paste("y :", y1[1] - y1[length(y1)]))
     if (abs(x1[1] - x1[length(x1)]) > tolerance || abs(y1[1] - y1[length(y1)]) > tolerance) {
       fits <- FALSE # Contour does not fit on map
     }
   }
-
+  print(paste("fits =", fits))
+  
   results <- list(raster = mkde_terra, contour = cont, cut = terra.cont, map = mymap,
                   probabilities = contour_probs, fits = fits)
   

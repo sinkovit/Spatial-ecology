@@ -63,25 +63,28 @@ loadDataframeFromFile <- function(file) {
 }
 
 
-# Load data from Movebank, return gpsdata and error message
+# Load data from Movebank
 # Returns a list where first item is the data and second item is the error
-# message; if successful, there error message = NULL and data will be
-# populated; if there is an error message, then data = NULL
+# message; if successful, data will be populated and there may be a message to
+# display to the user; if failure, data will be NULL and the message will contain
+# the error message
 loadDataframeFromMB <- function(study, username, password, remove_outliers) {
   # print(paste("username =", username))
   # print(paste("password =", password))
   # print(paste("study = ", study))
   # print(paste("remove_outliers = ", remove_outliers))
-  file.local <- paste(getwd(), "/Study-", toString(study), ".RData", sep="")
+  # file.local <- paste(getwd(), "/Study-", toString(study), ".RData", sep="")
   #print(paste("file.local =", file.local))
+  
+  # move2
   key <- keyring::key_list(service="movebank")
-  # print(paste("key =", key, "\n"))
+  print(paste("move2 key =", key, "\n"))
   if (nrow(key) == 0) {
-    print("no key!\n")
-    movebank_store_credentials(username, password)
-    print("stored mb credential\n")
+    print("move2 no key!\n")
+    move2::movebank_store_credentials(username, password)
+    print("move2 stored mb credential\n")
   } else {
-    print("key found!\n")
+    print("move2 key found!\n")
   }
 
   tryCatch({
@@ -91,23 +94,165 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     # #   printf("done\n")
     # #   return(list(data, NULL))
     # # } else {
-    # # maybe try shiny::invalidateLater()?
-    # # save(data, file=file.local)
-    # data <- movebank_download_study(study_id=strtoi(study),
-    # attributes = c("location_long", "location_lat",
-    #                "timestamp"))
-    # remove_movebank_outliers=remove_outliers)
-    data <- movebank_retrieve(entity_type = 'event', study_id = strtoi(study),
-                              remove_movebank_outliers=remove_outliers)
-    print("post data")
+    
+    # # move (1) - this can be used for debugging if move2 is throwing an error
+    # # on a study.  Be sure to uncomment the library(move) statement in app.R
+    # # so that the original move package will be available
+    # login <- move::movebankLogin(username = username, password = password )
+    # # # maybe try shiny::invalidateLater()?
+    # # # save(data, file=file.local)
+    # # data <- getMovebankData(study = strtoi(study), login = login)
+    # data1 <- move::getMovebankLocationData(study = strtoi(study), login = login)
+    # # move (1) returns whatever attributes the study has, including the following
+    # # algorithm.marked.outlier, deployment.id, external.temperature, event.id,
+    # # gps.fix.type.raw, gps.hdop, gps.maximum.signal.strength, gps.satellite.count,
+    # # gps.time.to.fix, gps.vdop, ground.speed, heading, height.above.ellipsoid,
+    # # height.above.msl, height.raw, individual.id, individual.local.identifier,
+    # # individual.taxon.canonical.name, location.error.text, location.lat,
+    # # location.long, manually.marked.outlier, raptor.workshop.migration.state,
+    # # sensor.type, sensor.type.id, study.id, study.name, tag.id,
+    # # tag.local.identifier, tag.voltage, telemetry.run.id, timestamp,
+    # # vertical.error.numerical, visible
+    # print(paste("data1 read in class =", class(data1)))
+    # print(paste("data1 read in length =", length(data1)))
+    # print(paste("data1 read in nrow =", nrow(data1)))
+    # # print(paste("data1 read in colnames =", colnames(data1)))
+    # print(paste("data1 read in names =", names(data1)))
+    # # print(paste("data head =", head(data)))
+    # #print(paste("data summary:", summary(data)))
+    # return(list(data1, NULL))
+    
+    # move2
+    # note, movebank_download_study returns a move2 objects and contains geometry
+    # data2 <- move2::movebank_download_study(
+    #   study_id=strtoi(study),
+    #   #attributes = "all",
+    #   attributes = c("event_id", "ground_speed", "heading", "height_raw",
+    #                  "individual_local_identifier",
+    #                  "individual_taxon_canonical_name", "location_lat",
+    #                  "location_long", "sensor_type_id", "timestamp", "visible"),
+    #   remove_movebank_outliers=remove_outliers)
+    
+    # for debugging...download the complete study
+    # tmp <- move2::movebank_download_study(study_id = strtoi(study),
+    #                                 remove_movebank_outliers = remove_outliers)
+    # print(paste("tmp class =", class(tmp)))
+    # print(paste("tmp length =", length(tmp)))
+    # print(paste("tmp nrow =", nrow(tmp)))
+    # print(paste("tmp names =", names(tmp)))
+    
+    # # tried to get x and y from geometry...
+    # geom <- data["geometry"]
+    # print(paste("geom class =", class(geom)))
+    # df <- sf::st_sf(geometry = geom)
+    # print(paste("df class =", class(df)))
+    # print(paste("df length =", length(df)))
+    # print(paste("df nrow =", nrow(df)))
+    # print(paste("df colnames =", colnames(df)))
+    
+    # # convert move2 to move...no column names!
+    # results <- move2::to_move(data2)
+    
+    # # following is needed if using movebank_download_study
+    # results <- dplyr::mutate(data2, long = sf::st_coordinates(data2)[,1],
+    #                          lat = sf::st_coordinates(data2)[,2])
+
+    # move(1) has additional attributes study.name and sensor.type but that
+    # causes runtime error below...
+
+    # movebank_retrieve(
+    #   entity_type = "tag_type",
+    #   attributes = c("external_id", "id")
+    # )
+
+    # sensors <- movebank_retrieve(entity_type = "tag_type", study_id = strtoi(study))
+    # print(paste("sensors length =", length(sensors)))
+    # print(paste("sensors nrow =", nrow(sensors)))
+    # print(paste("sensors colnames =", colnames(sensors)))
+    # print(paste("sensors head =", head(sensors)))
+    # print(paste("sensors :", sensors))
+    #
+    # # movebank_retrieve returns a data frame/tibble (no)
+    # data <- movebank_retrieve(entity_type = 'event', study_id = strtoi(study),
+    #                           attributes = c("deployment_id", "event_id",
+    #                                          "ground_speed", "heading",
+    #                                          "height_raw", "individual_id",
+    #                                          "individual_local_identifier",
+    #                                          "individual_taxon_canonical_name",
+    #                                          "location_lat", "location_long",
+    #                                          "sensor_type_id", "study_id",
+    #                                          "tag_id", "tag_local_identifier",
+    #                                          "timestamp", "visible"),
+    #                            remove_movebank_outliers=remove_outliers)
+    
+    # # for debugging...get the study's sensors
+    # study_sensors <- movebank_download_study_info(study_id = study)$sensor_type_ids
+    # print(paste("study_sensors =", study_sensors))
+
+    # get the attributes of the study to make sure that it has our minimum
+    # required info
+    # attributes <- move2::movebank_retrieve(entity_type = "study_attribute",
+    #                                        study_id = strtoi(study),
+    #                                        sensor_type_id = "gps")$short_name
+    # # following from Bart (https://gitlab.com/bartk/move2/-/issues/85) threw a
+    # # runtime error
+    print(paste("study =", study))
+    study_attributes <- move2::movebank_retrieve(
+      entity_type = "study_attribute", study_id = study,
+      attributes = "short_name")
+    print(paste("attributes class =", class(attributes)))
+    print(paste("attributes =", attributes))
+    print(paste("attributes nrow =", nrow(attributes)))
+    print(paste("attributes length =", length(attributes)))
+    print(paste("attributes names =", names(attributes)))
+    
+    # for debugging
+    info <- move2::movebank_download_study_info(study_id = strtoi(study))
+    print(paste("info class =", class(info)))
+    print(paste("info nrow =", nrow(info)))
+    print(paste("info length =", length(info)))
+    print(paste("info names =", names(info)))
+    
+    require_attributes <- c("location_long", "location_lat", "timestamp",
+                            "individual_local_identifier")
+    
+    data2 <- move2::movebank_retrieve(
+      entity_type = 'event', study_id = study, attributes = require_attributes,
+      remove_movebank_outliers=remove_outliers)
+    # attributes = c("event_id", "ground_speed",
+    #                "heading", "height_raw",
+    #                "individual_local_identifier",
+    #                "individual_taxon_canonical_name",
+    #                "location_lat", "location_long",
+    #                "sensor_type_id", "timestamp",
+    #                "visible"),
+    print(paste("data2 read in class =", class(data2)))
+    print(paste("data2 read in length =", length(data2)))
+    print(paste("data2 read in nrow =", nrow(data2)))
+    # print(paste("data2 read in str =", str(data2)))
+    print(paste("data2 read in names =", names(data2)))
+    # print(paste("data2 head =", head(data)))
+    # print(paste("data summary:", summary(data)))
+    # print("post data")
+    # return(list(data, "Your Movebank account info has been saved"))
+
     # converting tibble to data.frame
-    results <- as.data.frame(data)
+    results <- as.data.frame(data2)
+    print(paste("results class =", class(results)))
+    print(paste("results length =", length(results)))
+    print(paste("results nrow =", nrow(results)))
+    print(paste("results names =", names(results)))
+    # # print(paste("results head =", head(results)))
     return(list(results, "Your Movebank account info has been saved"))
   },
   error = function(error_message) {
-    print(paste("error message =", error_message))
     # message(rlang::last_error()$error)
     # rlang::last_error()$url
+    print(paste("error message x =", error_message))
+    print(paste("error message length =", length(error_message)))
+    print(paste("error message 0 =", error_message[0]))
+    print(paste("error message 1 =", error_message[1]))
+    # print(paste("error message 2 =", error_message[2]))
     
     if (str_detect(error_message[1], "you are not allowed to download")) {
       # Movebank data license url =
@@ -131,8 +276,17 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     } else if (str_detect(error_message[1], "too close to the limit")) {
       return(list(NULL, paste("System error (", error_message[1],
                               ").  Please wait a few minutes and try again...")))
+      # following doesn't work
+    # } else if (str_detect(error_message[1],
+    #                       "non-existing attributes are requested")) {
+    #   return(list(NULL, paste("One or more of the required attributes may be missing from the study")))
+    } else if (str_detect(error_message[1], "stack usage") &&
+               str_detect(error_message[1], "too close to the limit")) {
+      return(list(NULL, paste("Out of memory")))
     }
-    return(list(NULL, error_message))
+    return(list(NULL,
+                paste("Movebank system error detected! Please submit a support ticket and include this entire message:",
+                      error_message)))
   })
 }
 

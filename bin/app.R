@@ -48,22 +48,36 @@ library(tools)
 library(ggmap)
 library(terra)
 library(sf)
+# library(move)
+
 library(move2)
-library(keyring)  # used by move2
+library(assertthat)
+library(rlang)
+library(units)
+library(tidyselect)
+library(dplyr)
+library(tibble)
+library(vroom)
+library(cli)
+library(vctrs)
+library(bit64)
+library(keyring)
+library(xml2)
+library(curl)
 
 # library(shinyWidgets) # https://dreamrs.github.io/shinyWidgets/index.html &
 #                       # https://shinyapps.dreamrs.fr/shinyWidgets/
 
 library(readr)
 library(fs)
-library(rayshader)
+# library(rayshader)
 library(rgl)
 
 source("compute.R")
 source("loadDataframe.R")
 source("processDataframe.R")
 source("util.R")
-source("tests.R")
+#source("tests.R")
 
 #sessionInfo()
 
@@ -236,16 +250,16 @@ ui <- dashboardPage(
             # tags$strong(id = "mcp_save_label", "Output"),
             # # textInput("mcp_save_filename", "Filename"),
             # actionButton("mcp_save_filename", label = NULL),
-            radioButtons("mcp_save_format", label = "Format:", inline = TRUE,
-                         choices = list("BMP" = "bmp", "JPEG" = "jpg",
-                                        "PDF" = "pdf", "PNG" = "png",
-                                        "Postscript" = "ps", "SVG" = "svg",
-                                        "TIFF" = "tiff")),
+            # radioButtons("mcp_save_format", label = "Format:", inline = TRUE,
+            #              choices = list("BMP" = "bmp", "JPEG" = "jpg",
+            #                             "PDF" = "pdf", "PNG" = "png",
+            #                             "Postscript" = "ps", "SVG" = "svg",
+            #                             "TIFF" = "tiff")),
             hr(style = "border-top: 2px solid grey;"),
             actionButton("mcp_plot_button", label = "Plot"),
-            actionButton("mcp_save_button", label = "Save"),
-            bsTooltip(id = "mcp_save_button",
-                      title = "Save current plot in above output format to your computer"),
+            # actionButton("mcp_save_button", label = "Save"),
+            # bsTooltip(id = "mcp_save_button",
+            #           title = "Save current plot in above output format to your computer"),
           ),
           tabPanel(title = "BBMM", value = "BBMM", tags$br(),
             tags$strong(id = "dimensions_label", "Dimensions:"),
@@ -360,7 +374,7 @@ ui <- dashboardPage(
         # shinycssloaders::withSpinner(plotOutput("bbmm_plot" ), type = 4),
         plotOutput("mcp_plot" ),
         plotOutput("bbmm_plot"),
-        # rglwidgetOutput("threed_plot"),
+        #rglwidgetOutput("threed_plot"),
 
         tabsetPanel(
           id = "tables",
@@ -407,20 +421,15 @@ server <- function(input, output, session) {
   # print(paste("options :", options()))
   # increase file uplaod size to 30 MB
   # (https://groups.google.com/g/shiny-discuss/c/rU3vwGMZexQ/m/zeKhiYXrtEQJ)
+  options(shiny.maxRequestSize=100*1024^2)
   
+  #pdf(file = NULL)
   
   ############################################################################
   # TESTS
   ############################################################################
   #test_results <- test_file("tests.R")
   #print(test_results)
-  
-  options(shiny.maxRequestSize=100*1024^2)
-  
-  pdf(file = NULL)
-  
-  # for checking deployment
-  showNotification("This is a debug check...", duration = NULL, session = session)
   
   # Setup the Stadiamap API key
   id <- "api_key"
@@ -432,7 +441,7 @@ server <- function(input, output, session) {
                      session = session)
   },
   error = function(e) {
-    print(e)
+    print(paste("e =", e))
     showNotification(paste(message, "System error: unable to find API key!"),
                      id = id, type = "error", duration = NULL, session = session)
   })
@@ -502,8 +511,8 @@ server <- function(input, output, session) {
   })
   
   shinyjs::hide("mcp_plot")
-  shinyjs::hide("mcp_save_format")
-  shinyjs::hide("mcp_save_button")
+  # shinyjs::hide("mcp_save_format")
+  # shinyjs::hide("mcp_save_button")
   shinyjs::hide("bbmm_plot")
   shinyjs::hide("bbmm_save_button")
   shinyjs::hide("tables")
@@ -760,9 +769,9 @@ server <- function(input, output, session) {
       id <- "load_movebank"
       message <- "Accessing Movebank..."
       showNotification(message, duration = NULL, id = id, session = session)
-      results <- loadDataframeFromMB(username = input$movebank_username,
+      results <- loadDataframeFromMB(study = input$movebank_studyid,
+                                     username = input$movebank_username,
                                      password = input$movebank_password,
-                                     study = input$movebank_studyid,
                                      remove_outliers = input$movebank_outliers)
       basename <- input$movebank_studyid
       # updateTextInput(session, "save_movebank_filename",
@@ -806,7 +815,8 @@ server <- function(input, output, session) {
     # print(paste("results[2] =", results[[2]]))
     if (isEmpty(data)) {
       removeNotification(id = id, session = session)
-      showNotification(paste("Error loading", filename, ":", results[[2]]),
+      showNotification(paste("Error loading study", filename, ":", results[[2]]),
+                       action = a(href = "https://uccommunityhub.hubzero.org/support/ticket/new", "Create new support ticket"),
                        duration = NULL, type = "error", session = session)
       current_data_source(NULL)
     } else {
@@ -844,6 +854,7 @@ server <- function(input, output, session) {
       })
 
       if (continue) {
+        print("here 3")
 
         # shiny::validate(need(is.null(results[[2]]), results[[2]]))
         if (! is.null(results[[2]])) {
@@ -861,20 +872,29 @@ server <- function(input, output, session) {
         id <- "attributes"
         message <- "Calculating spatial attributes..."
         tryCatch({
+          print("here 4")
           showNotification(message, id = id, duration = NULL, session = session)
           data <- animalAttributes(data, input$areaUnits)
+          print(paste("post animalAttributes data nrow 1 =", nrow(data)))
+          print(paste("post animalAttributes data length 1 =", length(data)))
           showNotification(paste(message, "done"), id = id, duration = 3,
                            session = session)
+          print("here 5")
         },
         error = function(e) {
           showNotification(paste("Error :", e$message), id = id,
                            duration = NULL, type = "error", session = session)
           continue <<- FALSE
         })
+        print(paste("post animalAttributes data nrow 2 =", nrow(data)))
+        print(paste("post animalAttributes data length 2 =", length(data)))
         gps$summary <- data
+        print(paste("gps$summary =", nrow(gps$summary)))
+        print(paste("identical? ", identical(gps$summary, gps$original)))
         shinyjs::show("tables")
         
         if (input$data_source_button == 'Movebank' || input$data_source_button == 'Your computer') {
+          print("here 11")
           # print(paste("basename =", basename))
           # tmp <- paste("movebank-", input$movebank_studyid, ".csv", sep = "")
           # print(paste("tmp = ", tmp))
@@ -888,8 +908,9 @@ server <- function(input, output, session) {
           # paste("movebank-", input$movebank_studyid, ".csv",
           #       sep = "")
         }
-        
+
         if (continue) {
+          print("here 6")
           # Upate UI elements
           showTab(inputId = "controls", target = "MCP", session = session)
           showTab(inputId = "controls", target = "BBMM", session = session)
@@ -907,9 +928,9 @@ server <- function(input, output, session) {
           showTab("tables", target = "All", session = session)
           shinyjs::show("areaUnitsDiv")
           updateTabsetPanel(session, "tables", selected = "Summary")
-          updateActionButton(session, "mcp_save_filename",
-                             label = paste(getwd(), basename, ".",
-                                           input$mcp_save_format, sep = ""))
+          # updateActionButton(session, "mcp_save_filename",
+          #                    label = paste(getwd(), basename, ".",
+          #                                  input$mcp_save_format, sep = ""))
         }
       }
     }
@@ -1038,14 +1059,14 @@ server <- function(input, output, session) {
   observe ({
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
       shinyjs::disable("mcp_plot_button")
-      shinyjs::disable("mcp_save_format")
-      shinyjs::disable("mcp_save_button")
+      # shinyjs::disable("mcp_save_format")
+      # shinyjs::disable("mcp_save_button")
       shinyjs::disable("bbmm_plot_button")
       shinyjs::disable("bbmm_save_button")
     } else {
       shinyjs::enable("mcp_plot_button")
-      shinyjs::enable("mcp_save_format")
-      shinyjs::enable("mcp_save_button")
+      # shinyjs::enable("mcp_save_format")
+      # shinyjs::enable("mcp_save_button")
       shinyjs::enable("bbmm_plot_button")
       shinyjs::enable("bbmm_save_button")
     }
@@ -1056,8 +1077,13 @@ server <- function(input, output, session) {
   # See https://datatables.net/reference/option/ for options
   # See https://datatables.net/reference/option/dom for dom options
   table_all_data <- reactive({
+    original <- gps$original[]
+    print(paste("gps original class =", class(original)))
+    print(paste("gps original nrow =", nrow(original)))
+    print(paste("gps original length =", length(original)))
+    print(paste("gps original names =", names(original)))
     DT::datatable(
-      gps$original[], extensions = 'Buttons',
+      original, extensions = 'Buttons',
       caption="Tip: you can do multi-column sorting by shift clicking the columns\n\nm = meters",
       options = list(autoWidth = TRUE, buttons = c(''), dom = 'Bfrtip',
                      pagingType = "full_numbers", processing = TRUE,
@@ -1069,9 +1095,16 @@ server <- function(input, output, session) {
   })
   
   table_summary_data <- reactive({
+    summary <- gps$summary[]
+    print(paste("gps summary class =", class(summary)))
+    print(paste("gps summary nrow =", nrow(summary)))
+    print(paste("gps summary length =", length(summary)))
+    print(paste("gps summary names =", names(summary)))
+    # print(paste("gps summary head =", head(summary)))
+    # print(paste("gps summary summary =", summary(summary)))
     shinyjs::show ("tables")
     DT::datatable(
-      gps$summary[], extension = "Buttons",
+      summary, extension = "Buttons",
       caption="Tip: you can do multi-column sorting by shift clicking on the columns",
       #caption = tagList(h1("Caption")),
       options = list(autoWidth = TRUE, buttons = c(''), dom = 'Bfrtip',
@@ -1144,13 +1177,13 @@ server <- function(input, output, session) {
       # })
       showNotification(paste(message, "done"), id = mid, duration = 3,
                        session = session)
-      shinyjs::show("mcp_save_format")
-      shinyjs::show("mcp_save_button")
-      print("saving mcp plot")
-      pdf("mona_plot.pdf")
-      #plot(mat)
-      plot(map)
-      dev.off()
+      # shinyjs::show("mcp_save_format")
+      # shinyjs::show("mcp_save_button")
+      # print("saving mcp plot")
+      # pdf("mona_plot.pdf")
+      # #plot(mat)
+      # plot(map)
+      # dev.off()
     },
     error = function(e) {
       showNotification(paste(message,
@@ -1159,15 +1192,15 @@ server <- function(input, output, session) {
     })
   })
   
-  observeEvent(input$mcp_save_filename, {
-    print("save mcp save button!")
-    fname <- file.choose(new = TRUE)
-    print(paste("fname =", fname))
-  })
+  # observeEvent(input$mcp_save_filename, {
+  #   print("save mcp save button!")
+  #   fname <- file.choose(new = TRUE)
+  #   print(paste("fname =", fname))
+  # })
   
-  observeEvent(input$mcp_save_button, {
-    print("save mcp plot button!")
-  })
+  # observeEvent(input$mcp_save_button, {
+  #   print("save mcp plot button!")
+  # })
   
   observeEvent(input$bbmm_plot_button, {
     shinyjs::hide("instructions")
@@ -1331,7 +1364,7 @@ server <- function(input, output, session) {
         }
       },
       error = function(error_message) {
-        #base::print(paste("error message =", error_message))
+        base::print(paste("error message 1 =", error_message))
         showNotification(
           paste(message,
                 "error: unable to plot; please try adjusting the parameter(s)"),
