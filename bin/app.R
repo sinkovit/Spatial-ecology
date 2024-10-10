@@ -431,6 +431,9 @@ server <- function(input, output, session) {
   #test_results <- test_file("tests.R")
   #print(test_results)
   
+  showNotification("Testing deployment of new code...", duration = NULL,
+                   session = session)
+  
   # Setup the Stadiamap API key
   id <- "api_key"
   message <- "Setting up API key..."
