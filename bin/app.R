@@ -420,7 +420,7 @@ server <- function(input, output, session) {
   pdf(file = NULL)
   
   # for checking deployment
-  showNotification("This is a debug check 2...", duration = NULL, session = session)
+  showNotification("This is a debug check 3...", duration = NULL, session = session)
   
   # Setup the Stadiamap API key
   id <- "api_key"
