@@ -52,12 +52,19 @@
 # (5) If we have UTM data, then rename utm.[easting|northing] to
 # [x|y]data. Otherwise rename the x and y columns to [x|y]data
 
-# Returns a list where first item is the data and second item is the error
-# message; if successful, there error message = NULL and data will be
-# populated; if there is an error message, then data = NULL
+# Returns a list where first item is the data, the second item is a message for
+# the user and the third item is an error message; if successful, the error
+# message = NULL and data will be populated; if there is an error message, then
+# data = NULL
 
 preprocessDataframe <- function(gpsdata) {
 
+  # print("entered preprocessDataframe")
+  # print(paste("gpsdata class 1 =", class(gpsdata)))
+  # print(paste("gpsdata length =", length(gpsdata)))
+  # print(paste("gpsdata nrow 1 =", nrow(gpsdata)))
+  # print(paste("gpsdata names 1 =", names(gpsdata)))
+  
   #### Rename column names to conform to canonical names
   
   # Horizontal coordinates (canonical name: x and y)
@@ -75,11 +82,11 @@ preprocessDataframe <- function(gpsdata) {
   names(gpsdata)[names(gpsdata) == 'Northing'] <- 'utm.northing'
   
   # UTM zone (canonical name: utm.zone)
-  options <- c('utm-zone', 'utm_zone', 'utmzone', 'zone')
+  options <- c('utm-zone', 'utm_zone', 'utmzone', 'zone', 'Zone')
   for (opt in options) {
     names(gpsdata)[names(gpsdata) == opt] <- 'utm.zone'
   }
-  
+
   # Vertical location (canonical name: zdata)
   options <- c('Zdata', 'ZDATA', 'z', 'Z', 'height-raw', 'height_raw', 'height.raw')
   for (opt in options) {
@@ -131,7 +138,6 @@ preprocessDataframe <- function(gpsdata) {
   
   #### If cummultime and time are both present, delete time and rename cummultime to time
   #### If cummultime is present and time absent, just rename cummultime to time
-  
   if ("cummultime" %in% colnames(gpsdata)) {
     if ("time" %in% colnames(gpsdata)) {
       # Not sure why "gpsdata['time'] <- NULL" doesn't work here
@@ -151,20 +157,18 @@ preprocessDataframe <- function(gpsdata) {
         ("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) )) {
     # All is good
   } else {
-    return(list(NULL,
-                "Missing required columns; must have time and lat-long, x-y or UTM",
-                NULL))
+    return(list(NULL, NULL,
+                "Missing required columns; must have time and lat-long, x-y or UTM"))
   }
 
   #### If necessary convert POSIX time to epoch time (minutes since 1/1/1970)
   #### Set timezone to UTC to avoid daylight savings time ambiguities
-  
   if (!is.numeric(gpsdata$time)) {
     gpsdata$time <- unclass(as.POSIXct(gpsdata$time,
                                        tryFormats = c("%m/%e/%y %H:%M", "%Y-%m-%d %H:%M:%S"),
                                        tz="UTC")) / 60
   }
-  
+
   #### Add an 'id' column if it doesn't already exist and convert to string
   #### Handing as string adds flexibility since not all data sets will use
   #### integers to label animals
@@ -173,7 +177,7 @@ preprocessDataframe <- function(gpsdata) {
     gpsdata['id'] <- 1
   }
   gpsdata$id <- as.character(gpsdata$id)
-  
+
   #### Generate UTM coordinates from lat-long
   
   # If we have lat-long data without UTM data, do conversion to
@@ -181,43 +185,60 @@ preprocessDataframe <- function(gpsdata) {
   # warning message: In showSRID(uprojargs, format = "PROJ",
   # multiline = "NO", prefer_proj = prefer_proj) : Discarded datum
   # Unknown based on WGS84 ellipsoid in Proj4 definition
+  # print(paste("colnames:", colnames(gpsdata)))
+  
+  messages <- NULL
   
   if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
      (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata))) {
     
+    # First, find out and remove any lat/long NA values...
+    if (anyNA(gpsdata$lat) || anyNA(gpsdata$long) || anyNA(gpsdata$time) ||
+        anyNA(gpsdata$id)) {
+      nbefore <- nrow(gpsdata)
+      gpsdata <- subset(gpsdata, !is.na(gpsdata$lat) & !is.na(gpsdata$long) &
+                          !is.na(gpsdata$time) & !is.na(gpsdata$id))
+      nafter <- nrow(gpsdata)
+      messages <-
+        list(
+          paste(nbefore - nafter,
+                "row(s) of data have been removed from processing because they contain NA in at least one of the required fields."))
+    }
+      
     # Determine the UTM zone
     # See https://apollomapping.com/blog/gtm-finding-a-utm-zone-number-easily
     utm <- ceiling((180 + min(gpsdata$long))/6)
-    
+
     # Extracting latitude and longitude data
     gpsdata.latlong <- gpsdata[c("lat", "long")]
     gpsdata.sf <- sf::st_as_sf(gpsdata.latlong, coords = c("long", "lat"), crs = 4326)
-    
+
     # Transforming coordinates to UTM
     crs.str <- paste("+proj=utm +zone=", utm, " +datum=WGS84", sep="")
     gpsdata.latlong <- sf::st_transform(gpsdata.sf, crs = crs.str)
-    
+
     if ('long' %in% colnames(sf::st_coordinates(gpsdata.latlong))) {
       gpsdata$utm.easting <- sf::st_coordinates(gpsdata.latlong)[,1]
     } else {
       gpsdata$utm.easting <- sf::st_coordinates(gpsdata.latlong)[,1]
     }
-    
+
     if ('lat' %in% colnames(sf::st_coordinates(gpsdata.latlong))) {
       gpsdata$utm.northing <- sf::st_coordinates(gpsdata.latlong)[,2]
     } else {
       gpsdata$utm.northing <- sf::st_coordinates(gpsdata.latlong)[,2]
     }
-    
+
     rm(gpsdata.latlong)
   
     utm <- ifelse(base::mean(gpsdata$lat) > 0.0, paste(utm, "N", sep=""), paste(utm, "S", sep=""))
     gpsdata$utm.zone <- utm
-    
   }
 
   #### Generate list of UTM zones found in data file
   found.zones <- base::unique(gpsdata$utm.zone)
+  messages[[length(messages) + 1]] <-
+    paste("The data is in the projected zone:", paste(found.zones, collapse = ", "))
   
   #### Delete the column names that we don't need
   
@@ -248,6 +269,9 @@ preprocessDataframe <- function(gpsdata) {
     names(gpsdata)[names(gpsdata) == 'y'] <- 'ydata'
   }
   
-  #print(summary(gpsdata))
-  return(list(gpsdata, NULL, found.zones))
+  # print(paste("gpsdata class 2 =", class(gpsdata)))
+  # print(paste("gpsdata nrow 2 =", nrow(gpsdata)))
+  # print(paste("gpsdata length 2 =", length(gpsdata)))
+  # print(paste("gpsdata names 2 =", names(gpsdata)))
+  return(list(gpsdata, messages, NULL))
 }

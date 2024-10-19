@@ -291,9 +291,9 @@ ui <- dashboardPage(
             hr(style = "border-top: 2px solid grey;"),
 
             actionButton("bbmm_plot_button", label = "Plot"),
-            actionButton("bbmm_submit_button", label = "Submit"),
-            bsTooltip(id = "bbmm_submit_button",
-                      title = "Submit computation to supercomputer"),
+            # actionButton("bbmm_submit_button", label = "Submit"),
+            # bsTooltip(id = "bbmm_submit_button",
+            #           title = "Submit computation to supercomputer"),
             actionButton("bbmm_save_button", label = "Save"),
             bsTooltip(id = "bbmm_save_button", placement = "right",
                       title = "Save current plot to your computer"),
@@ -806,7 +806,7 @@ server <- function(input, output, session) {
     # print(paste("results[2] =", results[[2]]))
     if (isEmpty(data)) {
       removeNotification(id = id, session = session)
-      showNotification(paste("Error loading", filename, ":", results[[2]]),
+      showNotification(HTML(paste("Error loading", filename, ":", results[[2]])),
                        duration = NULL, type = "error", session = session)
       current_data_source(NULL)
     } else {
@@ -832,6 +832,12 @@ server <- function(input, output, session) {
         results <- preprocessDataframe(data)
         showNotification(paste(message, "done"), id = id, duration = 3,
                          session = session)
+        
+        if (!is.null(results[[2]])) {
+          tmp <- paste(results[[2]], collapse = "<br>")
+          showNotification(HTML(tmp),
+                           duration = NULL, type = "warning", session = session)
+        }
       },
       error = function(e) {
         error_message <- e[1]
@@ -845,11 +851,10 @@ server <- function(input, output, session) {
 
       if (continue) {
 
-        # shiny::validate(need(is.null(results[[2]]), results[[2]]))
-        if (! is.null(results[[2]])) {
-          showNotification(paste("Error :", results[[2]]), duration = NULL,
+        if (! is.null(results[[3]])) {
+          showNotification(paste("Error :", results[[3]]), duration = NULL,
                            type = "error", session = session)
-          shiny::validate(need(is.null(results[[2]]), results[[2]]))
+          shiny::validate(need(is.null(results[[3]]), results[[3]]))
         }
 
         data <- results[[1]]
@@ -1179,8 +1184,7 @@ server <- function(input, output, session) {
     rasters <- gps$rasters
     if(recalculate_raster())
       rasters <- NULL
-    print("here 1")
-    
+
     if (! is.null (rasters) && ! is.null (rasters[[id]])) {
       raster <- rasters[[id]]$raster
       # print(paste("raster summary =", summary(raster)))
@@ -1227,7 +1231,7 @@ server <- function(input, output, session) {
     #print(paste("replot_bbmm =", replot_bbmm()))
     if(replot_bbmm()) {
       mid <- "create_contour"
-      message <- paste("Calculating space use...")
+      message <- "Calculating space use..."
       tryCatch({
         probs = as.numeric ( unlist (strsplit (input$probability, ",")))
         # print(paste("save_bbmm_type:", input$save_bbmm_type))
