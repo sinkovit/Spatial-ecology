@@ -291,9 +291,9 @@ ui <- dashboardPage(
             hr(style = "border-top: 2px solid grey;"),
 
             actionButton("bbmm_plot_button", label = "Plot"),
-            actionButton("bbmm_submit_button", label = "Submit"),
-            bsTooltip(id = "bbmm_submit_button",
-                      title = "Submit computation to supercomputer"),
+            # actionButton("bbmm_submit_button", label = "Submit"),
+            # bsTooltip(id = "bbmm_submit_button",
+            #           title = "Submit computation to supercomputer"),
             actionButton("bbmm_save_button", label = "Save"),
             bsTooltip(id = "bbmm_save_button", placement = "right",
                       title = "Save current plot to your computer"),

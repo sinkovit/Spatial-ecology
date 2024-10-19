@@ -200,31 +200,27 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     # study_attributes <- move2::movebank_retrieve(
     #   entity_type = "study_attribute", study_id = study, sensor_type_id = "gps",
     #   attributes = c("short_name"))
-    print(paste("attributes class =", class(attributes)))
-    print(paste("attributes =", attributes))
-    print(paste("attributes nrow =", nrow(attributes)))
-    print(paste("attributes length =", length(attributes)))
-    print(paste("attributes names =", names(attributes)))
+    # print(paste("attributes class =", class(attributes)))
+    # print(paste("attributes =", attributes))
+    # print(paste("attributes nrow =", nrow(attributes)))
+    # print(paste("attributes length =", length(attributes)))
+    # print(paste("attributes names =", names(attributes)))
     if (!length(attributes)) {
       return(list(NULL, "No attributes found for data!"))
     }
     
     # for debugging
     info <- move2::movebank_download_study_info(study_id = strtoi(study))
-    print(paste("info class =", class(info)))
-    print(paste("info nrow =", nrow(info)))
-    print(paste("info length =", length(info)))
-    print(paste("info names =", names(info)))
-    # print(paste("info colnames =", colnames(info)))
+    # print(paste("info class =", class(info)))
+    # print(paste("info nrow =", nrow(info)))
+    # print(paste("info length =", length(info)))
+    # print(paste("info names =", names(info)))
     info_df <- as.data.frame(info)
-    # for (i in 1:ncol(info_df)) {
-    #   print(paste(i, "=", info_df[,i]))
+    # for (i in colnames(info_df)) {
+    #   if (! is.na(info_df[,i])) {
+    #     print(paste(i, "=", info_df[,i]))
+    #   }
     # }
-    for (i in colnames(info_df)) {
-      if (! is.na(info_df[,i])) {
-        print(paste(i, "=", info_df[,i]))
-      }
-    }
     
     require_attributes <- c("location_long", "location_lat", "timestamp",
                             "individual_local_identifier")
@@ -239,14 +235,10 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     #                "location_lat", "location_long",
     #                "sensor_type_id", "timestamp",
     #                "visible"),
-    print(paste("data2 read in class =", class(data2)))
-    print(paste("data2 read in length =", length(data2)))
-    print(paste("data2 read in nrow =", nrow(data2)))
-    # print(paste("data2 read in str =", str(data2)))
-    print(paste("data2 read in names =", names(data2)))
-    # print(paste("data2 head =", head(data)))
-    # print(paste("data summary:", summary(data)))
-    # print("post data")
+    # print(paste("data2 read in class =", class(data2)))
+    # print(paste("data2 read in length =", length(data2)))
+    # print(paste("data2 read in nrow =", nrow(data2)))
+    # print(paste("data2 read in names =", names(data2)))
     # return(list(data, "Your Movebank account info has been saved"))
 
     # converting tibble to data.frame
