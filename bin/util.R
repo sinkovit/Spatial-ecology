@@ -132,9 +132,7 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
       }
       
       if ("shape" %in% types) {
-        print("here 3")
         contour_lines <- terraToContour(contour_info$raster, contour_info$contour$threshold, crsstr = paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep=""))
-        print("here 4")
         sf::st_write(contour_lines, paste0(output_file, "_Contours.shp"), overwrite=TRUE)
       }
     }

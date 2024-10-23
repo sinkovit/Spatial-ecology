@@ -1,5 +1,5 @@
 # Use the Rocker Project's R version 4.3 image
-FROM rocker/r-ver:4.3.0
+FROM rocker/r-ver:latest
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -30,10 +30,13 @@ RUN install2.r --error --skipinstalled -n -1 \
     shinydashboard \
     shinyBS \
     shinyFiles \
-    tools
+    tools \
+    mkde \ 
+    move2 \
+    sf 
 
 # Install additional R packages using binaries with Rscript
-RUN Rscript -e "options(install.packages.check.source = 'no'); install.packages(c('ggplot2', 'mkde', 'ggmap', 'terra', 'sf', 'move2'))"
+RUN Rscript -e "options(install.packages.check.source = 'no'); install.packages(c('ggplot2', 'ggmap', 'terra'))"
 
 # Set the working directory inside the Docker container
 WORKDIR /srv/shiny-server/myapp
