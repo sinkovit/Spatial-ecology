@@ -38,6 +38,11 @@ RUN install2.r --error --skipinstalled -n -1 \
 # Install additional R packages using binaries with Rscript
 RUN Rscript -e "options(install.packages.check.source = 'no'); install.packages(c('ggplot2', 'ggmap', 'terra'))"
 
+RUN apt-get remove -y linux-libc-dev && apt-get autoremove -y && apt-get clean
+RUN apt-get update && apt-get install -y libgomp1 && apt-get clean
+RUN apt-get update && apt-get install -y libproj22 && apt-get clean
+RUN apt-get update && apt-get install -y libgdal30 && apt-get clean
+
 # Set the working directory inside the Docker container
 WORKDIR /srv/shiny-server/myapp
 
