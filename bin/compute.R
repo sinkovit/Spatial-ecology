@@ -229,7 +229,7 @@ mkdeToTerra <- function(mkde.obj) {
                 min(mkde.obj$y) - 0.5 * sy, max(mkde.obj$y) + 0.5 * sy)
     
     rst <- terra::rast(nrow = mkde.obj$ny, ncol = mkde.obj$nx, xmin = extent[1], xmax = extent[2],
-                ymin = extent[3], ymax = extent[4], crs = "+proj=longlat")
+                ymin = extent[3], ymax = extent[4])
     
     # Transpose and then flip vertically by reversing rows
     d_matrix <- base::t(matrix(mkde.obj$d[,,1], nrow = mkde.obj$nx, ncol = mkde.obj$ny))
