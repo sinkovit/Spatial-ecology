@@ -231,7 +231,7 @@ preprocessDataframe <- function(gpsdata) {
 
     rm(gpsdata.latlong)
   
-    utm <- ifelse(base::mean(gpsdata$lat) > 0.0, paste(utm, "N", sep=""), paste(utm, "S", sep=""))
+    # utm <- ifelse(base::mean(gpsdata$lat) > 0.0, paste(utm, "N", sep=""), paste(utm, "S", sep=""))
     gpsdata$utm.zone <- utm
   }
 

@@ -111,8 +111,74 @@ isEmpty <- function(x) {
   return(FALSE)
 }
 
-save_output <- function(types, rasters, id, utm.zone, datum, basename) {
+# save_bbmm <- function(types, rasters, id, utm.zone, datum, basename) {
+SaveBBMM <- function(types, rasters, id, utm.zone, datum, basename) {
   if (length(rasters) == 0) {
+    return(NULL)
+  }
+
+  if (is.null(basename)) {
+    basename <- "noname"
+  }
+
+  for (raster in rasters) {
+    if (is.null(id) || raster$id == id) {
+      contour_info <- raster$contours
+      crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
+                      " +units=m +no_defs", sep="")
+      output_file <- file.path(path_home(), paste0(basename, "-", raster$id))
+
+      if ("raster" %in% types) {
+        terra::writeRaster(contour_info$raster, filename = paste0(output_file, ".asc"), overwrite = TRUE)
+      }
+
+      if ("shape" %in% types) {
+        contour_lines <- terraToContour(contour_info$raster, contour_info$contour$threshold, crsstr = paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep=""))
+        sf::st_write(contour_lines, paste0(output_file, "_Contours.shp"), overwrite=TRUE)
+      }
+    }
+  }
+}
+
+# SaveBBMM <- function(types, rasters, id, utm.zone, datum, basename) {
+#   if (length(rasters) == 0) {
+#     return(NULL)
+#   }
+#   
+#   if (is.null(basename)) {
+#     basename <- "noname"
+#   }
+#   
+#   for (raster in rasters) {
+#     if (is.null(id) || raster$id == id) {
+#       contour_info <- raster$contours
+#       crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
+#                       " +units=m +no_defs", sep="")
+#       output_file <- file.path(path_home(), paste0(basename, "-", raster$id))
+#       
+#       if ("raster" %in% types) {
+#         terra::writeRaster(contour_info$raster, filename = paste0(output_file, ".asc"), overwrite = TRUE)
+#       }
+#       
+#       if ("shape" %in% types) {
+#         contour_lines <- terraToContour(contour_info$raster, contour_info$contour$threshold, crsstr = paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep=""))
+#         sf::st_write(contour_lines, paste0(output_file, "_Contours.shp"), overwrite=TRUE)
+#       }
+#     }
+#   }
+# }
+
+#
+# Save the given data with the given basename in serialized format
+#
+# Parameters:
+#   data - data to serialize
+#   basename - the basename of the output file
+#
+# Return: NULL if the data is empty or the full path + name of the output file
+#
+Serialize2D <- function(data, basename) {
+  if (length(data) == 0) {
     return(NULL)
   }
   
@@ -120,25 +186,9 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
     basename <- "noname"
   }
   
-  for (raster in rasters) {
-    if (is.null(id) || raster$id == id) {
-      contour_info <- raster$contours
-      crsstr <- paste("+proj=utm +zone=", utm.zone, " +datum=", datum,
-                      " +units=m +no_defs", sep="")
-      output_file <- file.path(path_home(), paste0(basename, "-", raster$id))
-      
-      if ("raster" %in% types) {
-        terra::writeRaster(contour_info$raster, filename = paste0(output_file, ".asc"), overwrite = TRUE)
-      }
-      
-      if ("shape" %in% types) {
-        print("here 3")
-        contour_lines <- terraToContour(contour_info$raster, contour_info$contour$threshold, crsstr = paste("+proj=utm +zone=", utm.zone, " +datum=", datum, " +units=m +no_defs", sep=""))
-        print("here 4")
-        sf::st_write(contour_lines, paste0(output_file, "_Contours.shp"), overwrite=TRUE)
-      }
-    }
-  }
+  output_file <- file.path(path_home(), paste0(basename, "-data2D"))
+  base::saveRDS(data, output_file)
+  return(output_file)
 }
 
 # Read the Stadia map API key file, remove newline if any is present, and setup
@@ -146,7 +196,7 @@ save_output <- function(types, rasters, id, utm.zone, datum, basename) {
 # valid or not.  If the key is not valid, the error "Error in
 # curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input
 # to a URL function" will be caught at plot run-time
-setupAPIkey <- function() {
+SetupAPIKey <- function() {
   filename <- "/secrets/mkde.txt"
   key <- readr::read_file(filename)
   key <- gsub("[\r\n]", "", key)

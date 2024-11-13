@@ -31,7 +31,9 @@
 # OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
 # MODIFICATIONS.
 
-# This code uses the Tidyverse Style Guide @ https://style.tidyverse.org
+# This code uses the Tidyverse Style Guide @ https://style.tidyverse.org;
+# except function names will follow Google's R Style Guide @
+# https://google.github.io/styleguide/Rguide.html
 
 library(shiny)
 library(mkde)
@@ -60,6 +62,7 @@ library(rayshader)
 library(rgl)
 
 source("compute.R")
+source("jobs.R")
 source("loadDataframe.R")
 source("processDataframe.R")
 source("util.R")
@@ -293,7 +296,7 @@ ui <- dashboardPage(
             actionButton("bbmm_plot_button", label = "Plot"),
             # actionButton("bbmm_submit_button", label = "Submit"),
             # bsTooltip(id = "bbmm_submit_button",
-            #           title = "Submit computation to supercomputer"),
+            #           title = "Submit computation to SDSC's Expanse supercomputer"),
             actionButton("bbmm_save_button", label = "Save"),
             bsTooltip(id = "bbmm_save_button", placement = "right",
                       title = "Save current plot to your computer"),
@@ -427,7 +430,7 @@ server <- function(input, output, session) {
   message <- "Setting up API key..."
   tryCatch ({
     showNotification(message, id = id, duration = NULL, session = session)
-    setupAPIkey()
+    SetupAPIKey()
     showNotification(paste(message, "done"), id = id, duration = 3,
                      session = session)
   },
@@ -520,9 +523,13 @@ server <- function(input, output, session) {
   # Hide the table elements
   shinyjs::hide("areaUnitsDiv")
   
+  # for debugging
+  # env_var <- names(s <- Sys.getenv())
+  # print(paste("env_var:", env_var))
+  # print(paste("USER =", Sys.getenv("USER")))
+  
   # I couldn't get the environment variable to persist on the hub so we'll
   # create our app's own environment file.
-  # env_var <- names(s <- Sys.getenv())
   
   # Retrieve user's Movebank credential info, if available
   tryCatch({
@@ -599,7 +606,8 @@ server <- function(input, output, session) {
     if (input$controls == "Data") {
       if (isEmpty (gps$original)) {
         output$instructions <- renderUI({
-          tagList(h4("Welcome, first step is to load your data..."),
+          tagList(h4(paste("Welcome ", Sys.getenv("USER"),
+                           ", first step is to load your data...", sep = "")),
                   tags$hr(style = "border-top: 2px solid #000000;")
           )
         })
@@ -760,9 +768,9 @@ server <- function(input, output, session) {
       id <- "load_movebank"
       message <- "Accessing Movebank..."
       showNotification(message, duration = NULL, id = id, session = session)
-      results <- loadDataframeFromMB(username = input$movebank_username,
+      results <- loadDataframeFromMB(study = input$movebank_studyid,
+                                     username = input$movebank_username,
                                      password = input$movebank_password,
-                                     study = input$movebank_studyid,
                                      remove_outliers = input$movebank_outliers)
       basename <- input$movebank_studyid
       # updateTextInput(session, "save_movebank_filename",
@@ -930,7 +938,7 @@ server <- function(input, output, session) {
   observe ({
     recalculate_raster(TRUE)
     replot_bbmm(TRUE)
-    
+
     if (!is.numeric (input$zone) || input$zone < 1 || input$zone > 60) {
       color <- "solid #FF0000"
     } else {
@@ -1022,8 +1030,10 @@ server <- function(input, output, session) {
         (is.numeric(input$cellsize) && input$cellsize < 1) ||
         (is.numeric(input$bbmm_buffer) && input$bbmm_buffer < 0)) {
       shinyjs::disable("bbmm_plot_button")
+      # shinyjs::disable("bbmm_submit_button")
     } else {
       shinyjs::enable("bbmm_plot_button")
+      # shinyjs::enable("bbmm_submit_button")
     }
   })
 
@@ -1047,12 +1057,14 @@ server <- function(input, output, session) {
       shinyjs::disable("mcp_save_button")
       shinyjs::disable("bbmm_plot_button")
       shinyjs::disable("bbmm_save_button")
+      # shinyjs::disable("bbmm_submit_button")
     } else {
       shinyjs::enable("mcp_plot_button")
       shinyjs::enable("mcp_save_format")
       shinyjs::enable("mcp_save_button")
       shinyjs::enable("bbmm_plot_button")
       shinyjs::enable("bbmm_save_button")
+      # shinyjs::enable("bbmm_submit_button")
     }
   })
 
@@ -1171,12 +1183,29 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$mcp_save_button, {
-    print("save mcp plot button!")
+    print("save mcp plot button, needs work!")
   })
   
   observeEvent(input$bbmm_plot_button, {
     shinyjs::hide("instructions")
     shinyjs::disable("controls")
+    
+    showModal(modalDialog(
+      title = "BBMM plotting...",
+      HTML("Your cell size setting can greatly affect the computational time needed for the BBMM calculation. Since the SEG has limited and shared computational resources, we request the following: <ol><li>Start with a <b>large</b> value using the gateway<br>A typical starting value might be 50-100 m for terrestrial animals and 1000-2000 m for avian species.</li><li>Gradually reduce the cell size until either the computation takes more than 3 minutes or the desired resolution is attained</li><li>If longer calculation are necessary, please submit the computation to the SDSC Expanse supercomputer</li></ol>To help with the selection of the cell size, the summary table shows the grid dimensions that would result from cells of size 30, 60, 100 and 300 m."),
+      footer = tagList(
+        actionButton("plot_bbmm", "Plot on gateway"),
+        actionButton("submit_bbmm", "Submit to supercomputer"),
+        # actionButton("option3", "Third Option"),
+        modalButton("Cancel")
+      ),
+      easyClose = TRUE
+    ))
+  })
+  
+  # User has chosen to plot BBMM using the gateway...
+  observeEvent(c(input$plot_bbmm, input$submit_bbmm), {
+    removeModal()
     
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
@@ -1196,11 +1225,13 @@ server <- function(input, output, session) {
       # mat %>% height_shade() %>% plot_map()
     } else {
       data <- gps$data
+      remote_job <- input$submit_bbmm > 0 ? TRUE : FALSE
       mid <- "calculate_raster2d"
       message <- paste("Calculating 2D raster...")
       showNotification(message, id = mid, duration = NULL, session = session)
       result <- calculateRaster2D(data, id, input$variance, input$max_time,
-                                  input$cellsize, input$bbmm_buffer)
+                                  input$cellsize, input$bbmm_buffer, remote_job)
+
       if (is.character(result)) {
         showNotification(paste("Error:", result), id = mid, duration = NULL,
                          type = "error", session = session)
@@ -1208,6 +1239,15 @@ server <- function(input, output, session) {
       } else {
         showNotification(paste(message, "done"), id = mid, duration = 3,
                          session = session)
+        
+        if (remote_job) {
+          output_file <- Serialize2D(result, input$basename)
+          SubmitJob(Sys.getenv("USER"), output_file)
+          showNotification(
+            "Your BBMM calculation has been submitted to SDSC's Expanse supercomputer.  Please come back later to check the results.",
+            duration = NULL, session = session)
+          return
+        }
         
         raster <- result
         recalculate_raster(FALSE)
@@ -1233,14 +1273,12 @@ server <- function(input, output, session) {
       mid <- "create_contour"
       message <- "Calculating space use..."
       tryCatch({
-        probs = as.numeric ( unlist (strsplit (input$probability, ",")))
+        probs = as.numeric(unlist (strsplit (input$probability, ",")))
         # print(paste("save_bbmm_type:", input$save_bbmm_type))
         showNotification(message, id = mid, duration = NULL, session = session)
         # print(paste("raster :", summary(raster)))
-        print("here 2")
         results <- createContour(raster, probs, input$zone, input$datum,
                                  input$bbmm_buffer)
-        print("here 3")
         #print(paste("results fits =", results[[1]]$fits))
         showNotification(paste(message, "done"), id = mid, duration = 3,
                          session = session)
@@ -1347,6 +1385,56 @@ server <- function(input, output, session) {
     }
   })
   
+  observeEvent(input$submit_bbmm, {
+    removeModal()
+    
+    summary <- gps$summary
+    id <- summary$id[input$table_summary_rows_selected]
+    raster <- NULL
+    rasters <- gps$rasters
+    if(recalculate_raster())
+      rasters <- NULL
+    
+    if (! is.null (rasters) && ! is.null (rasters[[id]])) {
+      raster <- rasters[[id]]$raster
+      # print(paste("raster summary =", summary(raster)))
+      # print(paste("str =", str(raster)))
+      # print(paste("typeof =", typeof(raster)))
+      # print(paste("attributes =", attributes(raster)))
+      # mat <- raster_to_matrix(raster)
+      # print(paste("mat summary =", summary(mat)))
+      # mat %>% height_shade() %>% plot_map()
+    } else {
+      data <- gps$data
+      mid <- "calculate_raster2d"
+      message <- paste("Calculating 2D raster...")
+      showNotification(message, id = mid, duration = NULL, session = session)
+      result <- calculateRaster2D(data, id, input$variance, input$max_time,
+                                  input$cellsize, input$bbmm_buffer)
+      if (is.character(result)) {
+        showNotification(paste("Error:", result), id = mid, duration = NULL,
+                         type = "error", session = session)
+        replot_bbmm(FALSE)
+      } else {
+        showNotification(paste(message, "done"), id = mid, duration = 3,
+                         session = session)
+        
+    print("submitting to supercomputer!")
+    data2d <- list(
+      x = x,
+      y = y,
+      t = t,
+      sig2obs = sig2obs,
+      t.max = t.max,
+      cell.sz = cell.sz,
+      xmin = xmin,
+      ymin = ymin,
+      nx = nx,
+      ny = ny
+    )
+    saveRDS(data2d, file = "data2d.rds")
+  })
+  
   observeEvent(input$reset_parameters, {
     shinyjs::reset("variance")
     shinyjs::reset("max_time")
@@ -1356,7 +1444,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$save_bbmm_button, {
-    # print("save bbmm output button!")
+    print("save bbmm output button!")
     # print(paste("save_bbmm_data =", input$save_bbmm_data))
     id <- NULL
     if (input$save_bbmm_data == "current") {
@@ -1368,8 +1456,8 @@ server <- function(input, output, session) {
     message <- paste("Saving output files to ", path_home(), "/", input$basename,
                      "* ...", sep = "")
     showNotification(message, id = mid, duration = NULL, session = session)
-    save_output(input$save_bbmm_type, gps$rasters, id, input$zone, input$datum,
-                input$basename)
+    SaveBBMM(input$save_bbmm_type, gps$rasters, id, input$zone, input$datum,
+              input$basename)
     showNotification(paste(message, "done"), id = mid, duration = NULL,
                      session = session)
   })
