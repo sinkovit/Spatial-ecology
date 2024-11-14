@@ -167,18 +167,26 @@ animalAttributes <- function(data_df, areaUnits) {
   return(result)
 }
 
-# Calculate rasters for each indivdual in a dataframe using mkde
-# package and return the results as a list of rasters
 #
-# gpsdata - data frame containing animal movement data
-# sig2obs - location error variance
-# t.max - maximum time between locations
-# cell.sz - cell size
-# xmin, xmax - min/max x coordinate
-# ymin, ymax - min/max y coordinate
+# Calculate rasters for each indivdual in a dataframe using mkde package and
+# return the results as a list of rasters
 #
-# returns string if there is an error or a list of rasters if successful
-calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
+# Parameters:
+#   gpsdata - data frame containing animal movement data
+#   sig2obs - location error variance
+#   t.max - maximum time between locations
+#   cell.sz - cell size
+#   remote_job - (optional, defaults to FALSE) will the MKDE be calculated by a
+#     remote job submitted to the supercomputer; should be TRUE or FALSE
+#
+# Return: depending on condition will return ONE of the following:
+#   if there is an error, will return an error string suitable to be displayed
+#     to the user;
+#   if remote_job = TRUE, list of values suitable for MKDE 2D calculation
+#   if remote_job = FALSE, list of rasters
+#
+calculateRaster2D <- function (
+    gpsdata, id, sig2obs, t.max, cell.sz, buffer, remote_job = FALSE) {
 
   x <- gpsdata[which(gpsdata$id == id), "xdata"]
   y <- gpsdata[which(gpsdata$id == id), "ydata"]
@@ -189,6 +197,8 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   if (min_maxt > t.max)
     return(paste("Max time must be >=", min_maxt, "for animal id", id))
 
+  # xmin, xmax - min/max x coordinate
+  # ymin, ymax - min/max y coordinate
   xmin = min(x) - buffer
   xmax = max(x) + buffer 
   ymin = min(y) - buffer
@@ -208,11 +218,18 @@ calculateRaster2D <- function (gpsdata, id, sig2obs, t.max, cell.sz, buffer) {
   # base::print(paste("cell size =", cell.sz))
   # base::print("---------------------------------------")
   
+  # if remote job, then return the list of info needed for job submission
+  if (remote_job) {
+    data2d <- list(x = x, y = y, t = t, sig2obs = sig2obs, t.max = t.max,
+                   cell.sz = cell.sz, xmin = xmin, ymin = ymin, nx = nx, ny = ny)
+    return(data2d)
+  }
+  
+  # if not remote job, then do MKDE calculation
   mv.dat <- initializeMovementData(t, x, y, sig2obs = sig2obs, t.max = t.max)
   mkde.obj <- initializeMKDE2D(xmin, cell.sz, nx, ymin, cell.sz, ny)
   dens.res <- initializeDensity(mkde.obj, mv.dat)
   mkde.obj <- dens.res$mkde.obj
-  
   return (mkde.obj)
 }
 
@@ -229,7 +246,7 @@ mkdeToTerra <- function(mkde.obj) {
                 min(mkde.obj$y) - 0.5 * sy, max(mkde.obj$y) + 0.5 * sy)
     
     rst <- terra::rast(nrow = mkde.obj$ny, ncol = mkde.obj$nx, xmin = extent[1], xmax = extent[2],
-                ymin = extent[3], ymax = extent[4], crs = st_crs("+proj=longlat"))
+                ymin = extent[3], ymax = extent[4])
     
     # Transpose and then flip vertically by reversing rows
     d_matrix <- base::t(matrix(mkde.obj$d[,,1], nrow = mkde.obj$nx, ncol = mkde.obj$ny))

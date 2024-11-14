@@ -189,12 +189,17 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     # study_sensors <- movebank_download_study_info(study_id = study)$sensor_type_ids
     # print(paste("study_sensors =", study_sensors))
 
+    required_attributes <- c("location_long", "location_lat", "timestamp",
+                             "individual_local_identifier")
+    
+    # the following gets the attributes for a particular sensor and NOT for the
+    # study!
     # get the attributes of the study to make sure that it has our minimum
     # required info
     # browser()
-    attributes <- move2::movebank_retrieve(entity_type = "study_attribute",
-                                           study_id = strtoi(study),
-                                           sensor_type_id = "gps")$short_name
+    # attributes <- move2::movebank_retrieve(entity_type = "study_attribute",
+    #                                        study_id = strtoi(study),
+    #                                        sensor_type_id = "gps")$short_name
     # # following from Bart (https://gitlab.com/bartk/move2/-/issues/85) threw a
     # # runtime error
     # study_attributes <- move2::movebank_retrieve(
@@ -205,41 +210,49 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     # print(paste("attributes nrow =", nrow(attributes)))
     # print(paste("attributes length =", length(attributes)))
     # print(paste("attributes names =", names(attributes)))
-    if (!length(attributes)) {
-      return(list(NULL, "No attributes found for data!"))
-    }
-    
+    # missing_attributes <- setdiff(required_attributes, attributes)
+    # print(paste("missing_attributes:", missing_attributes))
+    # if (length(missing_attributes) > 0) {
+    #   return(list(NULL, paste("Missing required attribute(s):",
+    #                           missing_attributes)))
+    # }
+
     # for debugging
-    info <- move2::movebank_download_study_info(study_id = strtoi(study))
+    # info <- move2::movebank_download_study_info(study_id = strtoi(study))
     # print(paste("info class =", class(info)))
     # print(paste("info nrow =", nrow(info)))
     # print(paste("info length =", length(info)))
     # print(paste("info names =", names(info)))
-    info_df <- as.data.frame(info)
+    # info_df <- as.data.frame(info)
     # for (i in colnames(info_df)) {
     #   if (! is.na(info_df[,i])) {
     #     print(paste(i, "=", info_df[,i]))
     #   }
     # }
     
-    require_attributes <- c("location_long", "location_lat", "timestamp",
-                            "individual_local_identifier")
-    
+    # can also use parameter attributes = required_attributes
     data2 <- move2::movebank_retrieve(
-      entity_type = 'event', study_id = study, attributes = require_attributes,
+      entity_type = 'event', study_id = study, attributes = "all",
       remove_movebank_outliers=remove_outliers)
-    # attributes = c("event_id", "ground_speed",
-    #                "heading", "height_raw",
-    #                "individual_local_identifier",
-    #                "individual_taxon_canonical_name",
-    #                "location_lat", "location_long",
-    #                "sensor_type_id", "timestamp",
-    #                "visible"),
+    # # attributes = c("event_id", "ground_speed",
+    # #                "heading", "height_raw",
+    # #                "individual_local_identifier",
+    # #                "individual_taxon_canonical_name",
+    # #                "location_lat", "location_long",
+    # #                "sensor_type_id", "timestamp",
+    # #                "visible"),
     # print(paste("data2 read in class =", class(data2)))
     # print(paste("data2 read in length =", length(data2)))
     # print(paste("data2 read in nrow =", nrow(data2)))
     # print(paste("data2 read in names =", names(data2)))
-    # return(list(data, "Your Movebank account info has been saved"))
+    
+    # check to be sure required attributes are present
+    missing_attributes <- setdiff(required_attributes, names(data2))
+    print(paste("missing_attributes:", missing_attributes))
+    if (length(missing_attributes) > 0) {
+      return(list(NULL, paste("Missing required attribute(s):",
+                              missing_attributes)))
+    }
 
     # converting tibble to data.frame
     results <- as.data.frame(data2)
