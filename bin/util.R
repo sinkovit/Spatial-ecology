@@ -186,7 +186,9 @@ Serialize2D <- function(data, basename) {
     basename <- "noname"
   }
   
-  output_file <- file.path(path_home(), paste0(basename, "-data2D"))
+  #output_file <- file.path(path_home(), paste0(basename, ".rds"))
+  output_file <- file.path(paste0("/tmp/", basename, "-",
+                                  format(Sys.time(), "%Y%m%d%H%M%S"), ".rds"))
   base::saveRDS(data, output_file)
   return(output_file)
 }
