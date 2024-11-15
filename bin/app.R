@@ -1192,7 +1192,7 @@ server <- function(input, output, session) {
     
     showModal(modalDialog(
       title = "BBMM plotting...",
-      HTML("Your cell size setting can greatly affect the computational time needed for the BBMM calculation. Since the SEG has limited and shared computational resources, we request the following: <ol><li>Start with a <b>large</b> value using the gateway<br>A typical starting value might be 50-100 m for terrestrial animals and 1000-2000 m for avian species.</li><li>Gradually reduce the cell size until either the computation takes more than 3 minutes or the desired resolution is attained</li><li>If longer calculation are necessary, please submit the computation to the SDSC Expanse supercomputer</li></ol>To help with the selection of the cell size, the summary table shows the grid dimensions that would result from cells of size 30, 60, 100 and 300 m."),
+      HTML("Your cell size setting can greatly affect the computational time needed for the BBMM calculation. Since the resources on SEG are shared and limited, please follow these guidelines: <ol><li>Start with a <b>large</b> value using the gateway<br>A typical starting value might be 50-100 m for terrestrial animals and 1000-2000 m for avian species.</li><li>Gradually reduce the cell size until either the computation takes more than a minute or the desired resolution is attained</li><li>If longer calculation are necessary, please submit the computation to the SDSC Expanse supercomputer</li></ol>To help with the selection of the cell size, the summary table shows the grid dimensions that would result from cells of size 30, 60, 100 and 300 m."),
       footer = tagList(
         actionButton("plot_bbmm", "Plot on gateway"),
         actionButton("submit_bbmm", "Submit to supercomputer"),
@@ -1205,6 +1205,11 @@ server <- function(input, output, session) {
   
   # User has chosen to plot BBMM using the gateway...
   observeEvent(c(input$plot_bbmm, input$submit_bbmm), {
+
+    # Ignore non-user input events
+    if (input$plot_bbmm == 0 && input$submit_bbmm == 0)
+      return()
+    
     removeModal()
     
     summary <- gps$summary
@@ -1225,7 +1230,8 @@ server <- function(input, output, session) {
       # mat %>% height_shade() %>% plot_map()
     } else {
       data <- gps$data
-      remote_job <- input$submit_bbmm > 0 ? TRUE : FALSE
+      remote_job <- input$submit_bbmm > 0
+      print(paste("remote_job =", remote_job))
       mid <- "calculate_raster2d"
       message <- paste("Calculating 2D raster...")
       showNotification(message, id = mid, duration = NULL, session = session)
@@ -1241,12 +1247,13 @@ server <- function(input, output, session) {
                          session = session)
         
         if (remote_job) {
+          print("serializing...")
           output_file <- Serialize2D(result, input$basename)
           SubmitJob(Sys.getenv("USER"), output_file)
           showNotification(
             "Your BBMM calculation has been submitted to SDSC's Expanse supercomputer.  Please come back later to check the results.",
             duration = NULL, session = session)
-          return
+          return()
         }
         
         raster <- result
@@ -1385,55 +1392,55 @@ server <- function(input, output, session) {
     }
   })
   
-  observeEvent(input$submit_bbmm, {
-    removeModal()
-    
-    summary <- gps$summary
-    id <- summary$id[input$table_summary_rows_selected]
-    raster <- NULL
-    rasters <- gps$rasters
-    if(recalculate_raster())
-      rasters <- NULL
-    
-    if (! is.null (rasters) && ! is.null (rasters[[id]])) {
-      raster <- rasters[[id]]$raster
-      # print(paste("raster summary =", summary(raster)))
-      # print(paste("str =", str(raster)))
-      # print(paste("typeof =", typeof(raster)))
-      # print(paste("attributes =", attributes(raster)))
-      # mat <- raster_to_matrix(raster)
-      # print(paste("mat summary =", summary(mat)))
-      # mat %>% height_shade() %>% plot_map()
-    } else {
-      data <- gps$data
-      mid <- "calculate_raster2d"
-      message <- paste("Calculating 2D raster...")
-      showNotification(message, id = mid, duration = NULL, session = session)
-      result <- calculateRaster2D(data, id, input$variance, input$max_time,
-                                  input$cellsize, input$bbmm_buffer)
-      if (is.character(result)) {
-        showNotification(paste("Error:", result), id = mid, duration = NULL,
-                         type = "error", session = session)
-        replot_bbmm(FALSE)
-      } else {
-        showNotification(paste(message, "done"), id = mid, duration = 3,
-                         session = session)
-        
-    print("submitting to supercomputer!")
-    data2d <- list(
-      x = x,
-      y = y,
-      t = t,
-      sig2obs = sig2obs,
-      t.max = t.max,
-      cell.sz = cell.sz,
-      xmin = xmin,
-      ymin = ymin,
-      nx = nx,
-      ny = ny
-    )
-    saveRDS(data2d, file = "data2d.rds")
-  })
+  # observeEvent(input$submit_bbmm, {
+  #   removeModal()
+  #   
+  #   summary <- gps$summary
+  #   id <- summary$id[input$table_summary_rows_selected]
+  #   raster <- NULL
+  #   rasters <- gps$rasters
+  #   if(recalculate_raster())
+  #     rasters <- NULL
+  #   
+  #   if (! is.null (rasters) && ! is.null (rasters[[id]])) {
+  #     raster <- rasters[[id]]$raster
+  #     # print(paste("raster summary =", summary(raster)))
+  #     # print(paste("str =", str(raster)))
+  #     # print(paste("typeof =", typeof(raster)))
+  #     # print(paste("attributes =", attributes(raster)))
+  #     # mat <- raster_to_matrix(raster)
+  #     # print(paste("mat summary =", summary(mat)))
+  #     # mat %>% height_shade() %>% plot_map()
+  #   } else {
+  #     data <- gps$data
+  #     mid <- "calculate_raster2d"
+  #     message <- paste("Calculating 2D raster...")
+  #     showNotification(message, id = mid, duration = NULL, session = session)
+  #     result <- calculateRaster2D(data, id, input$variance, input$max_time,
+  #                                 input$cellsize, input$bbmm_buffer)
+  #     if (is.character(result)) {
+  #       showNotification(paste("Error:", result), id = mid, duration = NULL,
+  #                        type = "error", session = session)
+  #       replot_bbmm(FALSE)
+  #     } else {
+  #       showNotification(paste(message, "done"), id = mid, duration = 3,
+  #                        session = session)
+  #       
+  #   print("submitting to supercomputer!")
+  #   data2d <- list(
+  #     x = x,
+  #     y = y,
+  #     t = t,
+  #     sig2obs = sig2obs,
+  #     t.max = t.max,
+  #     cell.sz = cell.sz,
+  #     xmin = xmin,
+  #     ymin = ymin,
+  #     nx = nx,
+  #     ny = ny
+  #   )
+  #   saveRDS(data2d, file = "data2d.rds")
+  # })
   
   observeEvent(input$reset_parameters, {
     shinyjs::reset("variance")
