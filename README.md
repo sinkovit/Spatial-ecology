@@ -7,21 +7,8 @@ https://github.com/nanohub-apps/hubtooljupytertemplate).
 * Previous code is in the "Bob" branch.
 * We aim to follow the Tidyverse style guide @ https://style.tidyverse.org/index.html
 
-### The following R packages are required for this app
-1. DT
-2. ggmap
-3. ggplot2
-3. keyring
-4. mkde
-5. move2
-6. R.utils
-7. shiny
-8. shinyBS
-9. shinycssloaders
-10. shinydashboard
-11. shinyFiles
-12. shinyjs
-13. stringr
-14. sf
-15. terra
-16. tools
+### Container
+We are making our space use software available to be used in a container.  This allows you to run your own container with all the required software already installed.
+
+#### Requirements
+1. Stadia Map key - our software will require that you have a Stadia Map key.  There is a free tier.  Instructions for setting up your key can be found [here](https://docs.stadiamaps.com/authentication/#api-keys).
