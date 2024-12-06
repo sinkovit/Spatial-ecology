@@ -198,10 +198,15 @@ Serialize2D <- function(data, basename) {
 # valid or not.  If the key is not valid, the error "Error in
 # curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input
 # to a URL function" will be caught at plot run-time
+# Returns: TRUE if success; FALSE otherwise
 SetupAPIKey <- function() {
   filename <- "/secrets/mkde.txt"
-  key <- readr::read_file(filename)
-  key <- gsub("[\r\n]", "", key)
-  register_stadiamaps(key = key, write = FALSE)
-  return(TRUE)
+  if (file.access(filename, 4) == 0 ) {
+    key <- readr::read_file(filename)
+    key <- gsub("[\r\n]", "", key)
+    ggmap::register_stadiamaps(key = key, write = FALSE)
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
 }
