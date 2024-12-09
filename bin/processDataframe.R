@@ -54,8 +54,8 @@
 
 # Returns a list where first item is the data, the second item is a message for
 # the user and the third item is an error message; if successful, the error
-# message = NULL and data will be populated; if there is an error message, then
-# data = NULL
+# message = NULL and data will be populated; there may or may not be a message.
+# If there is an error message, then data = NULL
 
 preprocessDataframe <- function(gpsdata) {
 
@@ -190,7 +190,9 @@ preprocessDataframe <- function(gpsdata) {
   messages <- NULL
   
   if(("lat" %in% colnames(gpsdata) && "long" %in% colnames(gpsdata)) &&
-     (!"utm.easting" %in% colnames(gpsdata) && !"utm.northing" %in% colnames(gpsdata) && !"utm.zone" %in% colnames(gpsdata))) {
+     (!"utm.easting" %in% colnames(gpsdata) &&
+      !"utm.northing" %in% colnames(gpsdata) &&
+      !"utm.zone" %in% colnames(gpsdata))) {
     
     # First, find out and remove any lat/long NA values...
     if (anyNA(gpsdata$lat) || anyNA(gpsdata$long) || anyNA(gpsdata$time) ||
@@ -237,8 +239,13 @@ preprocessDataframe <- function(gpsdata) {
 
   #### Generate list of UTM zones found in data file
   found.zones <- base::unique(gpsdata$utm.zone)
-  messages[[length(messages) + 1]] <-
-    paste("The data is in the projected zone:", paste(found.zones, collapse = ", "))
+  print(paste("found.zones =", found.zones))
+  print(paste("length =", length(found.zones)))
+  if (length(found.zones > 0)) {
+    messages[[length(messages) + 1]] <-
+      paste("The data is in the projected zone:", paste(found.zones,
+                                                        collapse = ", "))
+  }
   
   #### Delete the column names that we don't need
   

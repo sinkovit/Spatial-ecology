@@ -93,6 +93,8 @@ jscode <- "shinyjs.closeWindow = function() { window.close(); }"
 # options(rgl.useNULL=TRUE)
 
 # Define UI for app
+# Our design is that all user UI are handled in this file so that the code files
+# do NOT need to have any UI context
 ui <- dashboardPage(
   
   # skin = "black",
@@ -401,7 +403,6 @@ ui <- dashboardPage(
 
 # Define server logic required
 server <- function(input, output, session) {
-  
   # showNotification(paste("session$token =", session$token), session = session)
 
   ############################################################################
@@ -425,37 +426,6 @@ server <- function(input, output, session) {
   # deployment debugging
   showNotification("This is a debug check...", duration = NULL, session = session)
   showNotification(R.version.string, duration = NULL, type = "message", session = session)
-  
-  ############################################################################
-  # Setup the Stadia Map API key
-  ############################################################################
-  if (SetupAPIKey()) {
-    showNotification("Stadia Map key setup successful", duration = 3,
-                     session = session)
-  } else {
-    stadiaMapDialog <- function(failed = FALSE, value = "") {
-      modalDialog(
-        textInput(
-          "user_stadia_map_key",
-          label = HTML("Please enter your Stadia Map API key (<a href=\"https://docs.stadiamaps.com/authentication/#api-keys\">?</a>)"),
-          value = value),
-        if (failed) {
-          div(tags$b("Invalid Stadia Map API key", style = "color: red;"))
-        },
-        size = "s",
-        footer = tagList(
-          modalButton("Cancel"),
-          actionButton("stadiamap_key_ok", "OK")
-        )
-      )
-    }
-    # showModal(stadiaMapDialog())
-  }
-  observeEvent(input$stadiamap_key_ok, {
-    # print(paste("stadia map key =", input$user_stadia_map_key))
-    removeModal()
-    ggmap::register_stadiamaps(key = input$user_stadia_map_key, write = FALSE)
-  })
   
 
   ############################################################################
@@ -499,6 +469,40 @@ server <- function(input, output, session) {
   # showNotification(paste("gateway_volumes final:", gateway_volumes,
   #                        collapse = " "), duration = NULL, type = "message",
   #                  session = session)
+  
+  
+  ############################################################################
+  # Setup and handle the Stadia Map API key
+  ############################################################################
+  if (SetupAPIKey()) {
+    showNotification("Stadia Map key setup successful", duration = 3,
+                     session = session)
+  } else {
+    show_stadiamap_dialog_message_id <- "show_stadiamap_dialog"
+    stadiaMapDialog <- function(failed = FALSE, value = "") {
+      modalDialog(
+        textInput(
+          "user_stadia_map_key",
+          label = HTML("Please enter your Stadia Map API key (<a href=\"https://docs.stadiamaps.com/authentication/#api-keys\">?</a>)"),
+          value = value),
+        if (failed) {
+          div(tags$b("Invalid Stadia Map API key", style = "color: red;"))
+        },
+        size = "s",
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("stadiamap_key_ok", "OK")
+        )
+      )
+    }
+    showModal(stadiaMapDialog())
+  }
+  observeEvent(input$stadiamap_key_ok, {
+    # print(paste("stadia map key =", input$user_stadia_map_key))
+    removeModal()
+    ggmap::register_stadiamaps(key = input$user_stadia_map_key, write = FALSE)
+  })
+  
 
   ############################################################################
   # Initialize UI
@@ -1214,31 +1218,34 @@ server <- function(input, output, session) {
     print("save mcp plot button, needs work!")
   })
 
-  observeEvent(input$bbmm_plot_button, {
-    shinyjs::hide("instructions")
-    shinyjs::disable("controls")
-
-    showModal(modalDialog(
-      title = "BBMM plotting...",
-      HTML("Your cell size setting can greatly affect the computational time needed for the BBMM calculation. Since the resources on SEG are shared and limited, please follow these guidelines: <ol><li>Start with a <b>large</b> value using the gateway<br>A typical starting value might be 50-100 m for terrestrial animals and 1000-2000 m for avian species.</li><li>Gradually reduce the cell size until either the computation takes more than a minute or the desired resolution is attained</li><li>If longer calculation are necessary, please submit the computation to the SDSC Expanse supercomputer</li></ol>To help with the selection of the cell size, the summary table shows the grid dimensions that would result from cells of size 30, 60, 100 and 300 m."),
-      footer = tagList(
-        actionButton("plot_bbmm", "Plot on gateway"),
-        actionButton("submit_bbmm", "Submit to supercomputer"),
-        # actionButton("option3", "Third Option"),
-        modalButton("Cancel")
-      ),
-      easyClose = TRUE
-    ))
-  })
+  # Commented out as we are currently not submitting to the supercomputer
+  # observeEvent(input$bbmm_plot_button, {
+  #   shinyjs::hide("instructions")
+  #   shinyjs::disable("controls")
+  # 
+  #   showModal(modalDialog(
+  #     title = "BBMM plotting...",
+  #     HTML("Your cell size setting can greatly affect the computational time needed for the BBMM calculation. Since the resources on SEG are shared and limited, please follow these guidelines: <ol><li>Start with a <b>large</b> value using the gateway<br>A typical starting value might be 50-100 m for terrestrial animals and 1000-2000 m for avian species.</li><li>Gradually reduce the cell size until either the computation takes more than a minute or the desired resolution is attained</li><li>If longer calculation are necessary, please submit the computation to the SDSC Expanse supercomputer</li></ol>To help with the selection of the cell size, the summary table shows the grid dimensions that would result from cells of size 30, 60, 100 and 300 m."),
+  #     footer = tagList(
+  #       actionButton("plot_bbmm", "Plot on gateway"),
+  #       actionButton("submit_bbmm", "Submit to supercomputer"),
+  #       # actionButton("option3", "Third Option"),
+  #       modalButton("Cancel")
+  #     ),
+  #     easyClose = TRUE
+  #   ))
+  # })
 
   # User has chosen to plot BBMM using the gateway...
-  observeEvent(c(input$plot_bbmm, input$submit_bbmm), {
+  # observeEvent(c(input$plot_bbmm, input$submit_bbmm), {
+  observeEvent(input$bbmm_plot_button, {
 
-    # Ignore non-user input events
-    if (input$plot_bbmm == 0 && input$submit_bbmm == 0)
-      return()
-
-    removeModal()
+    # # Commented out to disable submitting plotting to supercomputer
+    # # Ignore non-user input events
+    # if (input$plot_bbmm == 0 && input$submit_bbmm == 0)
+    #   return()
+    # 
+    # removeModal()
 
     summary <- gps$summary
     id <- summary$id[input$table_summary_rows_selected]
@@ -1258,13 +1265,16 @@ server <- function(input, output, session) {
       # mat %>% height_shade() %>% plot_map()
     } else {
       data <- gps$data
-      remote_job <- input$submit_bbmm > 0
-      print(paste("remote_job =", remote_job))
+      # remote_job <- input$submit_bbmm > 0
+      # print(paste("remote_job =", remote_job))
       mid <- "calculate_raster2d"
       message <- paste("Calculating 2D raster...")
       showNotification(message, id = mid, duration = NULL, session = session)
+      # result <- calculateRaster2D(data, id, input$variance, input$max_time,
+      #                             input$cellsize, input$bbmm_buffer, remote_job)
+      print(paste("data =", data))
       result <- calculateRaster2D(data, id, input$variance, input$max_time,
-                                  input$cellsize, input$bbmm_buffer, remote_job)
+                                  input$cellsize, input$bbmm_buffer)
 
       if (is.character(result)) {
         showNotification(paste("Error:", result), id = mid, duration = NULL,
@@ -1274,15 +1284,16 @@ server <- function(input, output, session) {
         showNotification(paste(message, "done"), id = mid, duration = 3,
                          session = session)
 
-        if (remote_job) {
-          print("serializing...")
-          output_file <- Serialize2D(result, input$basename)
-          SubmitJob(Sys.getenv("USER"), output_file)
-          showNotification(
-            "Your BBMM calculation has been submitted to SDSC's Expanse supercomputer.  Please come back later to check the results.",
-            duration = NULL, session = session)
-          return()
-        }
+        # Commenting out remote job submission for now...
+        # if (remote_job) {
+        #   print("serializing...")
+        #   output_file <- Serialize2D(result, input$basename)
+        #   SubmitJob(Sys.getenv("USER"), output_file)
+        #   showNotification(
+        #     "Your BBMM calculation has been submitted to SDSC's Expanse supercomputer.  Please come back later to check the results.",
+        #     duration = NULL, session = session)
+        #   return()
+        # }
 
         raster <- result
         recalculate_raster(FALSE)
