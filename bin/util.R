@@ -193,11 +193,13 @@ Serialize2D <- function(data, basename) {
   return(output_file)
 }
 
-# Read the Stadia map API key file, remove newline if any is present, and setup
-# session with the key. Unfortunately there is no way to test if the api key is
-# valid or not.  If the key is not valid, the error "Error in
-# curl::curl_fetch_memory(url, handle = handle): URL rejected: Malformed input
-# to a URL function" will be caught at plot run-time
+# On the gateway, the Stadia Maps key is stored in /secrets/mkde.txt.  If that
+# file exists, then read it's content, remove newline if any is present, and
+# registered the key. If no file, then will check for the STADIA_MAPS_API_KEY
+# environment variable and register the key. Unfortunately there is no way to
+# test if the api key is valid or not.  If the key is not valid, the error
+# "Error in curl::curl_fetch_memory(url, handle = handle): URL rejected:
+# Malformed input to a URL function" will be caught at plot run-time
 # Returns: TRUE if success; FALSE otherwise
 SetupAPIKey <- function() {
   filename <- "/secrets/mkde.txt"
@@ -207,6 +209,12 @@ SetupAPIKey <- function() {
     ggmap::register_stadiamaps(key = key, write = FALSE)
     return(TRUE)
   } else {
-    return(FALSE)
+    key <- Sys.genenv("STADIA_MAPS_API_KEY")
+    if (key == "") {
+      return(FALSE)
+    } else {
+      ggmap::register_stadiamaps(key = key, write = FALSE)
+      return(TRUE)
+    }
   }
 }
