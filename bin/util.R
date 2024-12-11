@@ -209,7 +209,7 @@ SetupAPIKey <- function() {
     ggmap::register_stadiamaps(key = key, write = FALSE)
     return(TRUE)
   } else {
-    key <- Sys.genenv("STADIA_MAPS_API_KEY")
+    key <- Sys.getenv("STADIA_MAPS_API_KEY")
     if (key == "") {
       return(FALSE)
     } else {
