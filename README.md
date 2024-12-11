@@ -15,10 +15,12 @@ We are making our space use software available to be used in a container. This a
 1. Stadia Maps key - you must have a Stadia Maps key to plot.  There is a free tier. Instructions for setting up your key can be found [here](https://docs.stadiamaps.com/authentication/#api-keys).
 
 ### Setup
-1. Download the image from ghcr.io/matthewwangg/spatial-ecology-gateway-dev:latest
-1. Save your Stadmap Maps key into a file with the syntax STADIA_MAPS_API_KEY=<your key>
-1. Create & run the container docker run --env-file <filename from above> -p 3838:3838 ghcr.io/matthewwangg/spatial-ecology-gateway-dev
-1. Enter "http://localhost:3838" into your browser and the app should appear
+1. Download the image from ghcr.io/matthewwangg/spatial-ecology-gateway-dev:latest   
+   `docker pull ghcr.io/matthewwangg/spatial-ecology-gateway-dev:latest`
+1. Save your Stadmap Maps key into a file with the syntax `STADIA_MAPS_API_KEY=<your key>`
+1. Create & run the container   
+   `docker run --env-file <filename_from_step_above> -p 3838:3838 ghcr.io/matthewwangg/spatial-ecology-gateway-dev`
+1. Enter `http://localhost:3838` into your browser and the app should appear
 
 ## Support
 We are providing minimum support during project's funding gap.  If you need support, please submit a [support ticket](https://uccommunityhub.hubzero.org/support) and we will get back to you as soon as possible; thanks for your patience. 
