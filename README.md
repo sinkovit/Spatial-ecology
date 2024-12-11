@@ -1,14 +1,14 @@
 # Spatial-ecology
 This space use software is deployed in the [Spatial Ecology Gateway](https://uccommunityhub.hubzero.org/groups/spaceuseecology)
 
-* User documentation can be found [in the gateway](https://uccommunityhub.hubzero.org/groups/spaceuseecology/space-use-estimator-doc).
+* User documentation can be found [in the gateway](https://uccommunityhub.hubzero.org/groups/spaceuseecology/space-use-estimator-doc) (account required).
 * The structure of this repo matches HUBZero's tool's register structure
 requirement (see [Nano Hub's template](https://github.com/nanohub-apps/hubtooljupytertemplate)).
 * Original code is in the "Bob" branch.
 * We aim to follow the [Google style guide](https://google.github.io/styleguide/Rguide.html) but be aware that there are legacy code that don't follow this convention. 
 
 ## Container
-We are making our space use software available to be used in a container. This allows you to run your own container with all the required software already installed.
+In addition to the gateway, we are also making our space use R Shiny app available to be used in a container. This allows you to run your own container with all the required software already installed.
 
 ### Requirements
 1. Docker version ? 
