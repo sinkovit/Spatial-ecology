@@ -239,8 +239,6 @@ preprocessDataframe <- function(gpsdata) {
 
   #### Generate list of UTM zones found in data file
   found.zones <- base::unique(gpsdata$utm.zone)
-  print(paste("found.zones =", found.zones))
-  print(paste("length =", length(found.zones)))
   if (length(found.zones > 0)) {
     messages[[length(messages) + 1]] <-
       paste("The data is in the projected zone:", paste(found.zones,

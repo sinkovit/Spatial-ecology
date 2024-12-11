@@ -248,7 +248,7 @@ loadDataframeFromMB <- function(study, username, password, remove_outliers) {
     
     # check to be sure required attributes are present
     missing_attributes <- setdiff(required_attributes, names(data2))
-    print(paste("missing_attributes:", missing_attributes))
+    # print(paste("missing_attributes:", missing_attributes))
     if (length(missing_attributes) > 0) {
       return(list(NULL, paste("Missing required attribute(s):",
                               missing_attributes)))
