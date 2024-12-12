@@ -1,6 +1,6 @@
 #!/bin/sh
 /usr/bin/invoke_app "$@" -t mkde \
-                         -u R-4.0.5 \
+                         -u R-4.4.1 \
                          -u wrwroxy-0.2 \
                          -u shiny-server-1.5.17.973 \
                          -w headless \
