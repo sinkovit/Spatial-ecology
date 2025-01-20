@@ -1,5 +1,5 @@
 # Use the Rocker Project's R version 4.3 image
-FROM rocker/r-ver:4.4.1
+FROM rocker/r-ver:4.4.2
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -31,20 +31,12 @@ RUN install2.r --error --skipinstalled -n -1 \
     shinyBS \
     shinyFiles \
     tools \
-    mkde \ 
+    mkde \
     move2 \
     sf 
 
 # Install additional R packages using binaries with Rscript
 RUN Rscript -e "options(install.packages.check.source = 'no'); install.packages(c('ggplot2', 'ggmap', 'terra'))"
-
-RUN apt-get update && \
-    apt-get remove -y linux-libc-dev && \
-    apt-get install -y libgomp1 libproj22 libgdal30 && \
-    apt-get purge -y 'mysql*' 'libmysql*' 'openjdk*' 'bslib*' 'libpixman*' && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
 RUN rm -rf /usr/local/lib/R/site-library/bslib/lib/bs4
 
