@@ -58,7 +58,7 @@ library(keyring)  # used by move2
 
 library(readr)
 library(fs)
-library(rayshader)
+#library(rayshader)
 library(rgl)
 
 source("compute.R")
@@ -241,16 +241,16 @@ ui <- dashboardPage(
             # tags$strong(id = "mcp_save_label", "Output"),
             # # textInput("mcp_save_filename", "Filename"),
             # actionButton("mcp_save_filename", label = NULL),
-            radioButtons("mcp_save_format", label = "Format:", inline = TRUE,
-                         choices = list("BMP" = "bmp", "JPEG" = "jpg",
-                                        "PDF" = "pdf", "PNG" = "png",
-                                        "Postscript" = "ps", "SVG" = "svg",
-                                        "TIFF" = "tiff")),
+            # radioButtons("mcp_save_format", label = "Format:", inline = TRUE,
+            #              choices = list("BMP" = "bmp", "JPEG" = "jpg",
+            #                             "PDF" = "pdf", "PNG" = "png",
+            #                             "Postscript" = "ps", "SVG" = "svg",
+            #                             "TIFF" = "tiff")),
             hr(style = "border-top: 2px solid grey;"),
             actionButton("mcp_plot_button", label = "Plot"),
-            actionButton("mcp_save_button", label = "Save"),
-            bsTooltip(id = "mcp_save_button",
-                      title = "Save current plot in above output format to your computer"),
+            # actionButton("mcp_save_button", label = "Save"),
+            # bsTooltip(id = "mcp_save_button",
+            #           title = "Save current plot in above output format to your computer"),
           ),
           tabPanel(title = "BBMM", value = "BBMM", tags$br(),
             tags$strong(id = "dimensions_label", "Dimensions:"),
@@ -424,8 +424,8 @@ server <- function(input, output, session) {
   pdf(file = NULL)
   
   # deployment debugging
-  showNotification("This is a debug check...", duration = NULL, session = session)
-  showNotification(R.version.string, duration = NULL, type = "message", session = session)
+  # showNotification("This is a debug check...", duration = NULL, session = session)
+  # showNotification(R.version.string, duration = NULL, type = "message", session = session)
   
 
   ############################################################################
@@ -530,8 +530,8 @@ server <- function(input, output, session) {
   })
 
   shinyjs::hide("mcp_plot")
-  shinyjs::hide("mcp_save_format")
-  shinyjs::hide("mcp_save_button")
+  # shinyjs::hide("mcp_save_format")
+  # shinyjs::hide("mcp_save_button")
   shinyjs::hide("bbmm_plot")
   shinyjs::hide("bbmm_save_button")
   shinyjs::hide("tables")
@@ -942,9 +942,9 @@ server <- function(input, output, session) {
           showTab("tables", target = "All", session = session)
           shinyjs::show("areaUnitsDiv")
           updateTabsetPanel(session, "tables", selected = "Summary")
-          updateActionButton(session, "mcp_save_filename",
-                             label = paste(getwd(), basename, ".",
-                                           input$mcp_save_format, sep = ""))
+          # updateActionButton(session, "mcp_save_filename",
+          #                    label = paste(getwd(), basename, ".",
+          #                                  input$mcp_save_format, sep = ""))
         }
       }
     }
@@ -1076,15 +1076,15 @@ server <- function(input, output, session) {
   observe ({
     if (isEmpty (gps$original) || isEmpty (input$table_summary_rows_selected)) {
       shinyjs::disable("mcp_plot_button")
-      shinyjs::disable("mcp_save_format")
-      shinyjs::disable("mcp_save_button")
+      # shinyjs::disable("mcp_save_format")
+      # shinyjs::disable("mcp_save_button")
       shinyjs::disable("bbmm_plot_button")
       shinyjs::disable("bbmm_save_button")
       # shinyjs::disable("bbmm_submit_button")
     } else {
       shinyjs::enable("mcp_plot_button")
-      shinyjs::enable("mcp_save_format")
-      shinyjs::enable("mcp_save_button")
+      # shinyjs::enable("mcp_save_format")
+      # shinyjs::enable("mcp_save_button")
       shinyjs::enable("bbmm_plot_button")
       shinyjs::enable("bbmm_save_button")
       # shinyjs::enable("bbmm_submit_button")
@@ -1184,8 +1184,8 @@ server <- function(input, output, session) {
       # })
       showNotification(paste(message, "done"), id = mid, duration = 3,
                        session = session)
-      shinyjs::show("mcp_save_format")
-      shinyjs::show("mcp_save_button")
+      # shinyjs::show("mcp_save_format")
+      # shinyjs::show("mcp_save_button")
       # print("saving mcp plot")
       pdf("mona_plot.pdf")
       #plot(mat)
@@ -1208,15 +1208,15 @@ server <- function(input, output, session) {
     })
   })
 
-  observeEvent(input$mcp_save_filename, {
-    print("save mcp save button!")
-    fname <- file.choose(new = TRUE)
-    print(paste("fname =", fname))
-  })
+  # observeEvent(input$mcp_save_filename, {
+  #   print("save mcp save button!")
+  #   fname <- file.choose(new = TRUE)
+  #   print(paste("fname =", fname))
+  # })
 
-  observeEvent(input$mcp_save_button, {
-    print("save mcp plot button, needs work!")
-  })
+  # observeEvent(input$mcp_save_button, {
+  #   print("save mcp plot button, needs work!")
+  # })
 
   # Commented out as we are currently not submitting to the supercomputer
   # observeEvent(input$bbmm_plot_button, {
@@ -1272,7 +1272,7 @@ server <- function(input, output, session) {
       showNotification(message, id = mid, duration = NULL, session = session)
       # result <- calculateRaster2D(data, id, input$variance, input$max_time,
       #                             input$cellsize, input$bbmm_buffer, remote_job)
-      print(paste("data =", data))
+      #print(paste("data =", data))
       result <- calculateRaster2D(data, id, input$variance, input$max_time,
                                   input$cellsize, input$bbmm_buffer)
 
@@ -1344,7 +1344,7 @@ server <- function(input, output, session) {
           #print(paste("map =", str(results[[1]]$map)))
           output$bbmm_plot <- renderPlot({results[[1]]$map})
 
-          mat <- raster_to_matrix(results[[1]]$raster)
+          # mat <- raster_to_matrix(results[[1]]$raster)
           # print(paste("mat 1 =", str(mat)))
           # print(paste("attributes 1 =", attributes(mat)))
 

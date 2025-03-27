@@ -11,7 +11,7 @@ requirement (see [Nano Hub's template](https://github.com/nanohub-apps/hubtoolju
 In addition to the gateway, we are also making our space use R Shiny app available to be used in a container. This allows you to run your own container with all the required software already installed.
 
 ### Requirements
-1. Docker version ? 
+1. Docker version 27.2 
 1. Stadia Maps key - you must have a Stadia Maps key to plot.  There is a free tier. Instructions for setting up your key can be found [here](https://docs.stadiamaps.com/authentication/#api-keys).
 
 ### Setup
