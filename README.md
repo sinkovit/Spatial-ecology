@@ -4,6 +4,7 @@ An R Shiny application for analyzing animal tracking data with the following mai
 * Load data from your computer locally or from [Movebank](https://www.movebank.org/)
 * Calculate and plot spatial extent of animal location data using Minimum Convex Polygon (MCP)
 * Calculate and plot area dimension using Brownian Bridge Markov Model (BBMM)
+* Save output file locally
 
 [Application user documentation](https://github.com/sinkovit/Spatial-ecology/wiki/Space-Use-Estimator-Application-User-Guide) can be found on our Wiki
 
