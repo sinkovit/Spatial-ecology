@@ -11,8 +11,8 @@ An R Shiny application for analyzing animal tracking data with the following mai
 We aim to follow the [Google style guide](https://google.github.io/styleguide/Rguide.html) but be aware that there are legacy code that don't follow this convention. 
 
 ## Requirements
-* R version 4.5.0 (may work in earlier versions)
-* [Stadia Maps API key](https://stadiamaps.com) (if you want to see the plot on a map)
+1. R version 4.5.0 (may work in earlier versions)
+1. [Stadia Maps API key](https://stadiamaps.com) (if you want to see the plots on a map).  There is a free tier. Instructions for setting up your key can be found [here](https://docs.stadiamaps.com/authentication/#api-keys).
 
 ## How to use
 
@@ -24,8 +24,7 @@ We have made our application available to be used in a container. This allows yo
 
 #### 1.1 Requirements
 
-1. Docker version 27.2 (other versions may work)
-1. Stadia Maps key - you must have a Stadia Maps key to plot.  There is a free tier. Instructions for setting up your key can be found [here](https://docs.stadiamaps.com/authentication/#api-keys).
+1. [Docker Desktop](https://www.docker.com/products/docker-desktop/) (free) version 27.2 (other versions may work)
 
 #### 1.2 Setup
 
@@ -40,13 +39,13 @@ We have made our application available to be used in a container. This allows yo
 
 #### 2.1 Requirements
 
-1.  [RStudio](https://posit.co/products/open-source/rstudio/?sid=1) 2025-05-* (other versions will probably work also)
+1.  [RStudio](https://posit.co/products/open-source/rstudio/?sid=1) 2025-05* (other versions will probably work also)
 
 #### 2.2 Setup
 
 1. Download and install RStudio on your machine
-2. Download our code.  The main branch contains the last stable release and the dev branch contains work-in-progress.
-3. Run the bin/app.R in your RStudio
+2. [Download our code](https://github.com/sinkovit/Spatial-ecology).  The main branch contains the last stable release and the dev branch contains work-in-progress.
+3. Start the RStudio software and run our bin/app.R file
 4. RStudio should automatically pull in the packages our application needs.
 
 ### Support
