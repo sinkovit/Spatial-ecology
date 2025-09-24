@@ -45,7 +45,7 @@ We have made our application available to be used in a container. This allows yo
 
 1. Download and install RStudio on your machine
 2. [Download our code](https://github.com/sinkovit/Spatial-ecology).  The main branch contains the last stable release and the dev branch contains work-in-progress.
-3. Start the RStudio software and run our bin/app.R file
+3. Start the RStudio software and run our code/app.R file
 4. RStudio should automatically pull in the packages our application needs.
 
 ### Support
